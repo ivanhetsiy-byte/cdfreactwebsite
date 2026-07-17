@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="1200" viewBox="0 0 900 1200" fill="none">
+  <rect width="900" height="1200" fill="#1c1c1c"/>
+  <rect x="50" y="50" width="800" height="1100" stroke="#ffffff" stroke-opacity="0.18" stroke-width="2"/>
+  <polygon points="450,220 700,820 200,820" stroke="#ffffff" stroke-opacity="0.35" stroke-width="2" fill="none"/>
+  <text x="450" y="1100" text-anchor="middle" fill="#ffffff" fill-opacity="0.45" font-family="Helvetica, Arial, sans-serif" font-size="24" letter-spacing="8">PHOTO 06</text>
+</svg>
