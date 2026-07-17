@@ -1,7 +1,9 @@
 export type LenisApi = {
   animatedScroll: number;
+  isLocked: boolean;
   start: () => void;
   stop: () => void;
+  resize?: () => void;
   on: (
     event: "scroll",
     callback: (scroll: { animatedScroll: number }) => void,
@@ -16,6 +18,7 @@ export type LenisApi = {
       duration?: number;
       immediate?: boolean;
       lock?: boolean;
+      force?: boolean;
       offset?: number;
       easing?: (t: number) => number;
       onComplete?: () => void;
@@ -32,3 +35,23 @@ export function getLenis(): LenisApi | null {
 
 export const quinticEase = (t: number) =>
   t < 0.5 ? 16 * t * t * t * t * t : 1 - Math.pow(-2 * t + 2, 5) / 2;
+
+/** Bell-curve velocity — slow → fast → slow (half-sine). */
+export const sineEaseInOut = (t: number) =>
+  -(Math.cos(Math.PI * t) - 1) / 2;
+
+/** Exponential ease-in — slow start, rapid build-up. */
+export const expoEaseIn = (t: number) =>
+  t === 0 ? 0 : Math.pow(2, 10 * t - 10);
+
+/** Negative-exponential ease-out — fast start, asymptotic slowdown. */
+export const expoEaseOut = (t: number) =>
+  t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
+
+/** Exponential build-up then negative-exponential slowdown. */
+export const expoEaseInOut = (t: number) => {
+  if (t === 0) return 0;
+  if (t === 1) return 1;
+  if (t < 0.5) return Math.pow(2, 20 * t - 10) / 2;
+  return (2 - Math.pow(2, -20 * t + 10)) / 2;
+};

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="1200" viewBox="0 0 900 1200" fill="none">
+  <rect width="900" height="1200" fill="#141414"/>
+  <rect x="50" y="50" width="800" height="1100" stroke="#ffffff" stroke-opacity="0.18" stroke-width="2"/>
+  <line x1="50" y1="400" x2="850" y2="400" stroke="#ffffff" stroke-opacity="0.2" stroke-width="1"/>
+  <line x1="50" y1="800" x2="850" y2="800" stroke="#ffffff" stroke-opacity="0.2" stroke-width="1"/>
+  <circle cx="450" cy="600" r="140" stroke="#ffffff" stroke-opacity="0.4" stroke-width="2"/>
+  <text x="450" y="1100" text-anchor="middle" fill="#ffffff" fill-opacity="0.45" font-family="Helvetica, Arial, sans-serif" font-size="24" letter-spacing="8">PHOTO 04</text>
+</svg>

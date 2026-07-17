@@ -8,11 +8,14 @@ type LogoProps = {
  * - Dark mode  → "CDf white" (node 68:29)
  */
 export function Logo({ className = "" }: LogoProps) {
-  // viewBox 104×77 → height-led scale keeps aspect; theme swap stays on the imgs
-  const sizeClass = `block h-[87px] w-auto max-w-none object-contain object-left select-none swiss-no-select ${className}`;
+  // Height-led scale keeps aspect; theme swap stays on the imgs
+  const sizeClass =
+    "block h-full w-auto max-w-none object-contain object-left select-none swiss-no-select";
 
   return (
-    <span className="relative inline-flex h-[87px] w-auto shrink-0 items-center">
+    <span
+      className={`relative inline-flex h-[87px] w-auto shrink-0 items-center ${className}`}
+    >
       {/* eslint-disable-next-line @next/next/no-img-element -- crisp SVG brand vectors from Figma */}
       <img
         src="/icons/cdf-black.svg"
