@@ -4,28 +4,30 @@ import { Montserrat } from "next/font/google";
 export const helvetica = localFont({
   src: [
     {
-      path: "./fonts/helvetica-light-587ebe5a59211.ttf",
-      weight: "300",
-      style: "normal",
-    },
-    {
-      path: "./fonts/Helvetica.ttf",
+      path: "./fonts/Helvetica.woff2",
       weight: "400",
       style: "normal",
     },
     {
-      path: "./fonts/Helvetica-Oblique.ttf",
-      weight: "400",
+      path: "./fonts/Helvetica-Bold.woff2",
+      weight: "700",
+      style: "normal",
+    },
+    // Site uses Tailwind font-black (900); map to Bold so the browser
+    // does not synthesize a heavier face.
+    {
+      path: "./fonts/Helvetica-Bold.woff2",
+      weight: "900",
+      style: "normal",
+    },
+    {
+      path: "./fonts/Helvetica-BoldOblique.woff2",
+      weight: "700",
       style: "italic",
     },
     {
-      path: "./fonts/Helvetica-Bold.ttf",
-      weight: "700",
-      style: "normal",
-    },
-    {
-      path: "./fonts/Helvetica-BoldOblique.ttf",
-      weight: "700",
+      path: "./fonts/Helvetica-BoldOblique.woff2",
+      weight: "900",
       style: "italic",
     },
   ],

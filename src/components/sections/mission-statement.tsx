@@ -471,7 +471,7 @@ export function MissionStatement() {
               >
                 <Image
                   ref={mobileImageRef}
-                  src="/images/mission-dancer-raw.jpg"
+                  src="/images/mission-dancer.jpg"
                   alt="Dancer in a dynamic leap"
                   fill
                   sizes="48vw"
@@ -527,7 +527,7 @@ export function MissionStatement() {
           >
             <Image
               ref={desktopImageRef}
-              src="/images/mission-dancer-raw.jpg"
+              src="/images/mission-dancer.jpg"
               alt="Dancer in a dynamic leap"
               fill
               sizes="24vw"
