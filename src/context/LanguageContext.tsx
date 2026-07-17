@@ -33,7 +33,7 @@ export const HOME_LOCKED_DISCIPLINES = "JAZZ · BALLET · ACRO";
 /** Current season mark — locked English. */
 export const HOME_LOCKED_SEASON = "SEASON 12";
 
-const STORAGE_KEY = "cdf-language";
+const STORAGE_KEY = "cdf-language-pref";
 
 type Dictionary = {
   nav: {
@@ -373,15 +373,15 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     document.documentElement.lang = language;
-    try {
-      window.localStorage.setItem(STORAGE_KEY, language);
-    } catch {
-      // Ignore storage failures.
-    }
   }, [language]);
 
   const setLanguage = useCallback((lang: Language) => {
     setLanguageState(lang);
+    try {
+      window.localStorage.setItem(STORAGE_KEY, lang);
+    } catch {
+      // Ignore storage failures.
+    }
   }, []);
 
   const value = useMemo<LanguageContextValue>(

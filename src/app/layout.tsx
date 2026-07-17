@@ -44,6 +44,7 @@ export default function RootLayout({
           attribute="class"
           defaultTheme="light"
           enableSystem={false}
+          storageKey="cdf-theme"
           disableTransitionOnChange
         >
           <LanguageProvider>
