@@ -86,6 +86,13 @@ export function ScrollProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    // Home owns scroll when returning from a subpage (bottom → top entrance).
+    try {
+      if (sessionStorage.getItem("fromSubpage") === "true") return;
+    } catch {
+      // sessionStorage unavailable
+    }
+
     resetScrollToTop();
   }, [pathname]);
 

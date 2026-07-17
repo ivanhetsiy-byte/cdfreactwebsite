@@ -2,7 +2,9 @@ import type { Metadata, Viewport } from "next";
 
 import { helvetica, helveticaCompressed, montserrat } from "./fonts";
 import { BackToTop } from "@/components/layout/back-to-top";
+import { Footer } from "@/components/layout/footer";
 import { Navbar } from "@/components/layout/navbar";
+import { FirstVisitLoader } from "@/components/loading/FirstVisitLoader";
 import { ScrollProvider } from "@/components/providers/ScrollProvider";
 import { LanguageProvider } from "@/context/LanguageContext";
 import { ThemeProvider } from "@/providers/theme-provider";
@@ -52,9 +54,11 @@ export default function RootLayout({
               Skip to main content
             </a>
             <ScrollProvider>
+              <FirstVisitLoader />
               <div className="relative w-full min-h-screen bg-white text-black dark:bg-black dark:text-white">
                 <Navbar />
                 {children}
+                <Footer />
               </div>
               <BackToTop />
             </ScrollProvider>

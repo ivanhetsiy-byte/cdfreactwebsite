@@ -3,7 +3,7 @@
 import { ArrowUp } from "lucide-react";
 import { useEffect, useState } from "react";
 
-import { getLenis, quinticEase } from "@/lib/lenis";
+import { getLenis, sineEaseInOut } from "@/lib/lenis";
 
 export function BackToTop() {
   const [showTopButton, setShowTopButton] = useState(false);
@@ -48,12 +48,15 @@ export function BackToTop() {
         onClick={() => {
           const lenis = getLenis();
           if (lenis) {
-            lenis.scrollTo(0, { duration: 2.8, easing: quinticEase });
+            lenis.scrollTo(0, { duration: 1.15, easing: sineEaseInOut });
           }
         }}
       >
-        <ArrowUp className="w-4 h-4 text-black dark:text-white stroke-[1.5px]" aria-hidden />
-        <span className="font-swiss-compressed font-bold text-xs uppercase tracking-widest text-black dark:text-white select-none -rotate-90 origin-center mt-2">
+        <ArrowUp
+          className="h-4 w-4 text-black stroke-[1.5px] dark:text-white md:h-6 md:w-6 md:stroke-[1.75px]"
+          aria-hidden
+        />
+        <span className="mt-2 -rotate-90 origin-center select-none font-swiss-compressed text-xs font-bold uppercase tracking-widest text-black dark:text-white md:mt-3 md:text-sm">
           TOP
         </span>
       </button>

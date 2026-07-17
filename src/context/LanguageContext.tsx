@@ -20,6 +20,19 @@ export const MISSION_LOCKED_TITLE = {
   full: "Where Talent Grows",
 } as const;
 
+/** Studio motto — locked English, never translated. */
+export const HOME_LOCKED_MOTTO = {
+  line1: "ALWAYS TO THE TOP,",
+  line2: "ALWAYS TOGETHER.",
+  full: "ALWAYS TO THE TOP, ALWAYS TOGETHER.",
+} as const;
+
+/** Hero discipline rail — locked English. */
+export const HOME_LOCKED_DISCIPLINES = "JAZZ · BALLET · ACRO";
+
+/** Current season mark — locked English. */
+export const HOME_LOCKED_SEASON = "SEASON 12";
+
 const STORAGE_KEY = "cdf-language";
 
 type Dictionary = {
@@ -30,9 +43,13 @@ type Dictionary = {
     staff: string;
     contact: string;
     settings: string;
+    openMenu: string;
+    closeMenu: string;
   };
   footer: {
-    enrollment: string;
+    explore: string;
+    follow: string;
+    rights: string;
   };
   notFound: {
     backToHome: string;
@@ -43,6 +60,30 @@ type Dictionary = {
     professionalPedagogy: string;
     /** Locked English — never translate across locales. */
     danceForAllAges: string;
+  };
+  home: {
+    motto: {
+      index: string;
+      label: string;
+    };
+    programs: {
+      index: string;
+      label: string;
+      headline: string;
+      body: string;
+      cta: string;
+      competitive: { name: string; line: string };
+      recreational: { name: string; line: string };
+    };
+    gallery: {
+      index: string;
+      label: string;
+    };
+    enrollmentCta: {
+      index: string;
+      line: string;
+      cta: string;
+    };
   };
   settings: {
     close: string;
@@ -62,9 +103,13 @@ const dictionaries: Record<Language, Dictionary> = {
       staff: "STAFF",
       contact: "CONTACT US",
       settings: "SETTINGS",
+      openMenu: "Open menu",
+      closeMenu: "Close menu",
     },
     footer: {
-      enrollment: "Enrollment Open for Fall 2026 →",
+      explore: "Explore",
+      follow: "Follow",
+      rights: "© {year} CDF. All rights reserved.",
     },
     notFound: {
       backToHome: "Back to Home",
@@ -74,8 +119,38 @@ const dictionaries: Record<Language, Dictionary> = {
       professionalPedagogy: "Professional Pedagogy",
       danceForAllAges: "Dance for all",
     },
+    home: {
+      motto: {
+        index: "01",
+        label: "Our Motto",
+      },
+      programs: {
+        index: "02",
+        label: "Programs",
+        headline: "Ages 3–18",
+        body: "Competitive and recreational groups built for every stage of the journey.",
+        cta: "View classes →",
+        competitive: {
+          name: "Competitive",
+          line: "Technique-driven training for dancers who want the stage.",
+        },
+        recreational: {
+          name: "Recreational",
+          line: "Joyful classes that build skill, confidence, and love of dance.",
+        },
+      },
+      gallery: {
+        index: "03",
+        label: "Gallery",
+      },
+      enrollmentCta: {
+        index: "04",
+        line: "Fall enrollment is open",
+        cta: "Check fall enrollment →",
+      },
+    },
     settings: {
-      close: "CLOSE // ESC",
+      close: "CLOSE",
       theme: "THEME",
       light: "LIGHT",
       dark: "DARK",
@@ -90,9 +165,13 @@ const dictionaries: Record<Language, Dictionary> = {
       staff: "ПЕДАГОГИ",
       contact: "КОНТАКТЫ",
       settings: "НАСТРОЙКИ",
+      openMenu: "Открыть меню",
+      closeMenu: "Закрыть меню",
     },
     footer: {
-      enrollment: "Набор открыт на осень 2026 →",
+      explore: "Навигация",
+      follow: "Соцсети",
+      rights: "© {year} CDF. Все права защищены.",
     },
     notFound: {
       backToHome: "На главную",
@@ -102,8 +181,38 @@ const dictionaries: Record<Language, Dictionary> = {
       professionalPedagogy: "Профессиональная педагогика",
       danceForAllAges: "Dance for all",
     },
+    home: {
+      motto: {
+        index: "01",
+        label: "Наш девиз",
+      },
+      programs: {
+        index: "02",
+        label: "Программы",
+        headline: "Возраст 3–18",
+        body: "Соревновательные и любительские группы для каждого этапа пути.",
+        cta: "Смотреть классы →",
+        competitive: {
+          name: "Соревновательные",
+          line: "Тренировки с акцентом на технику для тех, кто хочет сцену.",
+        },
+        recreational: {
+          name: "Любительские",
+          line: "Занятия, которые дают навык, уверенность и любовь к танцу.",
+        },
+      },
+      gallery: {
+        index: "03",
+        label: "Галерея",
+      },
+      enrollmentCta: {
+        index: "04",
+        line: "Открыт набор на осень",
+        cta: "Узнать про осенний набор →",
+      },
+    },
     settings: {
-      close: "ЗАКРЫТЬ // ESC",
+      close: "ЗАКРЫТЬ",
       theme: "ТЕМА",
       light: "СВЕТЛАЯ",
       dark: "ТЁМНАЯ",
@@ -118,9 +227,13 @@ const dictionaries: Record<Language, Dictionary> = {
       staff: "ПЕДАГОГИ",
       contact: "КОНТАКТИ",
       settings: "НАЛАШТУВАННЯ",
+      openMenu: "Відкрити меню",
+      closeMenu: "Закрити меню",
     },
     footer: {
-      enrollment: "Набір відкрито на осінь 2026 →",
+      explore: "Навігація",
+      follow: "Соцмережі",
+      rights: "© {year} CDF. Усі права захищено.",
     },
     notFound: {
       backToHome: "На головну",
@@ -130,8 +243,38 @@ const dictionaries: Record<Language, Dictionary> = {
       professionalPedagogy: "Професійна педагогіка",
       danceForAllAges: "Dance for all",
     },
+    home: {
+      motto: {
+        index: "01",
+        label: "Наш девіз",
+      },
+      programs: {
+        index: "02",
+        label: "Програми",
+        headline: "Вік 3–18",
+        body: "Змагальні та аматорські групи для кожного етапу шляху.",
+        cta: "Дивитися класи →",
+        competitive: {
+          name: "Змагальні",
+          line: "Тренування з акцентом на техніку для тих, хто хоче сцену.",
+        },
+        recreational: {
+          name: "Аматорські",
+          line: "Заняття, що дають навичку, впевненість і любов до танцю.",
+        },
+      },
+      gallery: {
+        index: "03",
+        label: "Галерея",
+      },
+      enrollmentCta: {
+        index: "04",
+        line: "Відкрито набір на осінь",
+        cta: "Дізнатися про осінній набір →",
+      },
+    },
     settings: {
-      close: "ЗАКРИТИ // ESC",
+      close: "ЗАКРИТИ",
       theme: "ТЕМА",
       light: "СВІТЛА",
       dark: "ТЕМНА",
@@ -146,9 +289,13 @@ const dictionaries: Record<Language, Dictionary> = {
       staff: "スタッフ",
       contact: "お問い合わせ",
       settings: "設定",
+      openMenu: "メニューを開く",
+      closeMenu: "メニューを閉じる",
     },
     footer: {
-      enrollment: "2026年秋の入学受付中 →",
+      explore: "ナビ",
+      follow: "フォロー",
+      rights: "© {year} CDF. All rights reserved.",
     },
     notFound: {
       backToHome: "ホームへ戻る",
@@ -158,8 +305,38 @@ const dictionaries: Record<Language, Dictionary> = {
       professionalPedagogy: "プロフェッショナル指導",
       danceForAllAges: "Dance for all",
     },
+    home: {
+      motto: {
+        index: "01",
+        label: "私たちのモットー",
+      },
+      programs: {
+        index: "02",
+        label: "プログラム",
+        headline: "対象年齢 3–18歳",
+        body: "競技グループとレクリエーショングループ — それぞれの段階に合わせて。",
+        cta: "クラスを見る →",
+        competitive: {
+          name: "競技",
+          line: "ステージを目指すダンサーのための技術重視のトレーニング。",
+        },
+        recreational: {
+          name: "レクリエーション",
+          line: "スキルと自信、ダンスへの愛を育む楽しいクラス。",
+        },
+      },
+      gallery: {
+        index: "03",
+        label: "ギャラリー",
+      },
+      enrollmentCta: {
+        index: "04",
+        line: "秋の入学受付中",
+        cta: "秋の入学を確認 →",
+      },
+    },
     settings: {
-      close: "閉じる // ESC",
+      close: "閉じる",
       theme: "テーマ",
       light: "ライト",
       dark: "ダーク",
