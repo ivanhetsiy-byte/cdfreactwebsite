@@ -53,7 +53,7 @@ export function SettingsSidebar({ open, onClose }: SettingsSidebarProps) {
           onClick={onClose}
           className="absolute top-6 right-6 font-swiss text-xs uppercase tracking-widest text-black transition-opacity duration-150 hover:opacity-60 md:top-10 md:right-10 dark:text-white"
         >
-          {t.settings.close} // ESC
+          {t.settings.close}
         </button>
 
         <SettingsContent className="mt-16 h-[calc(100%-4rem)]" />

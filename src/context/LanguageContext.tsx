@@ -95,7 +95,7 @@ const dictionaries: Record<Language, Dictionary> = {
     },
     footer: {
       explore: "Explore",
-      follow: "Follow",
+      follow: "Follow Us",
       rights: "© {year} CDF. All rights reserved.",
     },
     notFound: {
@@ -145,7 +145,7 @@ const dictionaries: Record<Language, Dictionary> = {
     },
     footer: {
       explore: "Навигация",
-      follow: "Соцсети",
+      follow: "Подписывайтесь",
       rights: "© {year} CDF. Все права защищены.",
     },
     notFound: {
@@ -195,7 +195,7 @@ const dictionaries: Record<Language, Dictionary> = {
     },
     footer: {
       explore: "Навігація",
-      follow: "Соцмережі",
+      follow: "Підписуйтесь",
       rights: "© {year} CDF. Усі права захищено.",
     },
     notFound: {
@@ -245,7 +245,7 @@ const dictionaries: Record<Language, Dictionary> = {
     },
     footer: {
       explore: "ナビ",
-      follow: "フォロー",
+      follow: "フォローする",
       rights: "© {year} CDF. All rights reserved.",
     },
     notFound: {
