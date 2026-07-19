@@ -3,12 +3,23 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { motion, useReducedMotion } from "motion/react";
-import { useCallback, useEffect, useRef, type PointerEvent } from "react";
+import {
+  motion,
+  useMotionValueEvent,
+  useReducedMotion,
+  useScroll,
+  useTransform,
+} from "motion/react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type PointerEvent,
+} from "react";
 
 import {
   HOME_LOCKED_MOTTO,
-  HOME_LOCKED_SEASON,
   useLanguage,
 } from "@/context/LanguageContext";
 import { requestRouteCover } from "@/lib/route-cover";
@@ -53,6 +64,122 @@ const GALLERY_ITEMS: GalleryItem[] = GALLERY_CAPTIONS.map((caption, i) => ({
   alt: `${caption} placeholder`,
   caption,
 }));
+
+function ScrollTypewriter({
+  text,
+  className,
+  reducedMotion,
+}: {
+  text: string;
+  className?: string;
+  reducedMotion: boolean | null;
+}) {
+  const ref = useRef<HTMLParagraphElement>(null);
+
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start 0.92", "start 0.55"],
+  });
+  const chars = useTransform(scrollYProgress, [0, 1], [0, text.length]);
+
+  const [visible, setVisible] = useState(0);
+
+  useMotionValueEvent(chars, "change", (v) => {
+    setVisible(Math.min(text.length, Math.max(0, Math.round(v))));
+  });
+
+  // Sync on mount in case the section is already in view (e.g. restored scroll).
+  useEffect(() => {
+    setVisible(Math.min(text.length, Math.max(0, Math.round(chars.get()))));
+  }, [chars, text.length]);
+
+  if (reducedMotion) {
+    return <p className={className}>{text}</p>;
+  }
+
+  return (
+    <p ref={ref} className={className} aria-label={text}>
+      <span aria-hidden="true">{text.slice(0, visible)}</span>
+      <span aria-hidden="true" className="opacity-0">
+        {text.slice(visible)}
+      </span>
+    </p>
+  );
+}
+
+function CaretTypewriter({
+  text,
+  className,
+  id,
+  reducedMotion,
+  charMs = 72,
+}: {
+  text: string;
+  className?: string;
+  id?: string;
+  reducedMotion: boolean | null;
+  charMs?: number;
+}) {
+  const [visible, setVisible] = useState(0);
+  const [started, setStarted] = useState(false);
+  const ref = useRef<HTMLHeadingElement>(null);
+
+  useEffect(() => {
+    setVisible(0);
+    setStarted(false);
+  }, [text]);
+
+  useEffect(() => {
+    if (reducedMotion) {
+      setVisible(text.length);
+      setStarted(true);
+      return;
+    }
+
+    const el = ref.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) {
+          setStarted(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.35 },
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [reducedMotion, text]);
+
+  useEffect(() => {
+    if (!started || reducedMotion) return;
+    if (visible >= text.length) return;
+
+    const timer = window.setTimeout(() => {
+      setVisible((n) => Math.min(text.length, n + 1));
+    }, charMs);
+
+    return () => window.clearTimeout(timer);
+  }, [started, visible, text.length, charMs, reducedMotion]);
+
+  const done = visible >= text.length;
+
+  return (
+    <h2 ref={ref} id={id} className={className} aria-label={text}>
+      <span aria-hidden="true">{text.slice(0, visible)}</span>
+      {!reducedMotion && (
+        <span
+          aria-hidden="true"
+          className={`ml-[0.02em] inline-block h-[0.78em] w-[0.08em] translate-y-[0.06em] bg-current align-baseline ${
+            done ? "animate-caret-blink" : "opacity-100"
+          }`}
+        />
+      )}
+    </h2>
+  );
+}
 
 function SectionIndex({ value }: { value: string }) {
   return (
@@ -252,7 +379,6 @@ function GalleryStrip({
       {GALLERY_ITEMS.map((item) => (
         <div
           key={item.id}
-          data-gallery-slide
           className="w-[calc(100vw-3rem)] shrink-0 px-6 md:w-[min(28rem,42vw)] md:px-5"
         >
           <div className="pointer-events-none aspect-[3/4] w-full">
@@ -273,7 +399,14 @@ export function HomeWireframes() {
   const pathname = usePathname();
   const router = useRouter();
   const navLockRef = useRef(false);
+  const programsRef = useRef<HTMLDivElement>(null);
   const reducedMotion = useReducedMotion();
+
+  const { scrollYProgress } = useScroll({
+    target: programsRef,
+    offset: ["start 0.75", "end 0.9"],
+  });
+  const lineScale = useTransform(scrollYProgress, [0, 1], [0, 1]);
 
   const handleDelayedNavigation = (targetPath: string) => {
     if (typeof window === "undefined") return;
@@ -304,139 +437,69 @@ export function HomeWireframes() {
           viewport: { once: true, amount: 0.25 },
         };
 
-  const programKeys = ["competitive", "recreational"] as const;
+  const slideIn = (fromX: number, delay = 0) =>
+    reducedMotion
+      ? { initial: false as const, whileInView: undefined, transition: undefined }
+      : {
+          initial: { opacity: 0, x: fromX },
+          whileInView: { opacity: 1, x: 0 },
+          transition: { duration: 0.7, delay, ease: [0.22, 1, 0.36, 1] as const },
+          viewport: { once: true, amount: 0.25 },
+        };
+
+  const mottoLine1 = HOME_LOCKED_MOTTO.line1.replace(/[.,]$/, "");
+  const mottoLine2 = HOME_LOCKED_MOTTO.line2.replace(/[.,]$/, "");
 
   return (
     <div className="relative w-full bg-white text-black dark:bg-black dark:text-white swiss-no-select">
-      {/* ── 01 Motto — Swiss cascade field ── */}
+      {/* ── Motto ── */}
       <section
         aria-labelledby="home-motto-heading"
-        className="relative -mx-6 flex min-h-[100dvh] w-[calc(100%+3rem)] flex-col justify-center overflow-hidden border-t-2 border-black px-6 dark:border-white md:-mx-10 md:w-[calc(100%+5rem)] md:px-10"
+        className="relative flex min-h-dvh w-full items-center overflow-x-clip py-28 md:block md:min-h-0 md:pt-[20vw] md:pb-[14.5vw]"
       >
-        {/* Grid rails — desktop only */}
-        <div className="pointer-events-none absolute inset-0" aria-hidden="true">
-          <div className="absolute inset-y-[8%] left-[8%] hidden w-px bg-black/10 dark:bg-white/10 md:block" />
-          <div className="absolute inset-y-0 left-[28%] hidden w-px bg-black/10 dark:bg-white/10 md:block" />
-          <div className="absolute inset-y-[12%] left-[58%] hidden w-px bg-black/10 dark:bg-white/10 md:block" />
-          <div className="absolute inset-y-[20%] right-[10%] hidden w-px bg-black/10 dark:bg-white/10 md:block" />
-          <div className="absolute top-[22%] left-[4%] hidden h-px w-[70%] bg-black/10 dark:bg-white/10 md:block" />
-          <div className="absolute top-1/2 left-0 hidden h-px w-full bg-black/15 dark:bg-white/15 md:block" />
-          <div className="absolute bottom-[24%] left-[18%] hidden h-px w-[78%] bg-black/10 dark:bg-white/10 md:block" />
-        </div>
-
-        {/* Vertical side index — desktop */}
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute bottom-[18%] left-6 hidden md:left-10 md:block"
+        <h2
+          id="home-motto-heading"
+          className="font-swiss text-[clamp(1.85rem,8vw,3rem)] font-bold uppercase leading-[0.8] tracking-tighter md:text-[8.55vw]"
         >
-          <p className="-rotate-90 origin-bottom-left font-swiss text-xs font-medium tracking-[0.35em] text-[#666666] uppercase">
-            {t.home.motto.index} — {t.home.motto.label}
-          </p>
-        </div>
-
-        <div className="relative grid w-full grid-cols-1 gap-0 py-16 md:grid-cols-12 md:py-24">
-          <motion.div
-            className="mb-8 flex items-baseline gap-3 md:hidden"
-            {...fadeUp(0)}
+          <motion.span
+            className="block whitespace-nowrap"
+            {...slideIn(-96, 0)}
           >
-            <SectionIndex value={t.home.motto.index} />
-            <span className="font-swiss text-xs font-medium tracking-[0.2em] text-[#666666] uppercase">
-              {t.home.motto.label}
-            </span>
-          </motion.div>
-
-          <h2
-            id="home-motto-heading"
-            className="col-span-full flex flex-col font-swiss font-black uppercase tracking-tighter"
+            {mottoLine1}
+          </motion.span>
+          <motion.span
+            className="mt-[0.08em] block whitespace-nowrap pl-[1.4em]"
+            {...slideIn(96, 0.08)}
           >
-            {/* Mobile: stacked cascade with soft indent */}
-            <motion.span
-              className="block text-[clamp(2.5rem,14vw,4.5rem)] leading-[0.9] md:hidden"
-              {...fadeUp(0.05)}
-            >
-              <span className="block">ALWAYS</span>
-              <span className="mt-[0.06em] block pl-[8%]">TO THE TOP,</span>
-            </motion.span>
-
-            {/* Desktop: single line flush left */}
-            <motion.span
-              className="hidden text-[clamp(2.75rem,10.5vw,9.5rem)] leading-[0.86] md:block"
-              {...fadeUp(0.05)}
-            >
-              {HOME_LOCKED_MOTTO.line1}
-            </motion.span>
-
-            <motion.div
-              className="relative my-6 flex items-center gap-3 md:my-12 md:ml-[28%] md:mr-[10%] md:gap-4"
-              aria-hidden="true"
-              {...fadeUp(0.12)}
-            >
-              <span className="swiss-diamond h-2.5 w-2.5 shrink-0 bg-black dark:bg-white md:h-4 md:w-4" />
-              <span className="h-px flex-1 bg-black dark:bg-white" />
-              <span className="hidden font-swiss text-[10px] font-medium tracking-[0.35em] text-[#666666] uppercase tabular-nums md:inline">
-                {t.home.motto.index}
-              </span>
-            </motion.div>
-
-            {/* Mobile: indented second phrase */}
-            <motion.span
-              className="block pl-[16%] text-[clamp(2.5rem,14vw,4.5rem)] leading-[0.9] md:hidden"
-              {...fadeUp(0.18)}
-            >
-              <span className="block">ALWAYS</span>
-              <span className="mt-[0.06em] block">TOGETHER.</span>
-            </motion.span>
-
-            {/* Desktop: pushed right */}
-            <motion.span
-              className="hidden self-end text-right text-[clamp(2.75rem,10.5vw,9.5rem)] leading-[0.86] md:ml-[28%] md:block md:w-auto"
-              {...fadeUp(0.18)}
-            >
-              {HOME_LOCKED_MOTTO.line2}
-            </motion.span>
-          </h2>
-        </div>
+            {mottoLine2}
+          </motion.span>
+        </h2>
       </section>
 
-      {/* ── 02 Programs — full-viewport field ── */}
+      {/* ── Programs ── */}
       <section
         aria-labelledby="home-programs-heading"
-        className="relative -mx-6 flex min-h-[100dvh] w-[calc(100%+3rem)] flex-col justify-center overflow-hidden border-t-2 border-black px-6 dark:border-white md:-mx-10 md:w-[calc(100%+5rem)] md:px-10"
+        className="relative w-full pb-24 md:pt-[14.5vw] md:pb-[10vw]"
       >
-        <div className="pointer-events-none absolute inset-0" aria-hidden="true">
-          <div className="absolute inset-y-[10%] left-[10%] hidden w-px bg-black/10 dark:bg-white/10 md:block" />
-          <div className="absolute inset-y-0 left-[42%] hidden w-px bg-black/10 dark:bg-white/10 md:block" />
-          <div className="absolute inset-y-[14%] left-[78%] hidden w-px bg-black/10 dark:bg-white/10 md:block" />
-          <div className="absolute top-[30%] left-0 h-px w-[55%] bg-black/10 dark:bg-white/10" />
-          <div className="absolute bottom-[28%] left-[20%] h-px w-[80%] bg-black/10 dark:bg-white/10" />
-        </div>
+        {/* Header: Ages 3–18 + body / CTA */}
+        <div className="flex flex-col gap-10 md:flex-row md:items-start md:justify-between md:gap-12">
+          <CaretTypewriter
+            id="home-programs-heading"
+            text={t.home.programs.headline}
+            reducedMotion={reducedMotion}
+            className="font-swiss text-[clamp(3rem,12vw,4.5rem)] font-bold leading-[0.92] tracking-tight md:text-[13.4vw]"
+          />
 
-        <div className="relative flex w-full flex-col gap-12 py-20 md:gap-16 md:py-24">
-          {/* Header block */}
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-12 md:gap-0 md:items-end">
-            <motion.div
-              className="flex flex-col gap-4 md:col-span-7"
-              {...fadeUp(0)}
-            >
-              <div className="flex items-baseline gap-3">
-                <SectionIndex value={t.home.programs.index} />
-                <span className="font-swiss text-xs font-medium tracking-[0.2em] text-[#666666] uppercase">
-                  {t.home.programs.label}
-                </span>
-              </div>
-              <h2
-                id="home-programs-heading"
-                className="font-swiss text-[clamp(3rem,12vw,8rem)] font-black leading-[0.88] tracking-tighter"
-              >
-                {t.home.programs.headline}
-              </h2>
-            </motion.div>
-
-            <motion.div
-              className="flex flex-col gap-5 border-t border-black/20 pt-6 dark:border-white/20 md:col-span-5 md:border-t-0 md:border-l md:pl-10 md:pt-0"
-              {...fadeUp(0.1)}
-            >
-              <p className="max-w-md font-alt text-base leading-relaxed tracking-tight text-[#666666] md:text-lg">
+          <motion.div
+            className="flex max-w-[28rem] shrink-0 gap-5 md:max-w-[32rem] md:pt-[1.5vw]"
+            {...fadeUp(0.1)}
+          >
+            <span
+              aria-hidden="true"
+              className="mt-1 hidden h-[11rem] w-px shrink-0 bg-black dark:bg-white md:block"
+            />
+            <div className="flex flex-col gap-4 border-t border-black/20 pt-5 dark:border-white/20 md:border-t-0 md:pt-0">
+              <p className="font-alt text-[clamp(1.125rem,1.8vw,1.75rem)] leading-[1.45] tracking-tight text-[#6b6b6b]">
                 {t.home.programs.body}
               </p>
               <Link
@@ -445,100 +508,82 @@ export function HomeWireframes() {
                   e.preventDefault();
                   handleDelayedNavigation("/classes");
                 }}
-                className="inline-flex w-fit font-swiss text-sm font-bold uppercase tracking-widest text-[#666666] transition-colors duration-150 hover:text-black dark:hover:text-white md:text-base"
+                className="inline-flex w-fit font-swiss text-[clamp(1rem,1.6vw,1.5rem)] font-bold leading-[1.45] uppercase tracking-tight text-[#616161] transition-colors duration-150 hover:text-black dark:hover:text-white"
               >
                 {t.home.programs.cta}
               </Link>
-            </motion.div>
-          </div>
+            </div>
+          </motion.div>
+        </div>
 
-          {/* Program groups — stacked mobile, staggered desktop */}
-          <ul className="flex flex-col gap-0">
-            {programKeys.map((key, i) => {
-              const item = t.home.programs[key];
-              const isOffset = i % 2 === 1;
+        {/* Staggered program blocks */}
+        <div
+          ref={programsRef}
+          className="relative mt-24 md:mt-[12vw] md:pb-[24vw]"
+        >
+          <motion.div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-y-0 left-1/2 hidden w-px -translate-x-1/2 bg-linear-to-b from-black from-75% to-transparent dark:from-white md:block"
+            style={{
+              scaleY: reducedMotion ? 1 : lineScale,
+              transformOrigin: "top",
+            }}
+          />
 
-              return (
-                <motion.li
-                  key={key}
-                  className={`relative border-t-2 border-black py-8 dark:border-white md:py-14 ${
-                    isOffset ? "md:pl-[18%]" : "md:pr-[12%]"
-                  }`}
-                  {...fadeUp(0.12 + i * 0.1)}
-                >
-                  <div
-                    className={`flex flex-col gap-3 md:gap-4 ${
-                      isOffset
-                        ? "md:items-end md:text-right"
-                        : "items-start text-left"
-                    }`}
-                  >
-                    <div
-                      className={`flex items-baseline gap-3 ${
-                        isOffset ? "md:flex-row-reverse" : ""
-                      }`}
-                    >
-                      <span className="font-swiss text-xs font-medium tracking-[0.3em] text-[#666666] tabular-nums">
-                        {String(i + 1).padStart(2, "0")}
-                      </span>
-                      <span
-                        aria-hidden="true"
-                        className="swiss-diamond h-2.5 w-2.5 bg-black dark:bg-white"
-                      />
-                    </div>
+          <ul className="flex flex-col gap-24 md:gap-0">
+            <li className="relative md:w-[48%] md:pt-[7.5vw] md:pr-8">
+              <ScrollTypewriter
+                text={t.home.programs.competitive.name}
+                reducedMotion={reducedMotion}
+                className="font-swiss text-[clamp(2.5rem,8vw,3.5rem)] font-bold leading-none tracking-tighter md:text-[7vw]"
+              />
+              <ScrollTypewriter
+                text={t.home.programs.competitive.line}
+                reducedMotion={reducedMotion}
+                className="mt-5 max-w-[34rem] font-alt text-[clamp(1rem,1.4vw,1.3125rem)] leading-[1.5] tracking-tight text-[#6b6b6b] md:mt-7"
+              />
+            </li>
 
-                    <p className="font-swiss text-[clamp(2.5rem,11vw,5.5rem)] font-black leading-[0.9] tracking-tighter">
-                      {item.name}
-                    </p>
-
-                    <p
-                      className={`max-w-sm font-alt text-sm leading-snug tracking-tight text-[#666666] md:max-w-md md:text-base ${
-                        isOffset ? "md:ml-auto" : ""
-                      }`}
-                    >
-                      {item.line}
-                    </p>
-                  </div>
-                </motion.li>
-              );
-            })}
+            <li className="relative md:mt-[25vw] md:ml-auto md:w-[48%] md:pl-8">
+              <ScrollTypewriter
+                text={t.home.programs.recreational.name}
+                reducedMotion={reducedMotion}
+                className="font-swiss text-[clamp(2.5rem,8vw,3.5rem)] font-bold leading-none tracking-tighter md:text-[7vw]"
+              />
+              <ScrollTypewriter
+                text={t.home.programs.recreational.line}
+                reducedMotion={reducedMotion}
+                className="mt-5 max-w-[34rem] font-alt text-[clamp(1rem,1.4vw,1.3125rem)] leading-[1.5] tracking-tight text-[#6b6b6b] md:mt-7"
+              />
+            </li>
           </ul>
         </div>
-
-        <motion.p
-          className="pointer-events-none absolute bottom-0 left-6 z-10 whitespace-nowrap font-swiss text-[clamp(4.5rem,18vw,12rem)] font-black leading-[0.85] tracking-tighter uppercase md:left-10"
-          aria-label={HOME_LOCKED_SEASON}
-          {...fadeUp(0.2)}
-        >
-          {HOME_LOCKED_SEASON}
-        </motion.p>
       </section>
 
-      {/* ── 03 Gallery ── */}
+      {/* ── Gallery ── */}
       <section
         aria-labelledby="home-gallery-heading"
-        className="relative border-t-2 border-black dark:border-white"
+        className="relative w-full"
       >
-        <div className="pointer-events-none absolute inset-y-0 left-[12%] hidden w-px bg-black/10 dark:bg-white/10 md:block" />
-        <div className="pointer-events-none absolute inset-y-0 left-[72%] hidden w-px bg-black/10 dark:bg-white/10 md:block" />
-
-        <div className="relative py-10 md:py-12">
-          <motion.div className="mb-6 flex items-baseline gap-3 md:mb-8" {...fadeUp(0)}>
-            <SectionIndex value={t.home.gallery.index} />
-            <h2
-              id="home-gallery-heading"
-              className="font-swiss text-xs font-medium tracking-[0.2em] text-[#666666] uppercase"
-            >
-              {t.home.gallery.label}
-            </h2>
-          </motion.div>
-
-          {/* Drag gallery with release momentum */}
-          <motion.div {...fadeUp(0.08)}>
-            <GalleryStrip reducedMotion={reducedMotion} />
-          </motion.div>
+        <div className="relative pb-8 md:pb-8">
+          <motion.h2
+            id="home-gallery-heading"
+            className="font-swiss text-[clamp(3rem,12vw,4.5rem)] font-bold uppercase leading-[0.92] tracking-tighter md:text-[11.5vw]"
+            {...fadeUp(0)}
+          >
+            {t.home.gallery.label}
+          </motion.h2>
+          <div
+            aria-hidden="true"
+            className="mt-2 h-[3px] w-full bg-black dark:bg-white"
+          />
         </div>
+
+        <motion.div className="pb-20 md:pb-12" {...fadeUp(0.08)}>
+          <GalleryStrip reducedMotion={reducedMotion} />
+        </motion.div>
       </section>
+
 
       {/* ── 04 Fall enrollment CTA ── */}
       <section
@@ -546,7 +591,7 @@ export function HomeWireframes() {
         className="relative border-t-2 border-b-2 border-black dark:border-white"
       >
         <motion.div
-          className="flex flex-col gap-6 py-10 md:flex-row md:items-end md:justify-between md:gap-10 md:py-14"
+          className="flex flex-col gap-6 py-14 md:flex-row md:items-end md:justify-between md:gap-10 md:py-14"
           {...fadeUp(0)}
         >
           <div className="flex flex-col gap-3">

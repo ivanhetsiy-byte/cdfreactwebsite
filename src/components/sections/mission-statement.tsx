@@ -2,30 +2,16 @@
 
 import Image from "next/image";
 import {
-  motion,
-  useMotionValue,
-  useReducedMotion,
-  useTransform,
-  type MotionValue,
-} from "motion/react";
-import {
   useEffect,
   useRef,
   useState,
   type CSSProperties,
-  type ReactNode,
-  type RefObject,
 } from "react";
 
-import { useLenis } from "@/components/providers/ScrollProvider";
 import {
   MISSION_LOCKED_TITLE,
   useLanguage,
 } from "@/context/LanguageContext";
-import type { LenisApi } from "@/lib/lenis";
-
-/** ~4.5 viewport scrolls — mobile journey only. */
-const JOURNEY_HEIGHT = "450vh";
 
 /** Figma frame 64:6 — desktop canvas (unchanged). */
 const FRAME_W = 1422;
@@ -33,17 +19,6 @@ const FRAME_H = 1247;
 
 function pct(n: number, total: number) {
   return `${((n / total) * 100).toFixed(3)}%`;
-}
-
-/** Higher = snappier follow; lower = silkier under aggressive scroll. */
-const SCRUB_SMOOTH = 18;
-
-function clamp01(n: number) {
-  return Math.min(1, Math.max(0, n));
-}
-
-function damp(current: number, target: number, lambda: number, dt: number) {
-  return current + (target - current) * (1 - Math.exp(-lambda * dt));
 }
 
 const fadeMaskH: CSSProperties = {
@@ -78,163 +53,6 @@ function GrowsUnderline({ className = "" }: { className?: string }) {
   );
 }
 
-/**
- * Bidirectional scroll scrub with light damping.
- * Progress follows the finger both ways so scroll-back feels natural;
- * a simple opacity fade covers leaving the section toward the hero.
- */
-function useJourneyScroll(
-  sectionRef: RefObject<HTMLElement | null>,
-  reducedMotion: boolean | null,
-  lenis: LenisApi | null,
-  enabled: boolean,
-) {
-  const progress = useMotionValue(reducedMotion ? 1 : 0);
-  const exitFade = useMotionValue(1);
-
-  useEffect(() => {
-    if (!enabled) {
-      progress.set(0);
-      exitFade.set(1);
-      return;
-    }
-
-    if (reducedMotion) {
-      progress.set(1);
-      exitFade.set(1);
-      return;
-    }
-
-    let rafId = 0;
-    let running = true;
-    let raw = 0;
-    let smoothed = 0;
-    let exit = 1;
-    let lastTs = performance.now();
-
-    const readSample = () => {
-      const el = sectionRef.current;
-      if (!el) return { raw: 0, top: 0, bottom: 0 };
-      const rect = el.getBoundingClientRect();
-      const total = el.offsetHeight - window.innerHeight;
-      const next = total <= 0 ? 1 : clamp01(-rect.top / total);
-      return { raw: next, top: rect.top, bottom: rect.bottom };
-    };
-
-    const onScroll = () => {
-      const sample = readSample();
-      raw = sample.raw;
-
-      // Fade only when leaving the sticky track toward the hero.
-      // Inside the track, stay fully visible and scrub with progress.
-      if (sample.top > 0) {
-        exit = clamp01(1 - sample.top / window.innerHeight);
-      } else {
-        exit = 1;
-      }
-    };
-
-    const tick = (ts: number) => {
-      if (!running) return;
-      const dt = Math.min(0.05, (ts - lastTs) / 1000);
-      lastTs = ts;
-
-      smoothed = damp(smoothed, raw, SCRUB_SMOOTH, dt);
-      if (Math.abs(raw - smoothed) < 0.0004) smoothed = raw;
-
-      progress.set(smoothed);
-      exitFade.set(exit);
-
-      rafId = requestAnimationFrame(tick);
-    };
-
-    onScroll();
-    rafId = requestAnimationFrame(tick);
-
-    let unsub: (() => void) | undefined;
-    if (lenis && typeof lenis.on === "function") {
-      unsub = lenis.on("scroll", onScroll);
-    } else {
-      window.addEventListener("scroll", onScroll, { passive: true });
-    }
-    window.addEventListener("resize", onScroll);
-
-    return () => {
-      running = false;
-      cancelAnimationFrame(rafId);
-      unsub?.();
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-    };
-  }, [enabled, exitFade, lenis, progress, reducedMotion, sectionRef]);
-
-  return { progress, exitFade };
-}
-
-function GridRail({
-  progress,
-  range,
-  orientation,
-  style,
-}: {
-  progress: MotionValue<number>;
-  range: [number, number];
-  orientation: "horizontal" | "vertical";
-  style: CSSProperties;
-}) {
-  const scale = useTransform(progress, range, [0, 1]);
-  const opacity = useTransform(progress, range, [0, 0.35]);
-
-  return (
-    <motion.div
-      aria-hidden="true"
-      className={`pointer-events-none absolute bg-black dark:bg-white ${
-        orientation === "horizontal" ? "h-px origin-left" : "w-px origin-top"
-      }`}
-      style={{
-        ...style,
-        opacity,
-        ...(orientation === "horizontal"
-          ? { scaleX: scale, ...fadeMaskH }
-          : { scaleY: scale, ...fadeMaskV }),
-      }}
-    />
-  );
-}
-
-function JourneyWord({
-  progress,
-  range,
-  children,
-  className = "",
-  fromX = -12,
-  align = "left",
-}: {
-  progress: MotionValue<number>;
-  range: [number, number];
-  children: ReactNode;
-  className?: string;
-  fromX?: number;
-  align?: "left" | "center" | "right";
-}) {
-  const x = useTransform(progress, range, [`${fromX}vw`, "0vw"]);
-  const opacity = useTransform(progress, range, [0, 1]);
-  const alignClass =
-    align === "center"
-      ? "mx-auto text-center"
-      : align === "right"
-        ? "ml-auto text-right"
-        : "mr-auto text-left";
-
-  return (
-    <div className={`overflow-hidden ${alignClass}`}>
-      <motion.p className={className} style={{ x, opacity }}>
-        {children}
-      </motion.p>
-    </div>
-  );
-}
-
 /** Desktop Figma grid line (static). */
 function GridLine({
   orientation,
@@ -263,52 +81,33 @@ function GridLine({
   );
 }
 
+/** Mobile grid rail at final opacity (static). */
+function StaticGridRail({
+  orientation,
+  style,
+}: {
+  orientation: "horizontal" | "vertical";
+  style: CSSProperties;
+}) {
+  return (
+    <div
+      aria-hidden="true"
+      className={`pointer-events-none absolute bg-black opacity-35 dark:bg-white ${
+        orientation === "horizontal" ? "h-px" : "w-px"
+      }`}
+      style={{
+        ...style,
+        ...(orientation === "horizontal" ? fadeMaskH : fadeMaskV),
+      }}
+    />
+  );
+}
+
 export function MissionStatement() {
   const { t } = useLanguage();
-  const lenis = useLenis() as LenisApi | null;
-  const mobileTrackRef = useRef<HTMLDivElement>(null);
   const mobileImageRef = useRef<HTMLImageElement>(null);
   const desktopImageRef = useRef<HTMLImageElement>(null);
-  const [isMobile, setIsMobile] = useState(false);
   const [imageInView, setImageInView] = useState(false);
-  const reducedMotion = useReducedMotion();
-
-  useEffect(() => {
-    const mq = window.matchMedia("(max-width: 767px)");
-    const sync = () => setIsMobile(mq.matches);
-    sync();
-    mq.addEventListener("change", sync);
-    return () => mq.removeEventListener("change", sync);
-  }, []);
-
-  const { progress, exitFade } = useJourneyScroll(
-    mobileTrackRef,
-    reducedMotion,
-    lenis,
-    isMobile,
-  );
-
-  const stageLabel = useTransform(progress, (v): string => {
-    if (v < 0.18) return "01";
-    if (v < 0.38) return "02";
-    if (v < 0.56) return "03";
-    if (v < 0.74) return "04";
-    return "05";
-  });
-
-  const eyebrowOpacity = useTransform(progress, [0.04, 0.12], [0, 1]);
-  const eyebrowY = useTransform(progress, [0.04, 0.12], [20, 0]);
-
-  const diamondOpacity = useTransform(progress, [0.62, 0.74], [0, 1]);
-  const diamondScale = useTransform(progress, [0.62, 0.74], [0.88, 1]);
-
-  const underlineScale = useTransform(progress, [0.68, 0.78], [0, 1]);
-
-  const pedagogyOpacity = useTransform(progress, [0.74, 0.84], [0, 1]);
-  const pedagogyY = useTransform(progress, [0.74, 0.84], [28, 0]);
-
-  const closingOpacity = useTransform(progress, [0.86, 0.96], [0, 1]);
-  const closingY = useTransform(progress, [0.86, 0.96], [20, 0]);
 
   const wordClass =
     "font-swiss text-[clamp(4.5rem,22vw,13rem)] font-black leading-[0.86] tracking-tighter text-black dark:text-white";
@@ -339,167 +138,102 @@ export function MissionStatement() {
         {MISSION_LOCKED_TITLE.full}
       </h2>
 
-      {/* ── Mobile only — scroll journey ── */}
-      <div
-        ref={mobileTrackRef}
-        className="relative md:hidden"
-        style={{ height: JOURNEY_HEIGHT }}
-      >
-        <motion.div
-          className="sticky top-0 flex h-dvh w-full flex-col overflow-hidden px-5 py-8"
-          style={{ opacity: exitFade }}
+      {/* ── Mobile only — static layout ── */}
+      <div className="relative px-5 pt-36 pb-40 md:hidden">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 z-[15]"
         >
-          <div className="pointer-events-none absolute right-5 top-8 z-20 flex items-baseline gap-1 font-swiss text-xs tracking-[0.25em] text-[#666666] uppercase">
-            <motion.span className="tabular-nums text-black dark:text-white">
-              {stageLabel}
-            </motion.span>
-            <span aria-hidden="true">/</span>
-            <span>05</span>
-          </div>
+          <StaticGridRail
+            orientation="vertical"
+            style={{ left: "12%", top: "8%", height: "84%" }}
+          />
+          <StaticGridRail
+            orientation="vertical"
+            style={{ left: "38%", top: "0%", height: "100%" }}
+          />
+          <StaticGridRail
+            orientation="vertical"
+            style={{ left: "72%", top: "12%", height: "76%" }}
+          />
+          <StaticGridRail
+            orientation="vertical"
+            style={{ left: "88%", top: "20%", height: "60%" }}
+          />
+          <StaticGridRail
+            orientation="horizontal"
+            style={{ top: "22%", left: "4%", width: "92%" }}
+          />
+          <StaticGridRail
+            orientation="horizontal"
+            style={{ top: "48%", left: "0%", width: "70%" }}
+          />
+          <StaticGridRail
+            orientation="horizontal"
+            style={{ top: "72%", left: "18%", width: "78%" }}
+          />
+          <StaticGridRail
+            orientation="horizontal"
+            style={{ top: "88%", left: "8%", width: "60%" }}
+          />
+        </div>
 
-          {/* Grid rails sit above the diamond so lines cut across the photo */}
+        <div className="relative z-10 flex flex-col justify-between gap-24">
           <div
+            className="relative flex flex-col justify-center gap-5"
             aria-hidden="true"
-            className="pointer-events-none absolute inset-0 z-[15]"
           >
-            <GridRail
-              progress={progress}
-              range={[0.02, 0.14]}
-              orientation="vertical"
-              style={{ left: "12%", top: "8%", height: "84%" }}
-            />
-            <GridRail
-              progress={progress}
-              range={[0.08, 0.2]}
-              orientation="vertical"
-              style={{ left: "38%", top: "0%", height: "100%" }}
-            />
-            <GridRail
-              progress={progress}
-              range={[0.14, 0.26]}
-              orientation="vertical"
-              style={{ left: "72%", top: "12%", height: "76%" }}
-            />
-            <GridRail
-              progress={progress}
-              range={[0.18, 0.3]}
-              orientation="vertical"
-              style={{ left: "88%", top: "20%", height: "60%" }}
-            />
-            <GridRail
-              progress={progress}
-              range={[0.1, 0.22]}
-              orientation="horizontal"
-              style={{ top: "22%", left: "4%", width: "92%" }}
-            />
-            <GridRail
-              progress={progress}
-              range={[0.28, 0.4]}
-              orientation="horizontal"
-              style={{ top: "48%", left: "0%", width: "70%" }}
-            />
-            <GridRail
-              progress={progress}
-              range={[0.48, 0.6]}
-              orientation="horizontal"
-              style={{ top: "72%", left: "18%", width: "78%" }}
-            />
-            <GridRail
-              progress={progress}
-              range={[0.7, 0.82]}
-              orientation="horizontal"
-              style={{ top: "88%", left: "8%", width: "60%" }}
-            />
-          </div>
+            <div className="mr-auto overflow-hidden pr-[0.18em] text-left">
+              <p className={wordClass}>{MISSION_LOCKED_TITLE.where}</p>
+            </div>
 
-          <div className="relative z-10 flex min-h-0 flex-1 flex-col justify-between">
-            <motion.p
-              className="max-w-lg font-alt text-base font-normal tracking-tight text-black dark:text-white"
-              style={{ opacity: eyebrowOpacity, y: eyebrowY }}
-            >
-              {t.mission.jazzBalletAcro}
-            </motion.p>
+            <div className="mr-auto overflow-hidden pr-[0.18em] pl-[8%] text-left">
+              <p className={wordClass}>{MISSION_LOCKED_TITLE.talent}</p>
+            </div>
 
-            <div
-              className="relative flex flex-1 flex-col justify-center gap-1.5 py-6"
-              aria-hidden="true"
-            >
-              <JourneyWord
-                progress={progress}
-                range={[0.16, 0.3]}
-                className={wordClass}
-                fromX={-18}
-              >
-                {MISSION_LOCKED_TITLE.where}
-              </JourneyWord>
-
-              <JourneyWord
-                progress={progress}
-                range={[0.34, 0.48]}
-                className={`${wordClass} pl-[8%]`}
-                fromX={14}
-              >
-                {MISSION_LOCKED_TITLE.talent}
-              </JourneyWord>
-
-              <JourneyWord
-                progress={progress}
-                range={[0.52, 0.66]}
-                className={`${wordClass} italic pl-[16%]`}
-                fromX={-16}
-              >
+            <div className="mr-auto overflow-hidden pr-[0.18em] pl-[16%] text-left">
+              <p className={`${wordClass} italic`}>
                 <span className="relative inline-block">
                   {MISSION_LOCKED_TITLE.grows}
-                  <motion.span
-                    className="absolute inset-x-0 bottom-0 block origin-left"
-                    style={{ scaleX: underlineScale }}
-                  >
+                  <span className="absolute inset-x-0 bottom-0 block">
                     <GrowsUnderline />
-                  </motion.span>
+                  </span>
                 </span>
-              </JourneyWord>
-
-              <motion.div
-                className="relative z-0 mx-auto mt-6 overflow-hidden swiss-diamond"
-                style={{
-                  opacity: diamondOpacity,
-                  scale: diamondScale,
-                  width: "48vw",
-                  maxWidth: 200,
-                  aspectRatio: "333 / 512",
-                }}
-              >
-                <Image
-                  ref={mobileImageRef}
-                  src="/images/mission-dancer.jpg"
-                  alt="Dancer in a dynamic leap"
-                  fill
-                  sizes="48vw"
-                  className={`object-cover object-[38.34%_100%] ${
-                    imageInView
-                      ? "grayscale-0"
-                      : "grayscale brightness-95 contrast-105"
-                  }`}
-                />
-              </motion.div>
+              </p>
             </div>
 
-            <div className="flex flex-col gap-5 border-t-2 border-black pt-6 dark:border-white">
-              <motion.p
-                className="max-w-xl font-swiss text-[clamp(1.5rem,5.5vw,3.25rem)] font-black leading-[1.05] tracking-tight text-black dark:text-white"
-                style={{ opacity: pedagogyOpacity, y: pedagogyY }}
-              >
-                {t.mission.professionalPedagogy}
-              </motion.p>
-              <motion.p
-                className="font-swiss text-2xl leading-none text-[#666666]"
-                style={{ opacity: closingOpacity, y: closingY }}
-              >
-                {t.mission.danceForAllAges}
-              </motion.p>
+            <div
+              className="relative z-0 mx-auto mt-20 overflow-hidden swiss-diamond"
+              style={{
+                width: "56vw",
+                maxWidth: 230,
+                aspectRatio: "333 / 512",
+              }}
+            >
+              <Image
+                ref={mobileImageRef}
+                src="/images/mission-dancer.jpg"
+                alt="Dancer in a dynamic leap"
+                fill
+                sizes="56vw"
+                className={`object-cover object-[38.34%_100%] ${
+                  imageInView
+                    ? "grayscale-0"
+                    : "grayscale brightness-95 contrast-105"
+                }`}
+              />
             </div>
           </div>
-        </motion.div>
+
+          <div className="flex flex-col gap-8 border-t-2 border-black pt-12 dark:border-white">
+            <p className="max-w-xl font-swiss text-[clamp(1.5rem,5.5vw,3.25rem)] font-black leading-[1.05] tracking-tight text-black dark:text-white">
+              {t.mission.professionalPedagogy}
+            </p>
+            <p className="font-swiss text-2xl leading-none text-[#666666]">
+              {t.mission.danceForAllAges}
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* ── Desktop — original Figma canvas ── */}
@@ -531,7 +265,7 @@ export function MissionStatement() {
               alt="Dancer in a dynamic leap"
               fill
               sizes="24vw"
-              className={`object-cover object-[38.34%_100%] filter cursor-pointer will-change-transform transform-gpu backface-hidden [will-change:transform,filter] ${
+              className={`object-cover object-[38.34%_100%] transform-gpu backface-hidden [will-change:transform,filter] ${
                 imageInView
                   ? "grayscale-0 brightness-100 contrast-100"
                   : "grayscale hover:grayscale-0 brightness-95 contrast-105 hover:brightness-100 hover:contrast-100"

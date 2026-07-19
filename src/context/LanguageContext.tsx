@@ -24,7 +24,6 @@ export const MISSION_LOCKED_TITLE = {
 export const HOME_LOCKED_MOTTO = {
   line1: "ALWAYS TO THE TOP,",
   line2: "ALWAYS TOGETHER.",
-  full: "ALWAYS TO THE TOP, ALWAYS TOGETHER.",
 } as const;
 
 /** Hero discipline rail — locked English. */
@@ -62,13 +61,7 @@ type Dictionary = {
     danceForAllAges: string;
   };
   home: {
-    motto: {
-      index: string;
-      label: string;
-    };
     programs: {
-      index: string;
-      label: string;
       headline: string;
       body: string;
       cta: string;
@@ -76,7 +69,6 @@ type Dictionary = {
       recreational: { name: string; line: string };
     };
     gallery: {
-      index: string;
       label: string;
     };
     enrollmentCta: {
@@ -120,27 +112,20 @@ const dictionaries: Record<Language, Dictionary> = {
       danceForAllAges: "Dance for all",
     },
     home: {
-      motto: {
-        index: "01",
-        label: "Our Motto",
-      },
       programs: {
-        index: "02",
-        label: "Programs",
-        headline: "Ages 3–18",
+        headline: "Ages 3 - 18",
         body: "Competitive and recreational groups built for every stage of the journey.",
         cta: "View classes →",
         competitive: {
           name: "Competitive",
-          line: "Technique-driven training for dancers who want the stage.",
+          line: "Technique-driven training for dancers who want the stage. Structured classes build discipline, confidence, and teamwork while preparing students for competition and performance.",
         },
         recreational: {
           name: "Recreational",
-          line: "Joyful classes that build skill, confidence, and love of dance.",
+          line: "Welcoming classes that build foundational technique, creativity, and confidence. Designed for dancers who love to move and grow—without the commitment of competition.",
         },
       },
       gallery: {
-        index: "03",
         label: "Gallery",
       },
       enrollmentCta: {
@@ -182,27 +167,20 @@ const dictionaries: Record<Language, Dictionary> = {
       danceForAllAges: "Dance for all",
     },
     home: {
-      motto: {
-        index: "01",
-        label: "Наш девиз",
-      },
       programs: {
-        index: "02",
-        label: "Программы",
-        headline: "Возраст 3–18",
+        headline: "Возраст 3 - 18",
         body: "Соревновательные и любительские группы для каждого этапа пути.",
         cta: "Смотреть классы →",
         competitive: {
           name: "Соревновательные",
-          line: "Тренировки с акцентом на технику для тех, кто хочет сцену.",
+          line: "Тренировки с акцентом на технику для тех, кто хочет сцену. Структурированные занятия развивают дисциплину, уверенность и командный дух, готовя учеников к соревнованиям и выступлениям.",
         },
         recreational: {
           name: "Любительские",
-          line: "Занятия, которые дают навык, уверенность и любовь к танцу.",
+          line: "Доброжелательные занятия, которые дают базовую технику, креативность и уверенность. Для тех, кто любит двигаться и расти — без обязательств соревновательной программы.",
         },
       },
       gallery: {
-        index: "03",
         label: "Галерея",
       },
       enrollmentCta: {
@@ -244,27 +222,20 @@ const dictionaries: Record<Language, Dictionary> = {
       danceForAllAges: "Dance for all",
     },
     home: {
-      motto: {
-        index: "01",
-        label: "Наш девіз",
-      },
       programs: {
-        index: "02",
-        label: "Програми",
-        headline: "Вік 3–18",
+        headline: "Вік 3 - 18",
         body: "Змагальні та аматорські групи для кожного етапу шляху.",
         cta: "Дивитися класи →",
         competitive: {
           name: "Змагальні",
-          line: "Тренування з акцентом на техніку для тих, хто хоче сцену.",
+          line: "Тренування з акцентом на техніку для тих, хто хоче сцену. Структуровані заняття розвивають дисципліну, впевненість і командний дух, готуючи учнів до змагань і виступів.",
         },
         recreational: {
           name: "Аматорські",
-          line: "Заняття, що дають навичку, впевненість і любов до танцю.",
+          line: "Дружні заняття, що дають базову техніку, креативність і впевненість. Для тих, хто любить рухатися і зростати — без зобов’язань змагальної програми.",
         },
       },
       gallery: {
-        index: "03",
         label: "Галерея",
       },
       enrollmentCta: {
@@ -306,27 +277,20 @@ const dictionaries: Record<Language, Dictionary> = {
       danceForAllAges: "Dance for all",
     },
     home: {
-      motto: {
-        index: "01",
-        label: "私たちのモットー",
-      },
       programs: {
-        index: "02",
-        label: "プログラム",
-        headline: "対象年齢 3–18歳",
+        headline: "対象年齢 3 - 18歳",
         body: "競技グループとレクリエーショングループ — それぞれの段階に合わせて。",
         cta: "クラスを見る →",
         competitive: {
           name: "競技",
-          line: "ステージを目指すダンサーのための技術重視のトレーニング。",
+          line: "ステージを目指すダンサーのための技術重視のトレーニング。体系的なクラスで規律・自信・チームワークを養い、競技と公演に備えます。",
         },
         recreational: {
           name: "レクリエーション",
-          line: "スキルと自信、ダンスへの愛を育む楽しいクラス。",
+          line: "基礎技術・創造性・自信を育む、親しみやすいクラス。競技へのコミットなしで、動くことと成長を楽しむダンサーのために。",
         },
       },
       gallery: {
-        index: "03",
         label: "ギャラリー",
       },
       enrollmentCta: {

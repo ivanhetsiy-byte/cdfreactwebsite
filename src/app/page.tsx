@@ -84,7 +84,9 @@ export default function Home() {
 
       // Park at the true bottom while layout grows; race the instant height settles
       // (curtain is already lifting — expo ease-in keeps the first beats soft).
-      const SCROLL_MS = 1200;
+      // Mobile gets a longer glide: covering the same distance in 1.2s pushes too
+      // many pixels per frame and visibly stutters on phones.
+      const SCROLL_MS = isDesktop ? 1200 : 2000;
       const MAX_WAIT_MS = 900;
       const parkStartedAt = performance.now();
       let lastMax = -1;
