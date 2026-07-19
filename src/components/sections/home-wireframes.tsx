@@ -181,14 +181,6 @@ function CaretTypewriter({
   );
 }
 
-function SectionIndex({ value }: { value: string }) {
-  return (
-    <span className="font-swiss text-xs font-medium tracking-[0.25em] text-[#666666] uppercase tabular-nums">
-      {value}
-    </span>
-  );
-}
-
 function GalleryFigure({
   item,
   reducedMotion,
@@ -306,6 +298,9 @@ function GalleryStrip({
   );
 
   const onPointerDown = (e: PointerEvent<HTMLDivElement>) => {
+    // Touch devices use native momentum scrolling; the custom drag is
+    // only needed for mouse input, which can't drag-scroll natively.
+    if (e.pointerType !== "mouse") return;
     if (e.button !== 0) return;
     const el = scrollerRef.current;
     if (!el) return;
@@ -373,7 +368,7 @@ function GalleryStrip({
       onPointerMove={onPointerMove}
       onPointerUp={endDrag}
       onPointerCancel={endDrag}
-      className="-mx-6 flex cursor-grab gap-0 overflow-x-auto overscroll-x-contain no-scrollbar touch-pan-y select-none active:cursor-grabbing md:-mx-10"
+      className="-mx-6 flex cursor-grab gap-0 overflow-x-auto overscroll-x-contain no-scrollbar select-none active:cursor-grabbing md:-mx-10"
       style={{ WebkitOverflowScrolling: "touch" }}
     >
       {GALLERY_ITEMS.map((item) => (
@@ -581,39 +576,6 @@ export function HomeWireframes() {
 
         <motion.div className="pb-20 md:pb-12" {...fadeUp(0.08)}>
           <GalleryStrip reducedMotion={reducedMotion} />
-        </motion.div>
-      </section>
-
-
-      {/* ── 04 Fall enrollment CTA ── */}
-      <section
-        aria-labelledby="home-enrollment-heading"
-        className="relative border-t-2 border-b-2 border-black dark:border-white"
-      >
-        <motion.div
-          className="flex flex-col gap-6 py-14 md:flex-row md:items-end md:justify-between md:gap-10 md:py-14"
-          {...fadeUp(0)}
-        >
-          <div className="flex flex-col gap-3">
-            <SectionIndex value={t.home.enrollmentCta.index} />
-            <h2
-              id="home-enrollment-heading"
-              className="font-swiss text-[clamp(2rem,7vw,3.75rem)] font-black leading-[0.95] tracking-tighter"
-            >
-              {t.home.enrollmentCta.line}
-            </h2>
-          </div>
-
-          <Link
-            href="/contact"
-            onClick={(e) => {
-              e.preventDefault();
-              handleDelayedNavigation("/contact");
-            }}
-            className="inline-flex w-fit border-2 border-black bg-black px-8 py-3 font-swiss text-sm font-bold uppercase tracking-widest text-white transition-colors duration-150 hover:bg-white hover:text-black dark:border-white dark:bg-white dark:text-black dark:hover:bg-black dark:hover:text-white md:text-base"
-          >
-            {t.home.enrollmentCta.cta}
-          </Link>
         </motion.div>
       </section>
     </div>
