@@ -81,42 +81,17 @@ function GridLine({
   );
 }
 
-/** Mobile grid rail at final opacity (static). */
-function StaticGridRail({
-  orientation,
-  style,
-}: {
-  orientation: "horizontal" | "vertical";
-  style: CSSProperties;
-}) {
-  return (
-    <div
-      aria-hidden="true"
-      className={`pointer-events-none absolute bg-black opacity-35 dark:bg-white ${
-        orientation === "horizontal" ? "h-px" : "w-px"
-      }`}
-      style={{
-        ...style,
-        ...(orientation === "horizontal" ? fadeMaskH : fadeMaskV),
-      }}
-    />
-  );
-}
-
 export function MissionStatement() {
   const { t } = useLanguage();
-  const mobileImageRef = useRef<HTMLImageElement>(null);
   const desktopImageRef = useRef<HTMLImageElement>(null);
   const [imageInView, setImageInView] = useState(false);
 
   const wordClass =
-    "font-swiss text-[clamp(4.5rem,22vw,13rem)] font-black leading-[0.86] tracking-tighter text-black dark:text-white";
+    "font-swiss text-[clamp(5rem,25vw,14rem)] font-black leading-[0.86] tracking-tighter text-black dark:text-white";
 
   useEffect(() => {
-    const els = [mobileImageRef.current, desktopImageRef.current].filter(
-      (el): el is HTMLImageElement => el != null,
-    );
-    if (!els.length) return;
+    const el = desktopImageRef.current;
+    if (!el) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -124,7 +99,7 @@ export function MissionStatement() {
       },
       { root: null, rootMargin: "-20% 0px -20% 0px" },
     );
-    for (const el of els) observer.observe(el);
+    observer.observe(el);
     return () => observer.disconnect();
   }, []);
 
@@ -139,59 +114,18 @@ export function MissionStatement() {
       </h2>
 
       {/* ── Mobile only — static layout ── */}
-      <div className="relative px-5 pt-36 pb-40 md:hidden">
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 z-[15]"
-        >
-          <StaticGridRail
-            orientation="vertical"
-            style={{ left: "12%", top: "8%", height: "84%" }}
-          />
-          <StaticGridRail
-            orientation="vertical"
-            style={{ left: "38%", top: "0%", height: "100%" }}
-          />
-          <StaticGridRail
-            orientation="vertical"
-            style={{ left: "72%", top: "12%", height: "76%" }}
-          />
-          <StaticGridRail
-            orientation="vertical"
-            style={{ left: "88%", top: "20%", height: "60%" }}
-          />
-          <StaticGridRail
-            orientation="horizontal"
-            style={{ top: "22%", left: "4%", width: "92%" }}
-          />
-          <StaticGridRail
-            orientation="horizontal"
-            style={{ top: "48%", left: "0%", width: "70%" }}
-          />
-          <StaticGridRail
-            orientation="horizontal"
-            style={{ top: "72%", left: "18%", width: "78%" }}
-          />
-          <StaticGridRail
-            orientation="horizontal"
-            style={{ top: "88%", left: "8%", width: "60%" }}
-          />
-        </div>
-
-        <div className="relative z-10 flex flex-col justify-between gap-24">
-          <div
-            className="relative flex flex-col justify-center gap-5"
-            aria-hidden="true"
-          >
-            <div className="mr-auto overflow-hidden pr-[0.18em] text-left">
+      <div className="relative px-5 pt-32 pb-28 md:hidden">
+        <div className="relative z-10 flex flex-col gap-32">
+          <div className="-ml-4 flex flex-col gap-10" aria-hidden="true">
+            <div className="mr-auto text-left">
               <p className={wordClass}>{MISSION_LOCKED_TITLE.where}</p>
             </div>
 
-            <div className="mr-auto overflow-hidden pr-[0.18em] pl-[8%] text-left">
+            <div className="mr-auto pl-[8%] text-left">
               <p className={wordClass}>{MISSION_LOCKED_TITLE.talent}</p>
             </div>
 
-            <div className="mr-auto overflow-hidden pr-[0.18em] pl-[16%] text-left">
+            <div className="mr-auto pl-[14%] text-left">
               <p className={`${wordClass} italic`}>
                 <span className="relative inline-block">
                   {MISSION_LOCKED_TITLE.grows}
@@ -201,37 +135,25 @@ export function MissionStatement() {
                 </span>
               </p>
             </div>
-
-            <div
-              className="relative z-0 mx-auto mt-20 overflow-hidden swiss-diamond"
-              style={{
-                width: "56vw",
-                maxWidth: 230,
-                aspectRatio: "333 / 512",
-              }}
-            >
-              <Image
-                ref={mobileImageRef}
-                src="/images/mission-dancer.jpg"
-                alt="Dancer in a dynamic leap"
-                fill
-                sizes="56vw"
-                className={`object-cover object-[38.34%_100%] ${
-                  imageInView
-                    ? "grayscale-0"
-                    : "grayscale brightness-95 contrast-105"
-                }`}
-              />
-            </div>
           </div>
 
-          <div className="flex flex-col gap-8 border-t-2 border-black pt-12 dark:border-white">
-            <p className="max-w-xl font-swiss text-[clamp(1.5rem,5.5vw,3.25rem)] font-black leading-[1.05] tracking-tight text-black dark:text-white">
-              {t.mission.professionalPedagogy}
-            </p>
-            <p className="font-swiss text-2xl leading-none text-[#666666]">
-              {t.mission.danceForAllAges}
-            </p>
+          <div className="flex flex-col">
+            <div className="border-t border-black py-5 dark:border-white">
+              <p className="text-right font-swiss text-[clamp(1.375rem,6vw,2rem)] font-black leading-[1.05] tracking-tight text-black dark:text-white">
+                {t.mission.professionalPedagogy}
+              </p>
+            </div>
+
+            <div className="border-t border-black py-5 dark:border-white">
+              <p className="text-right font-swiss text-[clamp(1.375rem,6vw,2rem)] font-black leading-[1.05] tracking-tight text-[#666666]">
+                {t.mission.danceForAllAges}
+              </p>
+            </div>
+
+            <div
+              aria-hidden="true"
+              className="h-0.5 w-full bg-black dark:bg-white"
+            />
           </div>
         </div>
       </div>
