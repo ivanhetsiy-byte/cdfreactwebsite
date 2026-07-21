@@ -44,11 +44,11 @@ const TITLE_CLASS =
   "font-swiss text-[clamp(3.5rem,14vw,8rem)] font-bold uppercase leading-[0.88] tracking-tighter md:text-[13vw]";
 
 type LetterMotion = {
-  initial: Record<string, number>;
-  animate: Record<string, number>;
+  initial: Record<string, string | number>;
+  animate: Record<string, string | number>;
   transition: Transition;
   stagger: number;
-  style?: CSSProperties;
+  style?: CSSProperties & { transformPerspective?: number };
 };
 
 /** Discipline-specific letter entrances — each mirrors the movement quality of the class. */
