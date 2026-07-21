@@ -1,5 +1,6 @@
 "use client";
 
+import { Check, Copy } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -78,6 +79,44 @@ function formatPhoneInput(raw: string) {
 
 function phoneDigitCount(formatted: string) {
   return formatted.replace(/\D/g, "").length;
+}
+
+function CopyButton({ value, label }: { value: string; label: string }) {
+  const [copied, setCopied] = useState(false);
+  const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (resetTimerRef.current) clearTimeout(resetTimerRef.current);
+    };
+  }, []);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(true);
+      if (resetTimerRef.current) clearTimeout(resetTimerRef.current);
+      resetTimerRef.current = setTimeout(() => setCopied(false), 1600);
+    } catch {
+      // Clipboard may be unavailable; keep UI quiet.
+    }
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={handleCopy}
+      aria-label={copied ? `${label} copied` : `Copy ${label}`}
+      title={copied ? "Copied" : `Copy ${label}`}
+      className="inline-flex shrink-0 cursor-pointer items-center justify-center rounded-sm p-1.5 text-[#999999] transition-colors duration-150 hover:text-black focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black dark:text-[#666666] dark:hover:text-white dark:focus-visible:outline-white"
+    >
+      {copied ? (
+        <Check className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
+      ) : (
+        <Copy className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
+      )}
+    </button>
+  );
 }
 
 function useCyclingTypewriter(
@@ -372,7 +411,7 @@ export function ContactWireframes() {
                         e.preventDefault();
                         handleDelayedNavigation("/");
                       }}
-                      className="inline-flex w-fit cursor-pointer border border-black bg-black px-8 py-4 font-swiss text-sm font-bold uppercase tracking-[0.18em] text-white transition-colors duration-200 hover:bg-transparent hover:text-black dark:border-white dark:bg-white dark:text-black dark:hover:bg-transparent dark:hover:text-white md:text-base"
+                      className="inline-flex w-fit cursor-pointer border-2 border-black bg-black px-10 py-4 font-swiss text-base font-bold uppercase tracking-widest text-white transition-colors duration-150 hover:bg-white hover:text-black dark:border-white dark:bg-white dark:text-black dark:hover:bg-black dark:hover:text-white md:text-lg"
                     >
                       {COPY.success.home}
                     </Link>
@@ -521,7 +560,7 @@ export function ContactWireframes() {
                     <button
                       type="submit"
                       disabled={submitting}
-                      className="inline-flex w-fit cursor-pointer border border-black bg-transparent px-8 py-4 font-swiss text-sm font-bold uppercase tracking-[0.18em] text-black transition-colors duration-200 hover:bg-black hover:text-white disabled:cursor-not-allowed disabled:opacity-50 dark:border-white dark:text-white dark:hover:bg-white dark:hover:text-black md:text-base"
+                      className="inline-flex w-fit cursor-pointer border-2 border-black bg-transparent px-10 py-4 font-swiss text-base font-bold uppercase tracking-widest text-black transition-colors duration-150 hover:bg-black hover:text-white disabled:cursor-not-allowed disabled:opacity-50 dark:border-white dark:text-white dark:hover:bg-white dark:hover:text-black md:text-lg"
                     >
                       {submitting ? COPY.form.submitting : COPY.form.submit}
                     </button>
@@ -547,29 +586,47 @@ export function ContactWireframes() {
           >
             <div className="flex flex-col gap-2 border-t border-black py-6 dark:border-white">
               <p className={labelClass}>{COPY.details.email.label}</p>
-              <a
-                href={`mailto:${COPY.details.email.value}`}
-                className="w-fit font-swiss text-[clamp(1.125rem,1.6vw,1.5rem)] font-bold tracking-tight text-black transition-colors duration-150 hover:text-[#666666] dark:text-white dark:hover:text-[#999999]"
-              >
-                {COPY.details.email.value}
-              </a>
+              <div className="flex items-center gap-2">
+                <a
+                  href={`mailto:${COPY.details.email.value}`}
+                  className="w-fit font-swiss text-[clamp(1.125rem,1.6vw,1.5rem)] font-bold tracking-tight text-black transition-colors duration-150 hover:text-[#666666] dark:text-white dark:hover:text-[#999999]"
+                >
+                  {COPY.details.email.value}
+                </a>
+                <CopyButton
+                  value={COPY.details.email.value}
+                  label={COPY.details.email.label}
+                />
+              </div>
             </div>
 
             <div className="flex flex-col gap-2 border-t border-black/20 py-6 dark:border-white/20">
               <p className={labelClass}>{COPY.details.phone.label}</p>
-              <a
-                href={`tel:${COPY.details.phone.value.replace(/[^+\d]/g, "")}`}
-                className="w-fit font-swiss text-[clamp(1.125rem,1.6vw,1.5rem)] font-bold tracking-tight text-black transition-colors duration-150 hover:text-[#666666] dark:text-white dark:hover:text-[#999999]"
-              >
-                {COPY.details.phone.value}
-              </a>
+              <div className="flex items-center gap-2">
+                <a
+                  href={`tel:${COPY.details.phone.value.replace(/[^+\d]/g, "")}`}
+                  className="w-fit font-swiss text-[clamp(1.125rem,1.6vw,1.5rem)] font-bold tracking-tight text-black transition-colors duration-150 hover:text-[#666666] dark:text-white dark:hover:text-[#999999]"
+                >
+                  {COPY.details.phone.value}
+                </a>
+                <CopyButton
+                  value={COPY.details.phone.value}
+                  label={COPY.details.phone.label}
+                />
+              </div>
             </div>
 
             <div className="flex flex-col gap-2 border-t border-black/20 py-6 dark:border-white/20">
               <p className={labelClass}>{COPY.details.address.label}</p>
-              <p className="font-alt text-[clamp(1rem,1.3vw,1.25rem)] leading-[1.5] tracking-tight text-[#6b6b6b]">
-                {COPY.details.address.value}
-              </p>
+              <div className="flex items-start gap-2">
+                <p className="font-alt text-[clamp(1rem,1.3vw,1.25rem)] leading-[1.5] tracking-tight text-[#6b6b6b]">
+                  {COPY.details.address.value}
+                </p>
+                <CopyButton
+                  value={COPY.details.address.value}
+                  label={COPY.details.address.label}
+                />
+              </div>
             </div>
 
             <div className="flex flex-col gap-4 border-t border-black/20 py-6 dark:border-white/20">

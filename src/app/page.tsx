@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { Hero } from "@/components/sections/hero";
 import { HomeWireframes } from "@/components/sections/home-wireframes";
@@ -14,6 +14,25 @@ export default function Home() {
   const playIntroScrollRef = useRef(true);
   /** True when we should race from the bottom of the page up to the hero. */
   const returnFromSubpageRef = useRef(false);
+  /**
+   * Scroll-triggered home reveals (motto, Ages typewriter). `0` = deferred;
+   * increment when armed so observers remount fresh after the return race.
+   */
+  const [revealEpoch, setRevealEpoch] = useState(0);
+  const returnFinishedRef = useRef(false);
+
+  useLayoutEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      if (sessionStorage.getItem("fromSubpage") === "true") {
+        // Stay at epoch 0 until settled finishReturnScroll.
+        return;
+      }
+    } catch {
+      // sessionStorage unavailable
+    }
+    setRevealEpoch(1);
+  }, []);
 
   // Stationary start at (0,0) behind the transition mask — or bottom→top when
   // returning from another page. Desktop freezes Lenis until first-scroll handoff.
@@ -22,7 +41,8 @@ export default function Home() {
 
     try {
       if (sessionStorage.getItem("fromSubpage") === "true") {
-        sessionStorage.removeItem("fromSubpage");
+        // Keep the flag until finishReturnScroll so ScrollProvider skips
+        // resetScrollToTop and doesn't fight the bottom→top race.
         playIntroScrollRef.current = false;
         returnFromSubpageRef.current = true;
       }
@@ -37,17 +57,39 @@ export default function Home() {
     const fromSubpage = returnFromSubpageRef.current;
 
     let rafId = 0;
+    let settleRafId = 0;
     let attempts = 0;
     let returnUnlockId: ReturnType<typeof setTimeout> | undefined;
     let cancelled = false;
 
+    const armRevealsAfterSettle = () => {
+      // Two frames after scroll settles at top before observers attach.
+      settleRafId = requestAnimationFrame(() => {
+        settleRafId = requestAnimationFrame(() => {
+          if (cancelled) return;
+          setRevealEpoch((n) => (n === 0 ? 1 : n + 1));
+        });
+      });
+    };
+
     const finishReturnScroll = () => {
+      if (returnFinishedRef.current) return;
+      returnFinishedRef.current = true;
+
       if (returnUnlockId !== undefined) {
         clearTimeout(returnUnlockId);
         returnUnlockId = undefined;
       }
       isAnimatingRef.current = false;
       setIsAnimating(false);
+
+      try {
+        sessionStorage.removeItem("fromSubpage");
+      } catch {
+        // sessionStorage unavailable
+      }
+
+      armRevealsAfterSettle();
     };
 
     const getMaxScroll = () => {
@@ -74,6 +116,8 @@ export default function Home() {
       if (!lenis) {
         if (attempts++ < 120) {
           rafId = requestAnimationFrame(startReturnFromSubpage);
+        } else {
+          finishReturnScroll();
         }
         return;
       }
@@ -178,6 +222,7 @@ export default function Home() {
     return () => {
       cancelled = true;
       cancelAnimationFrame(rafId);
+      cancelAnimationFrame(settleRafId);
       if (returnUnlockId !== undefined) clearTimeout(returnUnlockId);
       const active = getLenis();
       if (active) active.isLocked = false;
@@ -285,7 +330,7 @@ export default function Home() {
 
       <Hero />
       <MissionStatement />
-      <HomeWireframes />
+      <HomeWireframes revealEpoch={revealEpoch} />
     </main>
   );
 }

@@ -127,21 +127,14 @@ const SOCIAL_META = [
 type SocialLinksProps = {
   className?: string;
   iconGap?: string;
-  /** Larger icons for the homepage hero strip */
-  size?: "default" | "hero";
 };
 
 export function SocialLinks({
   className = "",
   iconGap = "gap-5 md:gap-6",
-  size = "default",
 }: SocialLinksProps) {
   const reactId = useId().replace(/:/g, "");
   const gradientId = `insta-gradient-${reactId}`;
-  const sizeClass =
-    size === "hero"
-      ? "w-[32px] h-[32px] md:w-[38px] md:h-[38px] block shrink-0"
-      : iconClassName;
 
   return (
     <div
@@ -158,16 +151,16 @@ export function SocialLinks({
           className={`${social.className} select-none swiss-no-select`}
         >
           {social.kind === "instagram" ? (
-            <InstagramIcon gradientId={gradientId} sizeClass={sizeClass} />
+            <InstagramIcon gradientId={gradientId} sizeClass={iconClassName} />
           ) : null}
           {social.kind === "tiktok" ? (
-            <TikTokIcon sizeClass={sizeClass} />
+            <TikTokIcon sizeClass={iconClassName} />
           ) : null}
           {social.kind === "facebook" ? (
-            <FacebookIcon sizeClass={sizeClass} />
+            <FacebookIcon sizeClass={iconClassName} />
           ) : null}
           {social.kind === "youtube" ? (
-            <YouTubeIcon sizeClass={sizeClass} />
+            <YouTubeIcon sizeClass={iconClassName} />
           ) : null}
         </a>
       ))}

@@ -112,12 +112,15 @@ function CaretTypewriter({
   className,
   id,
   reducedMotion,
+  revealEpoch = 1,
   charMs = 72,
 }: {
   text: string;
   className?: string;
   id?: string;
   reducedMotion: boolean | null;
+  /** `0` = deferred (no observer); `>0` arms a fresh observer. */
+  revealEpoch?: number;
   charMs?: number;
 }) {
   const [visible, setVisible] = useState(0);
@@ -127,9 +130,15 @@ function CaretTypewriter({
   useEffect(() => {
     setVisible(0);
     setStarted(false);
-  }, [text]);
+  }, [text, revealEpoch]);
 
   useEffect(() => {
+    if (revealEpoch <= 0) {
+      setVisible(0);
+      setStarted(false);
+      return;
+    }
+
     if (reducedMotion) {
       setVisible(text.length);
       setStarted(true);
@@ -151,7 +160,7 @@ function CaretTypewriter({
 
     observer.observe(el);
     return () => observer.disconnect();
-  }, [reducedMotion, text]);
+  }, [revealEpoch, reducedMotion, text]);
 
   useEffect(() => {
     if (!started || reducedMotion) return;
@@ -178,6 +187,75 @@ function CaretTypewriter({
         />
       )}
     </h2>
+  );
+}
+
+/** Motto line — controlled slide-in; only observes when revealEpoch > 0. */
+function MottoLine({
+  children,
+  fromX,
+  delay = 0,
+  className,
+  reducedMotion,
+  revealEpoch,
+}: {
+  children: string;
+  fromX: number;
+  delay?: number;
+  className?: string;
+  reducedMotion: boolean | null;
+  revealEpoch: number;
+}) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const [inView, setInView] = useState(false);
+
+  useEffect(() => {
+    setInView(false);
+    if (revealEpoch <= 0) return;
+    if (reducedMotion) {
+      setInView(true);
+      return;
+    }
+
+    const el = ref.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) {
+          setInView(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.25 },
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [revealEpoch, reducedMotion]);
+
+  if (reducedMotion) {
+    return <span className={className}>{children}</span>;
+  }
+
+  return (
+    <motion.span
+      ref={ref}
+      className={className}
+      initial={{ opacity: 0, x: fromX }}
+      animate={
+        revealEpoch > 0 && inView
+          ? { opacity: 1, x: 0 }
+          : { opacity: 0, x: fromX }
+      }
+      transition={{
+        duration: 0.7,
+        delay: revealEpoch > 0 && inView ? delay : 0,
+        ease: [0.22, 1, 0.36, 1],
+      }}
+    >
+      {children}
+    </motion.span>
   );
 }
 
@@ -389,7 +467,12 @@ function GalleryStrip({
   );
 }
 
-export function HomeWireframes() {
+export function HomeWireframes({
+  revealEpoch = 1,
+}: {
+  /** `0` = deferred during return race; `>0` arms motto/Ages observers. */
+  revealEpoch?: number;
+}) {
   const { t } = useLanguage();
   const pathname = usePathname();
   const router = useRouter();
@@ -432,16 +515,6 @@ export function HomeWireframes() {
           viewport: { once: true, amount: 0.25 },
         };
 
-  const slideIn = (fromX: number, delay = 0) =>
-    reducedMotion
-      ? { initial: false as const, whileInView: undefined, transition: undefined }
-      : {
-          initial: { opacity: 0, x: fromX },
-          whileInView: { opacity: 1, x: 0 },
-          transition: { duration: 0.7, delay, ease: [0.22, 1, 0.36, 1] as const },
-          viewport: { once: true, amount: 0.25 },
-        };
-
   const mottoLine1 = HOME_LOCKED_MOTTO.line1.replace(/[.,]$/, "");
   const mottoLine2 = HOME_LOCKED_MOTTO.line2.replace(/[.,]$/, "");
 
@@ -456,18 +529,26 @@ export function HomeWireframes() {
           id="home-motto-heading"
           className="font-swiss text-[clamp(1.85rem,8vw,3rem)] font-bold uppercase leading-[0.8] tracking-tighter md:text-[8.55vw]"
         >
-          <motion.span
+          <MottoLine
+            key={`motto-1-${revealEpoch}`}
+            fromX={-96}
+            delay={0}
+            reducedMotion={reducedMotion}
+            revealEpoch={revealEpoch}
             className="block whitespace-nowrap"
-            {...slideIn(-96, 0)}
           >
             {mottoLine1}
-          </motion.span>
-          <motion.span
+          </MottoLine>
+          <MottoLine
+            key={`motto-2-${revealEpoch}`}
+            fromX={96}
+            delay={0.08}
+            reducedMotion={reducedMotion}
+            revealEpoch={revealEpoch}
             className="mt-[0.08em] block whitespace-nowrap pl-[1.4em]"
-            {...slideIn(96, 0.08)}
           >
             {mottoLine2}
-          </motion.span>
+          </MottoLine>
         </h2>
       </section>
 
@@ -482,6 +563,7 @@ export function HomeWireframes() {
             id="home-programs-heading"
             text={t.home.programs.headline}
             reducedMotion={reducedMotion}
+            revealEpoch={revealEpoch}
             className="font-swiss text-[clamp(3rem,12vw,4.5rem)] font-bold leading-[0.92] tracking-tight md:text-[13.4vw]"
           />
 
@@ -576,6 +658,35 @@ export function HomeWireframes() {
 
         <motion.div className="pb-20 md:pb-12" {...fadeUp(0.08)}>
           <GalleryStrip reducedMotion={reducedMotion} />
+        </motion.div>
+      </section>
+
+      {/* ── Fall enrollment CTA ── */}
+      <section
+        aria-labelledby="home-enrollment-heading"
+        className="relative w-full pb-20 md:pb-14"
+      >
+        <motion.div
+          className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between md:gap-10"
+          {...fadeUp(0)}
+        >
+          <h2
+            id="home-enrollment-heading"
+            className="font-swiss text-[clamp(2rem,7vw,3.75rem)] font-black leading-[0.95] tracking-tighter"
+          >
+            {t.home.enrollmentCta.line}
+          </h2>
+
+          <Link
+            href="/contact"
+            onClick={(e) => {
+              e.preventDefault();
+              handleDelayedNavigation("/contact");
+            }}
+            className="inline-flex w-fit border-2 border-black bg-black px-10 py-4 font-swiss text-base font-bold uppercase tracking-widest text-white transition-colors duration-150 hover:bg-white hover:text-black dark:border-white dark:bg-white dark:text-black dark:hover:bg-black dark:hover:text-white md:text-lg"
+          >
+            {t.home.enrollmentCta.cta}
+          </Link>
         </motion.div>
       </section>
     </div>

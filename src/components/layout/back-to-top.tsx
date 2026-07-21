@@ -1,12 +1,15 @@
 "use client";
 
 import { ArrowUp } from "lucide-react";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { getLenis, sineEaseInOut } from "@/lib/lenis";
 
 export function BackToTop() {
+  const pathname = usePathname();
   const [showTopButton, setShowTopButton] = useState(false);
+  const hideOnDesktop = pathname === "/contact";
 
   useEffect(() => {
     let unsubscribe: (() => void) | undefined;
@@ -39,7 +42,7 @@ export function BackToTop() {
 
   return (
     <div
-      className={`fixed bottom-10 right-6 md:right-10 z-50 flex flex-col items-center gap-2 transition-all duration-500 ease-out pointer-events-none ${showTopButton ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
+      className={`fixed bottom-10 right-6 md:right-10 z-50 flex flex-col items-center gap-2 transition-all duration-500 ease-out pointer-events-none ${showTopButton ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"} ${hideOnDesktop ? "md:hidden" : ""}`}
     >
       <button
         type="button"

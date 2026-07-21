@@ -2,22 +2,8 @@
 
 import Lenis from "lenis";
 import { usePathname } from "next/navigation";
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import "lenis/dist/lenis.css";
-
-const LenisContext = createContext<Lenis | null>(null);
-
-/** Access the active Lenis instance from any client child. */
-export function useLenis() {
-  return useContext(LenisContext);
-}
 
 type LenisWindow = Window & { lenis: Lenis };
 
@@ -43,7 +29,6 @@ function resetScrollToTop() {
  * (e.g. back-to-top) stays pinned to the monitor viewport.
  */
 export function ScrollProvider({ children }: { children: ReactNode }) {
-  const [lenis, setLenis] = useState<Lenis | null>(null);
   const pathname = usePathname();
   const isFirstPathEffect = useRef(true);
 
@@ -60,7 +45,6 @@ export function ScrollProvider({ children }: { children: ReactNode }) {
     instance.scrollTo(0, { immediate: true });
 
     (window as unknown as LenisWindow).lenis = instance;
-    setLenis(instance);
 
     let rafId = 0;
     const raf = (time: number) => {
@@ -76,7 +60,6 @@ export function ScrollProvider({ children }: { children: ReactNode }) {
       if (win.lenis === instance) {
         (window as Window & { lenis: Record<string, unknown> }).lenis = {};
       }
-      setLenis(null);
     };
   }, []);
 
@@ -96,7 +79,5 @@ export function ScrollProvider({ children }: { children: ReactNode }) {
     resetScrollToTop();
   }, [pathname]);
 
-  return (
-    <LenisContext.Provider value={lenis}>{children}</LenisContext.Provider>
-  );
+  return <>{children}</>;
 }

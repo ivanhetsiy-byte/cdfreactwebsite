@@ -40,14 +40,6 @@ export const quinticEase = (t: number) =>
 export const sineEaseInOut = (t: number) =>
   -(Math.cos(Math.PI * t) - 1) / 2;
 
-/** Exponential ease-in — slow start, rapid build-up. */
-export const expoEaseIn = (t: number) =>
-  t === 0 ? 0 : Math.pow(2, 10 * t - 10);
-
-/** Negative-exponential ease-out — fast start, asymptotic slowdown. */
-export const expoEaseOut = (t: number) =>
-  t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
-
 /** Exponential build-up then negative-exponential slowdown. */
 export const expoEaseInOut = (t: number) => {
   if (t === 0) return 0;

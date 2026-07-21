@@ -14,7 +14,7 @@ const COPY = {
   headline: "About Us",
   headerBody:
     "CDF is a competitive and recreational dance studio where dancers aged 3–18 train, perform, and grow together.",
-  headerCta: "Meet our staff →",
+  headerCta: "MEET OUR STAFF →",
   intro:
     "Always to the top, always together — a studio built on professional pedagogy and the belief that every dancer deserves a stage.",
   story: {
@@ -33,6 +33,10 @@ const COPY = {
       {
         name: "Ballet",
         line: "The technical foundation: posture, lines, and discipline that elevate every other discipline.",
+      },
+      {
+        name: "Jazz",
+        line: "Sharp musicality, style, and stage presence — from clean isolations to full-out performance energy.",
       },
       {
         name: "Acrobatics",
@@ -167,7 +171,7 @@ export function AboutWireframes() {
                   e.preventDefault();
                   handleDelayedNavigation("/staff");
                 }}
-                className="inline-flex w-fit font-swiss text-[clamp(1rem,1.6vw,1.5rem)] font-bold leading-[1.45] uppercase tracking-tight text-[#616161] transition-colors duration-150 hover:text-black dark:hover:text-white"
+                className="inline-flex w-fit font-alt text-[clamp(1rem,1.6vw,1.5rem)] font-bold leading-[1.45] uppercase tracking-tight text-[#616161] transition-colors duration-150 hover:text-black dark:hover:text-white"
               >
                 {COPY.headerCta}
               </Link>
@@ -302,7 +306,7 @@ export function AboutWireframes() {
               className="flex flex-col gap-3 border-t border-black pt-5 dark:border-white"
               {...fadeUp(i * 0.08)}
             >
-              <dd className="order-1 font-swiss-compressed text-[clamp(4.5rem,14vw,8rem)] font-black leading-[0.85] tracking-tighter md:text-[9vw]">
+              <dd className="order-1 font-swiss text-[clamp(4.5rem,14vw,8rem)] font-black leading-[0.85] tracking-tighter md:text-[9vw]">
                 {stat.value}
               </dd>
               <dt className="order-2 font-swiss text-xs font-medium tracking-[0.24em] text-[#666666] uppercase md:text-sm">
@@ -333,7 +337,7 @@ export function AboutWireframes() {
               e.preventDefault();
               handleDelayedNavigation("/contact");
             }}
-            className="mt-8 inline-flex w-fit font-swiss text-[clamp(1.125rem,2vw,1.75rem)] font-bold uppercase leading-[1.45] tracking-tight text-[#616161] transition-colors duration-150 hover:text-black dark:hover:text-white md:mt-[2vw]"
+            className="mt-8 inline-flex w-fit border-2 border-black bg-black px-10 py-4 font-swiss text-base font-bold uppercase tracking-widest text-white transition-colors duration-150 hover:bg-white hover:text-black dark:border-white dark:bg-white dark:text-black dark:hover:bg-black dark:hover:text-white md:mt-[2vw] md:text-lg"
           >
             {COPY.cta.button}
           </Link>

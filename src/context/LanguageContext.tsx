@@ -71,6 +71,10 @@ type Dictionary = {
     gallery: {
       label: string;
     };
+    enrollmentCta: {
+      line: string;
+      cta: string;
+    };
   };
   settings: {
     close: string;
@@ -123,6 +127,10 @@ const dictionaries: Record<Language, Dictionary> = {
       gallery: {
         label: "Gallery",
       },
+      enrollmentCta: {
+        line: "Fall enrollment is open",
+        cta: "Check fall enrollment →",
+      },
     },
     settings: {
       close: "CLOSE",
@@ -172,6 +180,10 @@ const dictionaries: Record<Language, Dictionary> = {
       },
       gallery: {
         label: "Галерея",
+      },
+      enrollmentCta: {
+        line: "Открыт набор на осень",
+        cta: "Узнать про осенний набор →",
       },
     },
     settings: {
@@ -223,6 +235,10 @@ const dictionaries: Record<Language, Dictionary> = {
       gallery: {
         label: "Галерея",
       },
+      enrollmentCta: {
+        line: "Відкрито набір на осінь",
+        cta: "Дізнатися про осінній набір →",
+      },
     },
     settings: {
       close: "ЗАКРИТИ",
@@ -272,6 +288,10 @@ const dictionaries: Record<Language, Dictionary> = {
       },
       gallery: {
         label: "ギャラリー",
+      },
+      enrollmentCta: {
+        line: "秋の入学受付中",
+        cta: "秋の入学を確認 →",
       },
     },
     settings: {
