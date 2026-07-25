@@ -8,6 +8,7 @@ import {
   useScroll,
   useTransform,
   type MotionValue,
+  type Variants,
 } from "motion/react";
 import Image from "next/image";
 import Link from "next/link";
@@ -653,7 +654,7 @@ const ClassNameTitle = forwardRef<
           <motion.span
             key={`${name}-${i}`}
             custom={i}
-            variants={motionConfig.letter}
+            variants={motionConfig.letter as Variants}
             className={`inline-block will-change-transform ${
               name === "Acrobatics" ? "origin-center" : "origin-bottom"
             }`}

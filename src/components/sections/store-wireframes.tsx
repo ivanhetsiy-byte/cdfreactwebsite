@@ -48,7 +48,7 @@ type PlacedItem = StoreProduct & {
 function useColumnCount() {
   const getCount = useCallback(() => {
     const idx = COL_QUERIES.findIndex((q) => matchMedia(q).matches);
-    return idx >= 0 ? COL_COUNTS[idx] : 1;
+    return idx >= 0 ? (COL_COUNTS[idx] ?? 1) : 1;
   }, []);
 
   const [cols, setCols] = useState(1);
@@ -71,7 +71,9 @@ function useElementWidth<T extends HTMLElement>() {
   useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const ro = new ResizeObserver(([entry]) => {
+    const ro = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (!entry) return;
       setWidth(entry.contentRect.width);
     });
     ro.observe(el);
@@ -117,12 +119,12 @@ export function StoreWireframes() {
     const colHeights = Array(cols).fill(0) as number[];
 
     return STORE_PRODUCTS.map((product) => {
-      const col = colHeights.indexOf(Math.min(...colHeights));
+      const col = Math.max(0, colHeights.indexOf(Math.min(...colHeights)));
       const imgH = Math.round(ASPECT_RATIO[product.aspect] * itemW);
       const h = imgH + CONTENT_H;
       const x = itemW * col + col * gap;
-      const y = colHeights[col];
-      colHeights[col] += h + gap;
+      const y = colHeights[col] ?? 0;
+      colHeights[col] = y + h + gap;
       return { ...product, x, y, w: itemW, h, imgH };
     });
   }, [cols, listWidth]);

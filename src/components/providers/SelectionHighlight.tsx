@@ -209,6 +209,7 @@ function mergeLineRects(rects: ContentRect[]): ContentRect[] {
     const midY = rect.top + rect.height / 2;
     const line = lines.find((group) => {
       const sample = group[0];
+      if (!sample) return false;
       const sampleMid = sample.top + sample.height / 2;
       const threshold = Math.max(sample.height, rect.height) * 0.6;
       return Math.abs(sampleMid - midY) <= threshold;
@@ -478,6 +479,7 @@ function readFrames(): Frame[] {
 
   for (let index = 0; index < rects.length; index++) {
     const rect = rects[index];
+    if (!rect) continue;
     const m = metricsForHeight(rect.height);
     const obstacles = [
       ...neighbors,
