@@ -1,12 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import {
-  useEffect,
-  useRef,
-  useState,
-  type CSSProperties,
-} from "react";
+import { type CSSProperties } from "react";
 
 import {
   MISSION_LOCKED_TITLE,
@@ -83,31 +78,15 @@ function GridLine({
 
 export function MissionStatement() {
   const { t } = useLanguage();
-  const desktopImageRef = useRef<HTMLImageElement>(null);
-  const [imageInView, setImageInView] = useState(false);
 
   const wordClass =
     "font-swiss text-[clamp(5rem,25vw,14rem)] font-black leading-[0.86] tracking-tighter text-black dark:text-white";
-
-  useEffect(() => {
-    const el = desktopImageRef.current;
-    if (!el) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        setImageInView(entries.some((e) => e.isIntersecting));
-      },
-      { root: null, rootMargin: "-20% 0px -20% 0px" },
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
 
   return (
     <section
       id="mission-section"
       aria-labelledby="mission-heading"
-      className="relative w-full bg-white text-black dark:bg-black dark:text-white swiss-no-select"
+      className="relative w-full bg-white text-black dark:bg-black dark:text-white"
     >
       <h2 id="mission-heading" className="sr-only">
         {MISSION_LOCKED_TITLE.full}
@@ -182,16 +161,11 @@ export function MissionStatement() {
             }}
           >
             <Image
-              ref={desktopImageRef}
               src="/images/mission-dancer.jpg"
               alt="Dancer in a dynamic leap"
               fill
               sizes="24vw"
-              className={`object-cover object-[38.34%_100%] transform-gpu backface-hidden [will-change:transform,filter] ${
-                imageInView
-                  ? "grayscale-0 brightness-100 contrast-100"
-                  : "grayscale hover:grayscale-0 brightness-95 contrast-105 hover:brightness-100 hover:contrast-100"
-              }`}
+              className="object-cover object-[38.34%_100%]"
             />
           </div>
 

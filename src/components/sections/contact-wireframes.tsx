@@ -1,7 +1,6 @@
 "use client";
 
 import { Check, Copy } from "lucide-react";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -13,14 +12,6 @@ import {
 
 import { SocialLinks } from "@/components/layout/social-links";
 import { requestRouteCover } from "@/lib/route-cover";
-
-/** Short rotating examples for the message field typewriter. */
-const MESSAGE_EXAMPLES = [
-  "I'd like to enroll my daughter in ballet.",
-  "What ages do you accept for gymnastics?",
-  "Do you offer trial classes?",
-  "Tell me about your competitive teams.",
-] as const;
 
 /** Contact page copy — hardcoded English for now; translations can follow later. */
 const COPY = {
@@ -37,6 +28,7 @@ const COPY = {
     namePlaceholder: "Your full name",
     emailPlaceholder: "you@example.com",
     phonePlaceholder: "(000) 000-0000",
+    messagePlaceholder: "Tell us how we can help…",
     submit: "Send message →",
     submitting: "Sending…",
     error: "Something went wrong. Please try again.",
@@ -119,73 +111,16 @@ function CopyButton({ value, label }: { value: string; label: string }) {
   );
 }
 
-function useCyclingTypewriter(
-  phrases: readonly string[],
-  reducedMotion: boolean | null,
-  paused: boolean,
-) {
-  const [index, setIndex] = useState(0);
-  const [text, setText] = useState("");
-  const [phase, setPhase] = useState<"typing" | "holding" | "erasing">(
-    "typing",
-  );
-
-  useEffect(() => {
-    if (reducedMotion) {
-      setText(phrases[0] ?? "");
-      return;
-    }
-    if (paused) return;
-
-    const phrase = phrases[index] ?? "";
-    let timer: ReturnType<typeof setTimeout>;
-
-    if (phase === "typing") {
-      if (text.length < phrase.length) {
-        timer = setTimeout(() => {
-          setText(phrase.slice(0, text.length + 1));
-        }, 42);
-      } else {
-        timer = setTimeout(() => setPhase("holding"), 1800);
-      }
-    } else if (phase === "holding") {
-      timer = setTimeout(() => setPhase("erasing"), 0);
-    } else if (text.length > 0) {
-      timer = setTimeout(() => {
-        setText((current) => current.slice(0, -1));
-      }, 24);
-    } else {
-      timer = setTimeout(() => {
-        setIndex((i) => (i + 1) % phrases.length);
-        setPhase("typing");
-      }, 320);
-    }
-
-    return () => clearTimeout(timer);
-  }, [text, phase, index, phrases, reducedMotion, paused]);
-
-  return text;
-}
-
 export function ContactWireframes() {
   const pathname = usePathname();
   const router = useRouter();
   const navLockRef = useRef(false);
-  const reducedMotion = useReducedMotion();
   const [sent, setSent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [phoneValue, setPhoneValue] = useState("");
-  const [messageFocused, setMessageFocused] = useState(false);
   const [messageValue, setMessageValue] = useState("");
   const successHeadingRef = useRef<HTMLParagraphElement>(null);
-
-  const typewriterPaused = messageFocused || messageValue.length > 0;
-  const typewriterText = useCyclingTypewriter(
-    MESSAGE_EXAMPLES,
-    reducedMotion,
-    typewriterPaused,
-  );
 
   useEffect(() => {
     if (!sent) return;
@@ -245,7 +180,6 @@ export function ContactWireframes() {
       form.reset();
       setPhoneValue("");
       setMessageValue("");
-      setMessageFocused(false);
       setSent(true);
     } catch {
       setSubmitError(COPY.form.error);
@@ -259,46 +193,8 @@ export function ContactWireframes() {
     setSent(false);
   };
 
-  const fadeUp = (delay = 0) =>
-    reducedMotion
-      ? {
-          initial: false as const,
-          whileInView: undefined,
-          transition: undefined,
-        }
-      : {
-          initial: { opacity: 0, y: 24 },
-          whileInView: { opacity: 1, y: 0 },
-          transition: {
-            duration: 0.55,
-            delay,
-            ease: [0.22, 1, 0.36, 1] as const,
-          },
-          viewport: { once: true, amount: 0.25 },
-        };
-
-  const slideIn = (fromX: number, delay = 0) =>
-    reducedMotion
-      ? {
-          initial: false as const,
-          whileInView: undefined,
-          transition: undefined,
-        }
-      : {
-          initial: { opacity: 0, x: fromX },
-          whileInView: { opacity: 1, x: 0 },
-          transition: {
-            duration: 0.7,
-            delay,
-            ease: [0.22, 1, 0.36, 1] as const,
-          },
-          viewport: { once: true, amount: 0.25 },
-        };
-
-  const showTypewriter = !messageFocused && messageValue.length === 0;
-
   return (
-    <div className="relative w-full bg-white text-black dark:bg-black dark:text-white swiss-no-select">
+    <div className="relative w-full bg-white text-black dark:bg-black dark:text-white">
       {/* ── Page header — same slot as the About header ── */}
       <section
         aria-labelledby="contact-heading"
@@ -309,18 +205,14 @@ export function ContactWireframes() {
         </p>
 
         <div className="flex flex-col gap-10 md:flex-row md:items-start md:justify-between md:gap-12">
-          <motion.h1
+          <h1
             id="contact-heading"
             className="font-swiss text-[clamp(3rem,12vw,4.5rem)] font-bold uppercase leading-[0.92] tracking-tighter md:text-[11.5vw]"
-            {...slideIn(-64, 0)}
           >
             {COPY.headline}
-          </motion.h1>
+          </h1>
 
-          <motion.div
-            className="flex max-w-[28rem] shrink-0 gap-5 md:max-w-[32rem] md:pt-[1.5vw]"
-            {...fadeUp(0.1)}
-          >
+          <div className="flex max-w-[28rem] shrink-0 gap-5 md:max-w-[32rem] md:pt-[1.5vw]">
             <span
               aria-hidden="true"
               className="mt-1 hidden h-[11rem] w-px shrink-0 bg-black dark:bg-white md:block"
@@ -328,7 +220,7 @@ export function ContactWireframes() {
             <p className="border-t border-black/20 pt-5 font-alt text-[clamp(1.125rem,1.8vw,1.75rem)] leading-[1.45] tracking-tight text-[#6b6b6b] dark:border-white/20 md:border-t-0 md:pt-0">
               {COPY.headerBody}
             </p>
-          </motion.div>
+          </div>
         </div>
       </section>
 
@@ -338,26 +230,12 @@ export function ContactWireframes() {
         className="relative w-full pb-16 md:pb-[6vw]"
       >
         <div className="relative pb-8">
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.h2
-              key={sent ? "success-title" : "form-title"}
-              id={sent ? "contact-success-heading" : "contact-form-heading"}
-              className="font-swiss text-[clamp(2.5rem,10vw,4.5rem)] font-bold uppercase leading-[0.92] tracking-tighter md:text-[8vw]"
-              initial={
-                reducedMotion ? false : { opacity: 0, y: 18 }
-              }
-              animate={{ opacity: 1, y: 0 }}
-              exit={
-                reducedMotion ? undefined : { opacity: 0, y: -12 }
-              }
-              transition={{
-                duration: 0.45,
-                ease: [0.22, 1, 0.36, 1],
-              }}
-            >
-              {sent ? COPY.success.title : COPY.form.heading}
-            </motion.h2>
-          </AnimatePresence>
+          <h2
+            id={sent ? "contact-success-heading" : "contact-form-heading"}
+            className="font-swiss text-[clamp(2.5rem,10vw,4.5rem)] font-bold uppercase leading-[0.92] tracking-tighter md:text-[8vw]"
+          >
+            {sent ? COPY.success.title : COPY.form.heading}
+          </h2>
           <div
             aria-hidden="true"
             className="mt-2 h-[3px] w-full bg-black dark:bg-white"
@@ -367,222 +245,174 @@ export function ContactWireframes() {
         <div className="grid grid-cols-1 gap-16 md:grid-cols-12 md:gap-8">
           {/* Form / success */}
           <div className="relative md:col-span-7">
-            <AnimatePresence mode="wait" initial={false}>
-              {sent ? (
-                <motion.div
-                  key="success"
-                  role="status"
-                  aria-live="polite"
-                  className="flex flex-col gap-8 border-t border-black pt-8 dark:border-white md:border-t-0 md:pt-0"
-                  initial={
-                    reducedMotion ? false : { opacity: 0, y: 28 }
-                  }
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={
-                    reducedMotion
-                      ? undefined
-                      : { opacity: 0, y: -16 }
-                  }
-                  transition={{
-                    duration: 0.5,
-                    ease: [0.22, 1, 0.36, 1],
-                  }}
-                >
-                  <div className="flex flex-col gap-4">
-                    <p className={labelClass}>{COPY.success.kicker}</p>
-                    <p
-                      ref={successHeadingRef}
-                      tabIndex={-1}
-                      className="max-w-[32rem] font-alt text-[clamp(1.25rem,2vw,1.75rem)] leading-[1.4] tracking-tight text-[#6b6b6b] outline-none"
-                    >
-                      {COPY.success.body}
-                    </p>
-                  </div>
+            {sent ? (
+              <div
+                role="status"
+                aria-live="polite"
+                className="flex flex-col gap-8 border-t border-black pt-8 dark:border-white md:border-t-0 md:pt-0"
+              >
+                <div className="flex flex-col gap-4">
+                  <p className={labelClass}>{COPY.success.kicker}</p>
+                  <p
+                    ref={successHeadingRef}
+                    tabIndex={-1}
+                    className="max-w-[32rem] font-alt text-[clamp(1.25rem,2vw,1.75rem)] leading-[1.4] tracking-tight text-[#6b6b6b] outline-none"
+                  >
+                    {COPY.success.body}
+                  </p>
+                </div>
 
-                  <div
-                    aria-hidden="true"
-                    className="h-px w-full max-w-[12rem] bg-black dark:bg-white"
-                  />
+                <div
+                  aria-hidden="true"
+                  className="h-px w-full max-w-[12rem] bg-black dark:bg-white"
+                />
 
-                  <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:gap-8">
-                    <Link
-                      href="/"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handleDelayedNavigation("/");
-                      }}
-                      className="inline-flex w-fit cursor-pointer border-2 border-black bg-black px-10 py-4 font-swiss text-base font-bold uppercase tracking-widest text-white transition-colors duration-150 hover:bg-white hover:text-black dark:border-white dark:bg-white dark:text-black dark:hover:bg-black dark:hover:text-white md:text-lg"
-                    >
-                      {COPY.success.home}
-                    </Link>
-                    <button
-                      type="button"
-                      onClick={handleSendAnother}
-                      className="inline-flex w-fit cursor-pointer font-swiss text-[clamp(1rem,1.4vw,1.25rem)] font-bold uppercase tracking-tight text-[#616161] transition-colors duration-150 hover:text-black dark:hover:text-white"
-                    >
-                      {COPY.success.again}
-                    </button>
-                  </div>
-                </motion.div>
-              ) : (
-                <motion.form
-                  key="form"
-                  className="flex flex-col gap-10"
-                  onSubmit={handleSubmit}
-                  initial={
-                    reducedMotion ? false : { opacity: 0, y: 24 }
-                  }
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={
-                    reducedMotion
-                      ? undefined
-                      : { opacity: 0, y: -20, filter: "blur(4px)" }
-                  }
-                  transition={{
-                    duration: 0.45,
-                    ease: [0.22, 1, 0.36, 1],
-                  }}
-                >
-                  <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 sm:gap-8">
-                    <div className="flex flex-col gap-2">
-                      <label htmlFor="contact-name" className={labelClass}>
-                        {COPY.form.name}
-                      </label>
-                      <input
-                        id="contact-name"
-                        name="name"
-                        type="text"
-                        required
-                        autoComplete="name"
-                        placeholder={COPY.form.namePlaceholder}
-                        className={inputClass}
-                      />
-                    </div>
-
-                    <div className="flex flex-col gap-2">
-                      <label htmlFor="contact-email" className={labelClass}>
-                        {COPY.form.email}
-                      </label>
-                      <input
-                        id="contact-email"
-                        name="email"
-                        type="email"
-                        required
-                        autoComplete="email"
-                        placeholder={COPY.form.emailPlaceholder}
-                        className={inputClass}
-                      />
-                    </div>
-                  </div>
-
+                <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:gap-8">
+                  <Link
+                    href="/"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleDelayedNavigation("/");
+                    }}
+                    className="inline-flex w-fit cursor-pointer border-2 border-black bg-black px-10 py-4 font-swiss text-base font-bold uppercase tracking-widest text-white transition-colors duration-150 hover:bg-white hover:text-black dark:border-white dark:bg-white dark:text-black dark:hover:bg-black dark:hover:text-white md:text-lg"
+                  >
+                    {COPY.success.home}
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={handleSendAnother}
+                    className="inline-flex w-fit cursor-pointer font-swiss text-[clamp(1rem,1.4vw,1.25rem)] font-bold uppercase tracking-tight text-[#616161] transition-colors duration-150 hover:text-black dark:hover:text-white"
+                  >
+                    {COPY.success.again}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <form className="flex flex-col gap-10" onSubmit={handleSubmit}>
+                <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 sm:gap-8">
                   <div className="flex flex-col gap-2">
-                    <label htmlFor="contact-phone" className={labelClass}>
-                      {COPY.form.phone}
+                    <label htmlFor="contact-name" className={labelClass}>
+                      {COPY.form.name}
                     </label>
                     <input
-                      id="contact-phone"
-                      name="phone"
-                      type="tel"
-                      inputMode="numeric"
-                      autoComplete="tel-national"
+                      id="contact-name"
+                      name="name"
+                      type="text"
                       required
-                      minLength={14}
-                      maxLength={14}
-                      pattern="\(\d{3}\) \d{3}-\d{4}"
-                      title="Enter a 10-digit US phone number"
-                      placeholder={COPY.form.phonePlaceholder}
-                      value={phoneValue}
-                      onChange={(e) =>
-                        setPhoneValue(formatPhoneInput(e.target.value))
-                      }
-                      onKeyDown={(e) => {
-                        const allowed = [
-                          "Backspace",
-                          "Delete",
-                          "Tab",
-                          "Escape",
-                          "Enter",
-                          "ArrowLeft",
-                          "ArrowRight",
-                          "ArrowUp",
-                          "ArrowDown",
-                          "Home",
-                          "End",
-                        ];
-                        if (allowed.includes(e.key)) return;
-                        if (e.ctrlKey || e.metaKey || e.altKey) return;
-                        if (!/^\d$/.test(e.key)) {
-                          e.preventDefault();
-                        }
-                      }}
-                      onPaste={(e) => {
-                        e.preventDefault();
-                        setPhoneValue(
-                          formatPhoneInput(e.clipboardData.getData("text")),
-                        );
-                      }}
+                      autoComplete="name"
+                      placeholder={COPY.form.namePlaceholder}
                       className={inputClass}
                     />
                   </div>
 
                   <div className="flex flex-col gap-2">
-                    <label htmlFor="contact-message" className={labelClass}>
-                      {COPY.form.message}
+                    <label htmlFor="contact-email" className={labelClass}>
+                      {COPY.form.email}
                     </label>
-                    <div className="relative">
-                      {showTypewriter ? (
-                        <p
-                          aria-hidden="true"
-                          className="pointer-events-none absolute inset-x-0 top-0 py-3 font-alt text-[clamp(1rem,1.3vw,1.25rem)] leading-[1.4] tracking-tight text-[#9a9a9a] dark:text-[#666666]"
-                        >
-                          {typewriterText}
-                          {!reducedMotion ? (
-                            <span className="ml-[0.02em] inline-block h-[0.9em] w-[0.08em] translate-y-[0.08em] bg-current align-baseline animate-caret-blink" />
-                          ) : null}
-                        </p>
-                      ) : null}
-                      <textarea
-                        id="contact-message"
-                        name="message"
-                        required
-                        rows={6}
-                        value={messageValue}
-                        onChange={(e) => setMessageValue(e.target.value)}
-                        onFocus={() => setMessageFocused(true)}
-                        onBlur={() => setMessageFocused(false)}
-                        aria-label={COPY.form.message}
-                        className={`${inputClass} relative z-10 resize-none bg-transparent`}
-                      />
-                    </div>
+                    <input
+                      id="contact-email"
+                      name="email"
+                      type="email"
+                      required
+                      autoComplete="email"
+                      placeholder={COPY.form.emailPlaceholder}
+                      className={inputClass}
+                    />
                   </div>
+                </div>
 
-                  <div className="flex flex-col gap-5 pt-2 sm:flex-row sm:items-center sm:gap-8">
-                    <button
-                      type="submit"
-                      disabled={submitting}
-                      className="inline-flex w-fit cursor-pointer border-2 border-black bg-transparent px-10 py-4 font-swiss text-base font-bold uppercase tracking-widest text-black transition-colors duration-150 hover:bg-black hover:text-white disabled:cursor-not-allowed disabled:opacity-50 dark:border-white dark:text-white dark:hover:bg-white dark:hover:text-black md:text-lg"
+                <div className="flex flex-col gap-2">
+                  <label htmlFor="contact-phone" className={labelClass}>
+                    {COPY.form.phone}
+                  </label>
+                  <input
+                    id="contact-phone"
+                    name="phone"
+                    type="tel"
+                    inputMode="numeric"
+                    autoComplete="tel-national"
+                    required
+                    minLength={14}
+                    maxLength={14}
+                    pattern="\(\d{3}\) \d{3}-\d{4}"
+                    title="Enter a 10-digit US phone number"
+                    placeholder={COPY.form.phonePlaceholder}
+                    value={phoneValue}
+                    onChange={(e) =>
+                      setPhoneValue(formatPhoneInput(e.target.value))
+                    }
+                    onKeyDown={(e) => {
+                      const allowed = [
+                        "Backspace",
+                        "Delete",
+                        "Tab",
+                        "Escape",
+                        "Enter",
+                        "ArrowLeft",
+                        "ArrowRight",
+                        "ArrowUp",
+                        "ArrowDown",
+                        "Home",
+                        "End",
+                      ];
+                      if (allowed.includes(e.key)) return;
+                      if (e.ctrlKey || e.metaKey || e.altKey) return;
+                      if (!/^\d$/.test(e.key)) {
+                        e.preventDefault();
+                      }
+                    }}
+                    onPaste={(e) => {
+                      e.preventDefault();
+                      setPhoneValue(
+                        formatPhoneInput(e.clipboardData.getData("text")),
+                      );
+                    }}
+                    className={inputClass}
+                  />
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label htmlFor="contact-message" className={labelClass}>
+                    {COPY.form.message}
+                  </label>
+                  <textarea
+                    id="contact-message"
+                    name="message"
+                    required
+                    rows={6}
+                    value={messageValue}
+                    onChange={(e) => setMessageValue(e.target.value)}
+                    placeholder={COPY.form.messagePlaceholder}
+                    aria-label={COPY.form.message}
+                    className={`${inputClass} resize-none bg-transparent`}
+                  />
+                </div>
+
+                <div className="flex flex-col gap-5 pt-2 sm:flex-row sm:items-center sm:gap-8">
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="inline-flex w-fit cursor-pointer border-2 border-black bg-transparent px-10 py-4 font-swiss text-base font-bold uppercase tracking-widest text-black transition-colors duration-150 hover:bg-black hover:text-white disabled:cursor-not-allowed disabled:opacity-50 dark:border-white dark:text-white dark:hover:bg-white dark:hover:text-black md:text-lg"
+                  >
+                    {submitting ? COPY.form.submitting : COPY.form.submit}
+                  </button>
+                  {submitError ? (
+                    <p
+                      role="alert"
+                      className="font-alt text-[clamp(0.95rem,1.2vw,1.125rem)] leading-[1.4] tracking-tight text-[#b42318]"
                     >
-                      {submitting ? COPY.form.submitting : COPY.form.submit}
-                    </button>
-                    {submitError ? (
-                      <p
-                        role="alert"
-                        className="font-alt text-[clamp(0.95rem,1.2vw,1.125rem)] leading-[1.4] tracking-tight text-[#b42318]"
-                      >
-                        {submitError}
-                      </p>
-                    ) : null}
-                  </div>
-                </motion.form>
-              )}
-            </AnimatePresence>
+                      {submitError}
+                    </p>
+                  ) : null}
+                </div>
+              </form>
+            )}
           </div>
 
           {/* Studio details */}
-          <motion.aside
+          <aside
             aria-label={COPY.details.heading}
             className="flex flex-col md:col-span-4 md:col-start-9"
-            {...fadeUp(0.16)}
           >
             <div className="flex flex-col gap-2 border-t border-black py-6 dark:border-white">
               <p className={labelClass}>{COPY.details.email.label}</p>
@@ -638,7 +468,7 @@ export function ContactWireframes() {
               aria-hidden="true"
               className="h-0.5 w-full bg-black dark:bg-white"
             />
-          </motion.aside>
+          </aside>
         </div>
       </section>
     </div>

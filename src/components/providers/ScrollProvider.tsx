@@ -1,9 +1,13 @@
 "use client";
 
 import Lenis from "lenis";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, type ReactNode } from "react";
 import "lenis/dist/lenis.css";
+
+gsap.registerPlugin(ScrollTrigger);
 
 type LenisWindow = Window & { lenis: Lenis };
 
@@ -31,8 +35,14 @@ function resetScrollToTop() {
 export function ScrollProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const isFirstPathEffect = useRef(true);
+  const isLab = pathname.startsWith("/lab");
+  // Staff mounts LmlStudioPage (LabScrollProvider) — avoid double Lenis.
+  const ownsOwnScroll = isLab || pathname === "/staff";
 
   useEffect(() => {
+    // Lab / staff studio pages own their own Lenis instance.
+    if (ownsOwnScroll) return;
+
     window.history.scrollRestoration = "manual";
 
     const instance = new Lenis({
@@ -46,12 +56,17 @@ export function ScrollProvider({ children }: { children: ReactNode }) {
 
     (window as unknown as LenisWindow).lenis = instance;
 
+    // Keep GSAP ScrollTrigger in sync with Lenis (window scroll).
+    instance.on("scroll", ScrollTrigger.update);
+
     let rafId = 0;
     const raf = (time: number) => {
       instance.raf(time);
       rafId = requestAnimationFrame(raf);
     };
     rafId = requestAnimationFrame(raf);
+
+    requestAnimationFrame(() => ScrollTrigger.refresh());
 
     return () => {
       cancelAnimationFrame(rafId);
@@ -61,9 +76,11 @@ export function ScrollProvider({ children }: { children: ReactNode }) {
         (window as Window & { lenis: Record<string, unknown> }).lenis = {};
       }
     };
-  }, []);
+  }, [ownsOwnScroll]);
 
   useEffect(() => {
+    if (ownsOwnScroll) return;
+
     if (isFirstPathEffect.current) {
       isFirstPathEffect.current = false;
       return;
@@ -77,7 +94,7 @@ export function ScrollProvider({ children }: { children: ReactNode }) {
     }
 
     resetScrollToTop();
-  }, [pathname]);
+  }, [pathname, ownsOwnScroll]);
 
   return <>{children}</>;
 }

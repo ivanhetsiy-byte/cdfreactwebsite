@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Hero } from "@/components/sections/hero";
 import { HomeWireframes } from "@/components/sections/home-wireframes";
@@ -14,25 +14,7 @@ export default function Home() {
   const playIntroScrollRef = useRef(true);
   /** True when we should race from the bottom of the page up to the hero. */
   const returnFromSubpageRef = useRef(false);
-  /**
-   * Scroll-triggered home reveals (motto, Ages typewriter). `0` = deferred;
-   * increment when armed so observers remount fresh after the return race.
-   */
-  const [revealEpoch, setRevealEpoch] = useState(0);
   const returnFinishedRef = useRef(false);
-
-  useLayoutEffect(() => {
-    if (typeof window === "undefined") return;
-    try {
-      if (sessionStorage.getItem("fromSubpage") === "true") {
-        // Stay at epoch 0 until settled finishReturnScroll.
-        return;
-      }
-    } catch {
-      // sessionStorage unavailable
-    }
-    setRevealEpoch(1);
-  }, []);
 
   // Stationary start at (0,0) behind the transition mask — or bottom→top when
   // returning from another page. Desktop freezes Lenis until first-scroll handoff.
@@ -57,20 +39,9 @@ export default function Home() {
     const fromSubpage = returnFromSubpageRef.current;
 
     let rafId = 0;
-    let settleRafId = 0;
     let attempts = 0;
     let returnUnlockId: ReturnType<typeof setTimeout> | undefined;
     let cancelled = false;
-
-    const armRevealsAfterSettle = () => {
-      // Two frames after scroll settles at top before observers attach.
-      settleRafId = requestAnimationFrame(() => {
-        settleRafId = requestAnimationFrame(() => {
-          if (cancelled) return;
-          setRevealEpoch((n) => (n === 0 ? 1 : n + 1));
-        });
-      });
-    };
 
     const finishReturnScroll = () => {
       if (returnFinishedRef.current) return;
@@ -88,8 +59,6 @@ export default function Home() {
       } catch {
         // sessionStorage unavailable
       }
-
-      armRevealsAfterSettle();
     };
 
     const getMaxScroll = () => {
@@ -222,7 +191,6 @@ export default function Home() {
     return () => {
       cancelled = true;
       cancelAnimationFrame(rafId);
-      cancelAnimationFrame(settleRafId);
       if (returnUnlockId !== undefined) clearTimeout(returnUnlockId);
       const active = getLenis();
       if (active) active.isLocked = false;
@@ -319,18 +287,18 @@ export default function Home() {
   return (
     <main
       id="main-content"
-      className="relative w-full min-h-screen bg-white text-black dark:bg-black dark:text-white pt-32 pb-24 px-6 md:p-10 md:pt-44 select-none swiss-no-select"
+      className="relative w-full min-h-screen bg-white text-black dark:bg-black dark:text-white pt-32 px-6 pb-0 md:px-10 md:pt-44 md:pb-0"
     >
       {isAnimating ? (
         <div
-          className="fixed inset-0 z-[9999] cursor-default"
+          className="fixed inset-0 bottom-14 z-[9999] cursor-default"
           aria-hidden="true"
         />
       ) : null}
 
       <Hero />
       <MissionStatement />
-      <HomeWireframes revealEpoch={revealEpoch} />
+      <HomeWireframes />
     </main>
   );
 }

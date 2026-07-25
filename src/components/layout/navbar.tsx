@@ -1,30 +1,209 @@
 "use client";
 
+import gsap from "gsap";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import { Logo } from "@/components/layout/Logo";
-import { SettingsContent } from "@/components/layout/SettingsContent";
-import { SettingsSidebar } from "@/components/layout/SettingsSidebar";
-import { SocialLinks } from "@/components/layout/social-links";
+import { NavProgressiveBlur } from "@/components/layout/NavProgressiveBlur";
 import { useLanguage } from "@/context/LanguageContext";
 import { requestRouteCover } from "@/lib/route-cover";
+import {
+  OPEN_SITE_MENU_EVENT,
+  broadcastSiteMenuState,
+} from "@/lib/site-menu";
 
+/** Desktop inline menu — Contact lives only in persistent chrome. */
 const NAV_HREFS = [
   { key: "home" as const, href: "/" },
   { key: "about" as const, href: "/about" },
   { key: "classes" as const, href: "/classes" },
   { key: "staff" as const, href: "/staff" },
-  { key: "contact" as const, href: "/contact" },
 ];
 
-function navLinkClass(active: boolean) {
-  return `shrink-0 font-swiss uppercase tracking-widest transition-all duration-150 pointer-events-auto ${
+/** Mobile LML-style stack — Store in list; Contact is the red pill CTA. */
+const MOBILE_NAV_HREFS = [
+  { key: "home" as const, href: "/" },
+  { key: "about" as const, href: "/about" },
+  { key: "classes" as const, href: "/classes" },
+  { key: "staff" as const, href: "/staff" },
+  { key: "store" as const, href: "/store" },
+];
+
+/** Title-case labels for LML-style mobile menu (desktop keeps uppercase via CSS). */
+const MOBILE_NAV_LABELS: Record<
+  (typeof MOBILE_NAV_HREFS)[number]["key"] | "contact" | "store",
+  string
+> = {
+  home: "Home",
+  about: "About",
+  classes: "Classes",
+  staff: "Staff",
+  store: "Store",
+  contact: "Contact",
+};
+
+/**
+ * Same outer footprint as lab LML mark.
+ * Inner CDF art is cropped/scaled so ink fills that box (no extra downward growth).
+ */
+const LOGO_HEIGHT_CLASS =
+  "h-[calc(min(25vw,220px)*179/467)] md:h-[calc(min(15vw,180px)*179/467)]";
+
+/** Stretch mark so cropped frame’s bottom = last ink pixel. */
+const LOGO_IMG_CLASS = "!h-[calc(100%*77/55)] !w-auto !max-h-none !items-start";
+
+/** Chrome pad — top→logo gap. */
+const CHROME_PAD_X = "px-5 md:px-6.5";
+const CHROME_PAD_Y = "py-4 md:py-6.5";
+
+/** Scroll distance (px) over which nav frost fades in. */
+const BLUR_SCROLL_RANGE = 120;
+
+/** Selection-style active mark.
+ * Header uses mix-blend-difference, so on light surfaces we paint the
+ * channel-inverse of accent red + white text → composites to red + black.
+ * Under `.dark` / force-dark pages, true accent + white (difference preserves it). */
+const NAV_ACTIVE_MARK =
+  "bg-[#3CE8E9] text-white dark:bg-[#C31716]";
+
+/** Desktop open-menu links — small uppercase. */
+function menuLinkClass(active: boolean) {
+  return [
+    "menu-inline-link relative shrink-0 font-swiss text-sm font-medium uppercase leading-none tracking-widest md:text-base",
+    "after:absolute after:bottom-0 after:left-0 after:h-0.5 after:transition-[width] after:duration-300 after:ease-out after:content-['']",
     active
-      ? "font-black text-black dark:text-white"
-      : "font-medium text-[#666666] hover:text-black dark:hover:text-white"
-  }`;
+      ? `${NAV_ACTIVE_MARK} px-[0.12em] after:w-0`
+      : "text-white after:w-0 after:bg-white hover:after:w-full",
+  ].join(" ");
+}
+
+/** Same as lab StudioHeader Work/Studio — top-aligned with −8px optical nudge. */
+const studioLinkClass =
+  "relative top-[-8px] inline-block font-medium text-[3.2rem] leading-none text-white transition-colors after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-current after:transition-all after:content-[''] hover:after:w-full";
+
+function studioLinkClassFor(active: boolean) {
+  return [
+    "relative top-[-8px] inline-block font-medium text-[3.2rem] leading-none text-white transition-colors",
+    "after:absolute after:bottom-0 after:left-0 after:h-0.5 after:bg-current after:transition-all after:content-['']",
+    active ? "after:w-full" : "after:w-0 hover:after:w-full",
+  ].join(" ");
+}
+
+/** Open-menu Store — same size/optical nudge as Contact / Close. */
+function storeMenuLinkClass(active: boolean) {
+  return [
+    "menu-store-link relative top-[-8px] inline-block shrink-0 font-medium normal-case leading-none text-white transition-colors",
+    "text-[3.2rem]",
+    "after:absolute after:bottom-0 after:left-0 after:h-0.5 after:bg-current after:transition-[width] after:duration-300 after:ease-out after:content-['']",
+    active ? "after:w-full" : "after:w-0 hover:after:w-full",
+  ].join(" ");
+}
+
+/** Mobile menu sits outside the blended header — true accent colors. */
+function mobileMenuLinkClass(active: boolean) {
+  return [
+    "menu-drop-link block w-full py-6 text-center font-swiss text-[3.5rem] font-medium leading-none tracking-tight transition-colors",
+    active ? "text-white" : "text-white opacity-90 hover:opacity-70",
+  ].join(" ");
+}
+
+function mobileMenuLabelClass(active: boolean) {
+  return active ? "bg-[#C31716] text-white px-[0.12em]" : undefined;
+}
+
+function HamburgerIcon({ open }: { open: boolean }) {
+  return (
+    <span className="relative flex h-5 w-7 items-center justify-center" aria-hidden="true">
+      <span
+        className={`absolute block h-0.5 w-7 bg-current transition-transform duration-300 ease-out ${
+          open ? "translate-y-0 rotate-45" : "-translate-y-1.5"
+        }`}
+      />
+      <span
+        className={`absolute block h-0.5 w-7 bg-current transition-transform duration-300 ease-out ${
+          open ? "translate-y-0 -rotate-45" : "translate-y-1.5"
+        }`}
+      />
+    </span>
+  );
+}
+
+/** Chrome Menu ↔ Close labels (title case, matches Contact). */
+const MENU_TOGGLE_OPEN = "Menu";
+const MENU_TOGGLE_CLOSE = "Close";
+
+function delay(ms: number) {
+  return new Promise<void>((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
+function prefersReducedMotion() {
+  return (
+    typeof window !== "undefined" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
+}
+
+function formatEstTime(date: Date): string {
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/New_York",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true,
+  }).format(date);
+}
+
+function readScrollY() {
+  if (typeof window === "undefined") return 0;
+  const lenis = (window as unknown as { lenis?: { scroll?: number } }).lenis;
+  if (typeof lenis?.scroll === "number") return lenis.scroll;
+  return window.scrollY || document.documentElement.scrollTop || 0;
+}
+
+function isDesktopNav() {
+  return (
+    typeof window !== "undefined" &&
+    window.matchMedia("(min-width: 768px)").matches
+  );
+}
+
+/**
+ * Full word always laid out; clip reveals from the right (RTL on open).
+ * Caret sits on the reveal edge — right when opening, left when closing.
+ */
+function TypewriterSlot({
+  full,
+  typed,
+  typing,
+}: {
+  full: string;
+  typed: string;
+  typing: boolean;
+}) {
+  const progress = full.length === 0 ? 0 : typed.length / full.length;
+  const clipLeft = (1 - progress) * 100;
+
+  return (
+    <span className="relative inline-block whitespace-nowrap">
+      <span
+        className="inline-block whitespace-nowrap"
+        style={{ clipPath: `inset(0 0 0 ${clipLeft}%)` }}
+      >
+        {full}
+      </span>
+      {typing ? (
+        <span
+          aria-hidden
+          className="pointer-events-none absolute top-1/2 h-[0.85em] w-[0.08em] -translate-y-1/2 bg-current animate-[caret-blink_1.1s_linear_infinite]"
+          style={{ left: `${(1 - progress) * 100}%` }}
+        />
+      ) : null}
+    </span>
+  );
 }
 
 export function Navbar() {
@@ -32,311 +211,694 @@ export function Navbar() {
   const router = useRouter();
   const { t } = useLanguage();
   const navLockRef = useRef(false);
+  const closingRef = useRef(false);
+  const mobilePanelRef = useRef<HTMLDivElement>(null);
+  const desktopNavRef = useRef<HTMLElement>(null);
+  const storeLinkRef = useRef<HTMLAnchorElement>(null);
+  const openTlRef = useRef<gsap.core.Timeline | null>(null);
   const [activeIndicator, setActiveIndicator] = useState(pathname);
-  const [desktopSettingsOpen, setDesktopSettingsOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [mobileSettingsView, setMobileSettingsView] = useState(false);
+  const [blurProgress, setBlurProgress] = useState(0);
+  const [localTime, setLocalTime] = useState<string | null>(null);
+  const [isDesktop, setIsDesktop] = useState(false);
+  const [toggleLabel, setToggleLabel] = useState(MENU_TOGGLE_OPEN);
+  const toggleLabelRef = useRef<HTMLSpanElement>(null);
+  const toggleFadeRef = useRef<gsap.core.Tween | null>(null);
+  /** 0–1 wipe across the whole desktop link row (not per-word). */
+  const [linksReveal, setLinksReveal] = useState(0);
+  const [linksTyping, setLinksTyping] = useState(false);
+  const linksRevealRef = useRef(0);
+  const [storeTyped, setStoreTyped] = useState("");
+  const [storeTyping, setStoreTyping] = useState(false);
+  const typewriterGenRef = useRef(0);
+  const storeTypedRef = useRef("");
+  const linksTweenRef = useRef<gsap.core.Tween | null>(null);
+
+  const bumpTypewriterGen = () => {
+    typewriterGenRef.current += 1;
+    return typewriterGenRef.current;
+  };
+
+  /** Smooth 0–1 wipe via GSAP. */
+  const tweenReveal = (
+    to: number,
+    onUpdate: (next: number) => void,
+    duration = 0.5,
+    ease = "power2.inOut",
+  ) =>
+    new Promise<boolean>((resolve) => {
+      linksTweenRef.current?.kill();
+      const state = { r: linksRevealRef.current };
+      linksTweenRef.current = gsap.to(state, {
+        r: to,
+        duration,
+        ease,
+        onUpdate: () => {
+          linksRevealRef.current = state.r;
+          onUpdate(state.r);
+        },
+        onComplete: () => {
+          linksRevealRef.current = to;
+          onUpdate(to);
+          resolve(true);
+        },
+        onInterrupt: () => resolve(false),
+      });
+    });
+
+  /** Reveal for Store. */
+  const typeChars = async (
+    full: string,
+    onUpdate: (next: string) => void,
+    gen: number,
+    stepMs = 36,
+  ) => {
+    if (typewriterGenRef.current !== gen) return false;
+    onUpdate("");
+    await delay(stepMs);
+    for (let i = 1; i <= full.length; i++) {
+      if (typewriterGenRef.current !== gen) return false;
+      onUpdate(full.slice(0, i));
+      await delay(stepMs);
+    }
+    return typewriterGenRef.current === gen;
+  };
+
+  /** Erase Store right → left (must finish before the link wipe on close). */
+  const deleteChars = async (
+    current: string,
+    onUpdate: (next: string) => void,
+    gen: number,
+    stepMs = 28,
+  ) => {
+    for (let i = current.length - 1; i >= 0; i--) {
+      if (typewriterGenRef.current !== gen) return false;
+      onUpdate(current.slice(0, i));
+      await delay(stepMs);
+    }
+    return typewriterGenRef.current === gen;
+  };
 
   useEffect(() => {
     setActiveIndicator(pathname);
   }, [pathname]);
 
   useEffect(() => {
-    if (!menuOpen) {
-      setMobileSettingsView(false);
+    const mq = window.matchMedia("(min-width: 768px)");
+    const sync = () => setIsDesktop(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
+  useEffect(() => {
+    broadcastSiteMenuState(menuOpen);
+    return () => broadcastSiteMenuState(false);
+  }, [menuOpen]);
+
+  // Simple fade Menu ↔ Close
+  useEffect(() => {
+    const target = menuOpen ? MENU_TOGGLE_CLOSE : MENU_TOGGLE_OPEN;
+    const el = toggleLabelRef.current;
+
+    if (toggleLabel === target) return;
+
+    if (prefersReducedMotion() || !el) {
+      setToggleLabel(target);
+      if (el) gsap.set(el, { opacity: 1 });
       return;
     }
 
+    toggleFadeRef.current?.kill();
+    toggleFadeRef.current = gsap.to(el, {
+      opacity: 0,
+      duration: 0.16,
+      ease: "power1.in",
+      onComplete: () => {
+        setToggleLabel(target);
+        requestAnimationFrame(() => {
+          gsap.fromTo(
+            el,
+            { opacity: 0 },
+            { opacity: 1, duration: 0.22, ease: "power1.out" },
+          );
+        });
+      },
+    });
+
+    return () => {
+      toggleFadeRef.current?.kill();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only react to menuOpen
+  }, [menuOpen]);
+
+  // Live EST clock for mobile menu footer (LML “locale • time” slot)
+  useEffect(() => {
+    if (!menuOpen || isDesktop) return;
+    const tick = () => setLocalTime(formatEstTime(new Date()));
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [menuOpen, isDesktop]);
+
+  // Gradual frost — fades in as content scrolls under the nav (LML pattern)
+  useEffect(() => {
+    const update = () => {
+      const y = readScrollY();
+      setBlurProgress(Math.min(1, Math.max(0, y / BLUR_SCROLL_RANGE)));
+    };
+
+    update();
+
+    window.addEventListener("scroll", update, { passive: true });
+
+    type LenisLike = {
+      on?: (e: string, cb: () => void) => void;
+      off?: (e: string, cb: () => void) => void;
+    };
+    const lenis = (window as unknown as { lenis?: LenisLike }).lenis;
+    lenis?.on?.("scroll", update);
+
+    return () => {
+      window.removeEventListener("scroll", update);
+      lenis?.off?.("scroll", update);
+    };
+  }, [pathname]);
+
+  // Keep mobile panel parked above the viewport when closed
+  useEffect(() => {
+    const panel = mobilePanelRef.current;
+    if (!panel) return;
+    gsap.set(panel, { yPercent: -100 });
+  }, []);
+
+  // External Menu triggers (e.g. lab StudioHeader)
+  useEffect(() => {
+    const onOpen = () => {
+      closingRef.current = false;
+      setMenuOpen(true);
+    };
+    window.addEventListener(OPEN_SITE_MENU_EVENT, onOpen);
+    return () => window.removeEventListener(OPEN_SITE_MENU_EVENT, onOpen);
+  }, []);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
-      if (mobileSettingsView) {
-        setMobileSettingsView(false);
-        return;
-      }
-      setMenuOpen(false);
+      requestClose();
     };
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [menuOpen, mobileSettingsView]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- close uses refs
+  }, [menuOpen]);
 
-  const closeMenu = () => {
-    setMenuOpen(false);
-    setMobileSettingsView(false);
+  // Open animation — desktop: typewriter; mobile: full-screen panel
+  useEffect(() => {
+    if (!menuOpen) return;
+
+    openTlRef.current?.kill();
+    closingRef.current = false;
+
+    const reduced = prefersReducedMotion();
+    const desktop = isDesktopNav();
+
+    if (desktop) {
+      const gen = bumpTypewriterGen();
+
+      if (reduced) {
+        linksRevealRef.current = 1;
+        setLinksReveal(1);
+        setLinksTyping(false);
+        storeTypedRef.current = t.nav.store;
+        setStoreTyped(t.nav.store);
+        setStoreTyping(false);
+        return;
+      }
+
+      linksRevealRef.current = 0;
+      setLinksReveal(0);
+      setLinksTyping(true);
+      storeTypedRef.current = "";
+      setStoreTyped("");
+      setStoreTyping(false);
+
+      void (async () => {
+        // One wipe across the whole link row, right → left
+        const ok = await tweenReveal(1, setLinksReveal, 0.55, "power2.out");
+        if (!ok || typewriterGenRef.current !== gen) return;
+        setLinksTyping(false);
+
+        setStoreTyping(true);
+        const storeOk = await typeChars(
+          t.nav.store,
+          (next) => {
+            storeTypedRef.current = next;
+            setStoreTyped(next);
+          },
+          gen,
+          40,
+        );
+        if (!storeOk) return;
+        setStoreTyping(false);
+      })();
+
+      return () => {
+        linksTweenRef.current?.kill();
+        if (typewriterGenRef.current === gen) {
+          typewriterGenRef.current += 1;
+        }
+      };
+    }
+
+    const panel = mobilePanelRef.current;
+    if (!panel) return;
+
+    const links = Array.from(
+      panel.querySelectorAll<HTMLElement>(".menu-drop-link"),
+    ).filter((el) => el.getClientRects().length > 0);
+
+    if (reduced) {
+      gsap.set(panel, { yPercent: 0 });
+      if (links.length) gsap.set(links, { clearProps: "all" });
+      return;
+    }
+
+    gsap.set(panel, { yPercent: -100 });
+    if (links.length) gsap.set(links, { opacity: 0, y: 12 });
+
+    const tl = gsap.timeline();
+    openTlRef.current = tl;
+    tl.to(panel, {
+      yPercent: 0,
+      duration: 0.45,
+      ease: "power3.out",
+    });
+    if (links.length) {
+      tl.to(
+        links,
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.35,
+          stagger: 0.04,
+          ease: "power2.out",
+        },
+        "-=0.15",
+      );
+    }
+
+    return () => {
+      tl.kill();
+      if (openTlRef.current === tl) openTlRef.current = null;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- t.nav stable enough per open
+  }, [menuOpen]);
+
+  // Lock page scroll only for full-screen mobile menu
+  useEffect(() => {
+    if (!menuOpen || isDesktop) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [menuOpen, isDesktop]);
+
+  const requestClose = () => {
+    if (closingRef.current) return;
+    if (!menuOpen) return;
+
+    const reduced = prefersReducedMotion();
+    const desktop = isDesktopNav();
+
+    if (reduced) {
+      bumpTypewriterGen();
+      setMenuOpen(false);
+      linksRevealRef.current = 0;
+      setLinksReveal(0);
+      setLinksTyping(false);
+      setStoreTyped("");
+      setStoreTyping(false);
+      return;
+    }
+
+    closingRef.current = true;
+    openTlRef.current?.kill();
+
+    if (desktop) {
+      const gen = bumpTypewriterGen();
+      linksTweenRef.current?.kill();
+
+      void (async () => {
+        // 1) Store fully erases first
+        setStoreTyping(true);
+        const storeOk = await deleteChars(
+          storeTypedRef.current || t.nav.store,
+          (next) => {
+            storeTypedRef.current = next;
+            setStoreTyped(next);
+          },
+          gen,
+          28,
+        );
+        if (!storeOk || typewriterGenRef.current !== gen) return;
+        storeTypedRef.current = "";
+        setStoreTyped("");
+        setStoreTyping(false);
+
+        // 2) Then the little links wipe out (reverse of open)
+        setLinksTyping(true);
+        const ok = await tweenReveal(0, setLinksReveal, 0.45, "power2.in");
+        if (!ok || typewriterGenRef.current !== gen) return;
+
+        setLinksTyping(false);
+        setMenuOpen(false);
+        closingRef.current = false;
+      })();
+      return;
+    }
+
+    const panel = mobilePanelRef.current;
+    if (!panel) {
+      setMenuOpen(false);
+      closingRef.current = false;
+      return;
+    }
+
+    const links = Array.from(
+      panel.querySelectorAll<HTMLElement>(".menu-drop-link"),
+    ).filter((el) => el.getClientRects().length > 0);
+
+    const tl = gsap.timeline({
+      onComplete: () => {
+        setMenuOpen(false);
+        closingRef.current = false;
+        gsap.set(panel, { yPercent: -100 });
+      },
+    });
+
+    if (links.length) {
+      tl.to(links, {
+        opacity: 0,
+        y: -8,
+        duration: 0.18,
+        stagger: 0.02,
+        ease: "power2.in",
+      });
+    }
+    tl.to(
+      panel,
+      {
+        yPercent: -100,
+        duration: 0.4,
+        ease: "power3.in",
+      },
+      links.length ? "-=0.05" : 0,
+    );
   };
 
   const handleDelayedNavigation = (targetPath: string) => {
     if (typeof window === "undefined") return;
     if (targetPath === pathname) {
-      closeMenu();
+      requestClose();
       return;
     }
     if (navLockRef.current) return;
 
     navLockRef.current = true;
-    setDesktopSettingsOpen(false);
-    closeMenu();
+    closingRef.current = false;
+    bumpTypewriterGen();
+    openTlRef.current?.kill();
+    setMenuOpen(false);
+    linksRevealRef.current = 0;
+    setLinksReveal(0);
+    setLinksTyping(false);
+    setStoreTyped("");
+    setStoreTyping(false);
+    storeTypedRef.current = "";
+    if (mobilePanelRef.current) gsap.set(mobilePanelRef.current, { yPercent: -100 });
 
-    // 1. Instantly snap the active navbar highlight state text weight
     setActiveIndicator(targetPath);
 
     if (targetPath === "/") {
       sessionStorage.setItem("fromSubpage", "true");
     }
 
-    // Fade the black curtain up before the route swap
     requestRouteCover();
 
-    // 2. Wait exactly 500ms for the black curtain to reach full opacity,
-    // then switch the route behind the mask so the viewer never sees the swap
     setTimeout(() => {
       router.push(targetPath);
       navLockRef.current = false;
     }, 500);
   };
 
-  const openDesktopSettings = () => {
-    closeMenu();
-    setDesktopSettingsOpen(true);
-  };
-
-  const openMobileSettings = () => {
-    setMobileSettingsView(true);
-  };
-
   const toggleMenu = () => {
-    setDesktopSettingsOpen(false);
     if (menuOpen) {
-      closeMenu();
+      requestClose();
       return;
     }
+    closingRef.current = false;
     setMenuOpen(true);
   };
 
+  const showBlur = !menuOpen || isDesktop;
+
   return (
     <>
-      <header className="absolute top-0 left-0 z-30 flex w-full items-center justify-between bg-transparent p-6 text-black dark:text-white pointer-events-auto md:p-10">
-        {/* Logo — official Figma vectors, theme-swapped (black ↔ white) */}
-        <Link
-          href="/"
-          onClick={(e) => {
-            e.preventDefault();
-            handleDelayedNavigation("/");
-          }}
-          className="swiss-no-select relative z-10 flex h-[56px] w-auto min-h-0 shrink-0 items-center overflow-hidden pointer-events-auto md:h-[87px]"
-          aria-label="CDF home"
-        >
-          <Logo className="!h-full" />
-        </Link>
+      {/* LML progressive frost — under chrome, above page; fades in on scroll */}
+      {showBlur ? <NavProgressiveBlur progress={blurProgress} /> : null}
 
-        {/* Desktop nav — Helvetica, gap 16px, viewport-centered */}
-        <nav
-          aria-label="Main navigation"
-          className="absolute top-1/2 left-1/2 hidden -translate-x-1/2 -translate-y-1/2 items-center gap-4 whitespace-nowrap font-swiss text-[20px] uppercase leading-none md:flex"
-        >
-          {NAV_HREFS.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              onClick={(e) => {
-                e.preventDefault();
-                handleDelayedNavigation(link.href);
-              }}
-              className={navLinkClass(activeIndicator === link.href)}
-            >
-              {t.nav[link.key]}
-            </Link>
-          ))}
-        </nav>
-
-        {/* Far-right: mobile menu (md:hidden) + desktop settings */}
-        <div className="relative z-10 flex h-[56px] shrink-0 items-center justify-end gap-5 pointer-events-auto md:h-8 md:w-[calc(2rem*104/77)] md:gap-0">
-          <button
-            type="button"
-            onClick={toggleMenu}
-            className="inline-flex h-full w-[56px] items-center justify-center leading-none md:hidden"
-            aria-label={menuOpen ? t.nav.closeMenu : t.nav.openMenu}
-            aria-expanded={menuOpen}
-            aria-controls="mobile-nav-menu"
-          >
-            <svg
-              className={`h-8 w-8 transition-colors duration-150 cursor-pointer select-none swiss-no-select ${
-                menuOpen
-                  ? "text-black dark:text-white"
-                  : "text-[#666666] hover:text-black dark:hover:text-white"
-              }`}
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="square"
-              strokeLinejoin="miter"
-              aria-hidden="true"
-            >
-              {menuOpen ? (
-                <>
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                  <line x1="6" y1="18" x2="18" y2="6" />
-                </>
-              ) : (
-                <>
-                  <line x1="4" y1="7" x2="20" y2="7" />
-                  <line x1="4" y1="12" x2="20" y2="12" />
-                  <line x1="4" y1="17" x2="20" y2="17" />
-                </>
-              )}
-            </svg>
-          </button>
-
-          <button
-            type="button"
-            onClick={openDesktopSettings}
-            className="hidden h-11 w-11 items-center justify-center leading-none md:inline-flex md:h-auto md:w-auto"
-            aria-label={t.nav.settings}
-            aria-expanded={desktopSettingsOpen}
-            aria-haspopup="dialog"
-          >
-            <svg
-              className={`h-7 w-7 transition-colors duration-150 cursor-pointer select-none swiss-no-select ${
-                desktopSettingsOpen
-                  ? "text-black dark:text-white"
-                  : "text-[#666666] hover:text-black dark:hover:text-white"
-              }`}
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="square"
-              strokeLinejoin="miter"
-              aria-hidden="true"
-            >
-              <line x1="4" y1="8" x2="16" y2="8" />
-              <circle cx="18" cy="8" r="2" fill="currentColor" />
-              <circle cx="6" cy="16" r="2" fill="currentColor" />
-              <line x1="8" y1="16" x2="20" y2="16" />
-            </svg>
-          </button>
-        </div>
-      </header>
-
-      {/* Mobile nav drawer */}
-      <button
-        type="button"
-        aria-label={t.nav.closeMenu}
-        tabIndex={menuOpen ? 0 : -1}
-        onClick={closeMenu}
-        className={`fixed inset-0 z-40 bg-black/40 transition-opacity duration-500 ease-out md:hidden ${
-          menuOpen
-            ? "pointer-events-auto opacity-100"
-            : "pointer-events-none opacity-0"
-        }`}
-      />
-
-      <nav
-        id="mobile-nav-menu"
-        aria-label="Mobile navigation"
+      {/* Mobile only — full-screen black menu */}
+      <div
+        ref={mobilePanelRef}
+        id="site-nav-menu-mobile"
+        role="dialog"
+        aria-modal="true"
+        aria-label={t.nav.menu}
         aria-hidden={!menuOpen}
-        className={`fixed top-0 right-0 z-50 flex h-screen w-full max-w-[320px] flex-col bg-white p-6 text-black shadow-2xl transition-transform duration-500 ease-out dark:bg-black dark:text-white border-l border-black dark:border-white md:hidden ${
-          menuOpen ? "translate-x-0" : "translate-x-full"
+        className={`fixed inset-0 z-[1003] bg-black text-white will-change-transform md:hidden ${
+          menuOpen ? "pointer-events-auto" : "pointer-events-none"
         }`}
       >
-        <button
-          type="button"
-          onClick={() => {
-            if (mobileSettingsView) {
-              setMobileSettingsView(false);
-              return;
-            }
-            closeMenu();
-          }}
-          className="absolute top-6 right-6 z-10 font-swiss uppercase text-xs tracking-widest text-black dark:text-white hover:opacity-60 transition-opacity duration-150"
-        >
-          {t.settings.close}
-        </button>
-
-        <div className="relative mt-16 flex min-h-0 flex-1 flex-col">
-          {/* Nav links — blur/fade out when settings opens */}
-          <div
-            className={`flex min-h-0 flex-1 flex-col transition-[opacity,filter] duration-500 ease-out ${
-              mobileSettingsView
-                ? "pointer-events-none absolute inset-0 opacity-0 blur-sm"
-                : "relative opacity-100 blur-0"
-            }`}
-            aria-hidden={mobileSettingsView}
+        <div className="flex h-full flex-col px-5 pt-20 pb-6">
+          <nav
+            aria-label="Main navigation"
+            className="min-h-0 flex-1 overflow-y-auto"
           >
-            <ul className="flex flex-col gap-6">
-              {NAV_HREFS.map((link) => (
-                <li key={link.href}>
+            <ul className="flex flex-col">
+              {MOBILE_NAV_HREFS.map((link, i) => (
+                <li
+                  key={link.href}
+                  className={
+                    i < MOBILE_NAV_HREFS.length - 1
+                      ? "border-b border-white/20"
+                      : undefined
+                  }
+                >
                   <Link
                     href={link.href}
                     onClick={(e) => {
                       e.preventDefault();
                       handleDelayedNavigation(link.href);
                     }}
-                    className={`block font-swiss text-lg uppercase tracking-widest transition-all duration-150 ${
-                      activeIndicator === link.href
-                        ? "font-black text-black dark:text-white"
-                        : "font-medium text-[#666666] hover:text-black dark:hover:text-white"
-                    }`}
-                    tabIndex={menuOpen && !mobileSettingsView ? 0 : -1}
+                    className={mobileMenuLinkClass(activeIndicator === link.href)}
+                    tabIndex={menuOpen ? 0 : -1}
                   >
-                    {t.nav[link.key]}
+                    <span
+                      className={mobileMenuLabelClass(
+                        activeIndicator === link.href,
+                      )}
+                    >
+                      {MOBILE_NAV_LABELS[link.key]}
+                    </span>
                   </Link>
                 </li>
               ))}
             </ul>
+          </nav>
 
-            <div className="mt-8 border-t border-black/20 pt-6 dark:border-white/20">
-              <p className="mb-4 font-swiss text-xs font-medium tracking-[0.18em] text-[#666666] uppercase">
-                {t.footer.follow}
-              </p>
-              <SocialLinks iconGap="gap-5" />
-            </div>
-
-            <button
-              type="button"
-              onClick={openMobileSettings}
-              className="mt-auto mb-4 ml-auto inline-flex h-12 w-12 items-center justify-center leading-none"
-              aria-label={t.nav.settings}
-              aria-expanded={mobileSettingsView}
-              tabIndex={menuOpen && !mobileSettingsView ? 0 : -1}
+          <div className="mt-auto flex items-center justify-between gap-4 pt-8 pb-1">
+            <p
+              className="flex items-center font-swiss text-[0.7rem] tracking-tight text-white/50"
+              aria-live="off"
             >
-              <svg
-                className="h-6 w-6 text-[#666666] transition-colors duration-150 cursor-pointer select-none swiss-no-select hover:text-black dark:hover:text-white"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="square"
-                strokeLinejoin="miter"
+              Philadelphia
+              <span
+                aria-hidden
+                className="mx-2 inline-block size-[3px] rounded-full bg-white/50"
+              />
+              <span className="tabular-nums">{localTime ?? "—"}</span>
+            </p>
+            <Link
+              href="/contact"
+              onClick={(e) => {
+                e.preventDefault();
+                handleDelayedNavigation("/contact");
+              }}
+              className="menu-drop-link inline-flex items-center gap-2 rounded-full bg-[#C31716] px-5 py-2.5 font-swiss text-sm font-medium text-white transition-opacity hover:opacity-90"
+              tabIndex={menuOpen ? 0 : -1}
+            >
+              <span
+                className="flex size-5 items-center justify-center rounded-full bg-white/20 text-[0.65rem] leading-none"
                 aria-hidden="true"
               >
-                <line x1="4" y1="8" x2="16" y2="8" />
-                <circle cx="18" cy="8" r="2" fill="currentColor" />
-                <circle cx="6" cy="16" r="2" fill="currentColor" />
-                <line x1="8" y1="16" x2="20" y2="16" />
-              </svg>
-            </button>
-          </div>
-
-          {/* Settings — blur/fade in within the same drawer */}
-          <div
-            className={`flex min-h-0 flex-1 flex-col transition-[opacity,filter] duration-500 ease-out ${
-              mobileSettingsView
-                ? "relative opacity-100 blur-0"
-                : "pointer-events-none absolute inset-0 opacity-0 blur-sm"
-            }`}
-            aria-hidden={!mobileSettingsView}
-          >
-            <SettingsContent />
+                ✉
+              </span>
+              Contact
+            </Link>
           </div>
         </div>
-      </nav>
+      </div>
 
-      <SettingsSidebar
-        open={desktopSettingsOpen}
-        onClose={() => setDesktopSettingsOpen(false)}
-      />
+      {/* Persistent chrome — only interactive children capture clicks */}
+      <header className="pointer-events-none fixed top-0 right-0 left-0 z-[1004] mix-blend-difference text-white">
+        <div
+          className={`relative z-20 flex w-full items-center justify-between ${CHROME_PAD_X} ${CHROME_PAD_Y}`}
+        >
+          <div className="relative flex h-16 w-full items-center justify-between md:items-start">
+            <Link
+              href="/"
+              onClick={(e) => {
+                e.preventDefault();
+                handleDelayedNavigation("/");
+              }}
+              className={`swiss-no-select pointer-events-auto relative z-10 flex w-auto min-h-0 shrink-0 items-start overflow-hidden ${LOGO_HEIGHT_CLASS}`}
+              aria-label="CDF home"
+            >
+              {/* White mark on black mobile menu; blend mark otherwise */}
+              {menuOpen ? (
+                <>
+                  <span className="block h-full md:hidden">
+                    <Logo className={LOGO_IMG_CLASS} forceWhite />
+                  </span>
+                  <span className="hidden h-full md:block">
+                    <Logo className={LOGO_IMG_CLASS} blend />
+                  </span>
+                </>
+              ) : (
+                <Logo className={LOGO_IMG_CLASS} blend />
+              )}
+            </Link>
+
+            {/* Desktop open: Store — same row + type size as Contact / Close */}
+            {menuOpen && (storeTyped || storeTyping) ? (
+              <div className="pointer-events-none absolute inset-y-0 left-1/2 z-10 hidden -translate-x-1/2 items-start md:flex">
+                <Link
+                  ref={storeLinkRef}
+                  href="/store"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleDelayedNavigation("/store");
+                  }}
+                  className={`${storeMenuLinkClass(activeIndicator === "/store")} pointer-events-auto`}
+                  tabIndex={0}
+                  aria-label={t.nav.store}
+                >
+                  <TypewriterSlot
+                    full={t.nav.store}
+                    typed={storeTyped}
+                    typing={storeTyping}
+                  />
+                </Link>
+              </div>
+            ) : null}
+
+            {/* Desktop: Contact …… Menu — original 40% band; links sit next to Menu, bottom-aligned */}
+            <nav className="pointer-events-auto hidden w-[40%] shrink-0 items-end justify-between font-medium md:flex">
+              <Link
+                href="/contact"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleDelayedNavigation("/contact");
+                }}
+                className={studioLinkClassFor(activeIndicator === "/contact")}
+              >
+                Contact
+              </Link>
+
+              <div className="flex min-w-0 items-end gap-5 lg:gap-7">
+                {menuOpen ? (
+                  <nav
+                    ref={desktopNavRef}
+                    id="site-nav-menu"
+                    aria-label="Main navigation"
+                    className="relative top-[-8px] min-w-0 overflow-hidden"
+                  >
+                    <div
+                      className="relative"
+                      style={{
+                        clipPath: `inset(0 0 0 ${(1 - linksReveal) * 100}%)`,
+                      }}
+                    >
+                      <ul className="flex flex-nowrap items-end justify-end gap-x-4 lg:gap-x-6">
+                        {NAV_HREFS.map((link) => (
+                          <li key={link.href} className="shrink-0">
+                            <Link
+                              href={link.href}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                handleDelayedNavigation(link.href);
+                              }}
+                              className={menuLinkClass(
+                                activeIndicator === link.href,
+                              )}
+                            >
+                              {t.nav[link.key]}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    {linksTyping ? (
+                      <span
+                        aria-hidden
+                        className="pointer-events-none absolute bottom-0 h-[0.85em] w-[0.08em] bg-current animate-[caret-blink_1.1s_linear_infinite]"
+                        style={{ left: `${(1 - linksReveal) * 100}%` }}
+                      />
+                    ) : null}
+                  </nav>
+                ) : null}
+
+                <button
+                  type="button"
+                  onClick={toggleMenu}
+                  className={`${studioLinkClass} shrink-0 cursor-pointer whitespace-nowrap border-0 bg-transparent p-0 font-[inherit] font-medium leading-none`}
+                  aria-label={menuOpen ? t.nav.closeMenu : t.nav.openMenu}
+                  aria-expanded={menuOpen}
+                  aria-controls="site-nav-menu"
+                >
+                  <span className="relative inline-block whitespace-nowrap leading-none">
+                    <span className="invisible" aria-hidden>
+                      {MENU_TOGGLE_CLOSE}
+                    </span>
+                    <span
+                      ref={toggleLabelRef}
+                      className="absolute inset-0 flex items-end justify-end whitespace-nowrap leading-none"
+                    >
+                      {toggleLabel}
+                    </span>
+                  </span>
+                </button>
+              </div>
+            </nav>
+
+            {/* Mobile: hamburger / close only */}
+            <button
+              type="button"
+              onClick={toggleMenu}
+              className="pointer-events-auto relative z-10 text-current transition-opacity hover:opacity-70 md:hidden"
+              aria-label={menuOpen ? t.nav.closeMenu : t.nav.openMenu}
+              aria-expanded={menuOpen}
+              aria-controls="site-nav-menu-mobile"
+            >
+              <HamburgerIcon open={menuOpen} />
+            </button>
+          </div>
+        </div>
+      </header>
     </>
   );
 }

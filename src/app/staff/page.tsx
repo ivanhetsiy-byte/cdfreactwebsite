@@ -1,18 +1,12 @@
 import type { Metadata } from "next";
 
-import { StaffWireframes } from "@/components/sections/staff-wireframes";
+import { LmlStudioPage } from "@/components/lab/lml-studio/LmlStudioPage";
 
 export const metadata: Metadata = {
   title: "Staff",
 };
 
+/** Production staff route — lab studio; global Navbar owns Contact / Menu. */
 export default function Page() {
-  return (
-    <main
-      id="main-content"
-      className="relative w-full min-h-screen bg-white text-black dark:bg-black dark:text-white pt-32 pb-24 px-6 md:p-10 md:pt-44 select-none swiss-no-select"
-    >
-      <StaffWireframes />
-    </main>
-  );
+  return <LmlStudioPage chrome="site" />;
 }

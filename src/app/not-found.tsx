@@ -34,7 +34,7 @@ export default function NotFound() {
   return (
     <main
       id="main-content"
-      className="swiss-no-select relative min-h-screen w-full bg-white px-6 pb-24 pt-32 font-swiss-compressed text-black dark:bg-black dark:text-white md:p-10 md:pt-44"
+      className="relative min-h-screen w-full bg-white px-6 pb-24 pt-32 font-swiss-compressed text-black dark:bg-black dark:text-white md:p-10 md:pt-44"
     >
       {/* Geometric grid — absolute-locked Swiss canvas */}
       <div

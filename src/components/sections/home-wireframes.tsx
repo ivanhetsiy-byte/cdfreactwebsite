@@ -1,20 +1,14 @@
 "use client";
 
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  motion,
-  useMotionValueEvent,
-  useReducedMotion,
-  useScroll,
-  useTransform,
-} from "motion/react";
-import {
   useCallback,
   useEffect,
   useRef,
-  useState,
   type PointerEvent,
 } from "react";
 
@@ -23,6 +17,9 @@ import {
   useLanguage,
 } from "@/context/LanguageContext";
 import { requestRouteCover } from "@/lib/route-cover";
+import { ScrollSlide } from "@/components/motion/ScrollSlide";
+
+gsap.registerPlugin(ScrollTrigger);
 
 type GalleryItem = {
   id: string;
@@ -65,209 +62,7 @@ const GALLERY_ITEMS: GalleryItem[] = GALLERY_CAPTIONS.map((caption, i) => ({
   caption,
 }));
 
-function ScrollTypewriter({
-  text,
-  className,
-  reducedMotion,
-}: {
-  text: string;
-  className?: string;
-  reducedMotion: boolean | null;
-}) {
-  const ref = useRef<HTMLParagraphElement>(null);
-
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ["start 0.92", "start 0.55"],
-  });
-  const chars = useTransform(scrollYProgress, [0, 1], [0, text.length]);
-
-  const [visible, setVisible] = useState(0);
-
-  useMotionValueEvent(chars, "change", (v) => {
-    setVisible(Math.min(text.length, Math.max(0, Math.round(v))));
-  });
-
-  // Sync on mount in case the section is already in view (e.g. restored scroll).
-  useEffect(() => {
-    setVisible(Math.min(text.length, Math.max(0, Math.round(chars.get()))));
-  }, [chars, text.length]);
-
-  if (reducedMotion) {
-    return <p className={className}>{text}</p>;
-  }
-
-  return (
-    <p ref={ref} className={className} aria-label={text}>
-      <span aria-hidden="true">{text.slice(0, visible)}</span>
-      <span aria-hidden="true" className="opacity-0">
-        {text.slice(visible)}
-      </span>
-    </p>
-  );
-}
-
-function CaretTypewriter({
-  text,
-  className,
-  id,
-  reducedMotion,
-  revealEpoch = 1,
-  charMs = 72,
-}: {
-  text: string;
-  className?: string;
-  id?: string;
-  reducedMotion: boolean | null;
-  /** `0` = deferred (no observer); `>0` arms a fresh observer. */
-  revealEpoch?: number;
-  charMs?: number;
-}) {
-  const [visible, setVisible] = useState(0);
-  const [started, setStarted] = useState(false);
-  const ref = useRef<HTMLHeadingElement>(null);
-
-  useEffect(() => {
-    setVisible(0);
-    setStarted(false);
-  }, [text, revealEpoch]);
-
-  useEffect(() => {
-    if (revealEpoch <= 0) {
-      setVisible(0);
-      setStarted(false);
-      return;
-    }
-
-    if (reducedMotion) {
-      setVisible(text.length);
-      setStarted(true);
-      return;
-    }
-
-    const el = ref.current;
-    if (!el) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry?.isIntersecting) {
-          setStarted(true);
-          observer.disconnect();
-        }
-      },
-      { threshold: 0.35 },
-    );
-
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [revealEpoch, reducedMotion, text]);
-
-  useEffect(() => {
-    if (!started || reducedMotion) return;
-    if (visible >= text.length) return;
-
-    const timer = window.setTimeout(() => {
-      setVisible((n) => Math.min(text.length, n + 1));
-    }, charMs);
-
-    return () => window.clearTimeout(timer);
-  }, [started, visible, text.length, charMs, reducedMotion]);
-
-  const done = visible >= text.length;
-
-  return (
-    <h2 ref={ref} id={id} className={className} aria-label={text}>
-      <span aria-hidden="true">{text.slice(0, visible)}</span>
-      {!reducedMotion && (
-        <span
-          aria-hidden="true"
-          className={`ml-[0.02em] inline-block h-[0.78em] w-[0.08em] translate-y-[0.06em] bg-current align-baseline ${
-            done ? "animate-caret-blink" : "opacity-100"
-          }`}
-        />
-      )}
-    </h2>
-  );
-}
-
-/** Motto line — controlled slide-in; only observes when revealEpoch > 0. */
-function MottoLine({
-  children,
-  fromX,
-  delay = 0,
-  className,
-  reducedMotion,
-  revealEpoch,
-}: {
-  children: string;
-  fromX: number;
-  delay?: number;
-  className?: string;
-  reducedMotion: boolean | null;
-  revealEpoch: number;
-}) {
-  const ref = useRef<HTMLSpanElement>(null);
-  const [inView, setInView] = useState(false);
-
-  useEffect(() => {
-    setInView(false);
-    if (revealEpoch <= 0) return;
-    if (reducedMotion) {
-      setInView(true);
-      return;
-    }
-
-    const el = ref.current;
-    if (!el) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry?.isIntersecting) {
-          setInView(true);
-          observer.disconnect();
-        }
-      },
-      { threshold: 0.25 },
-    );
-
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [revealEpoch, reducedMotion]);
-
-  if (reducedMotion) {
-    return <span className={className}>{children}</span>;
-  }
-
-  return (
-    <motion.span
-      ref={ref}
-      className={className}
-      initial={{ opacity: 0, x: fromX }}
-      animate={
-        revealEpoch > 0 && inView
-          ? { opacity: 1, x: 0 }
-          : { opacity: 0, x: fromX }
-      }
-      transition={{
-        duration: 0.7,
-        delay: revealEpoch > 0 && inView ? delay : 0,
-        ease: [0.22, 1, 0.36, 1],
-      }}
-    >
-      {children}
-    </motion.span>
-  );
-}
-
-function GalleryFigure({
-  item,
-  reducedMotion,
-  alwaysShowCaption = false,
-}: {
-  item: GalleryItem;
-  reducedMotion: boolean | null;
-  alwaysShowCaption?: boolean;
-}) {
+function GalleryFigure({ item }: { item: GalleryItem }) {
   return (
     <figure className="group relative h-full w-full overflow-hidden bg-black">
       <Image
@@ -276,19 +71,9 @@ function GalleryFigure({
         fill
         unoptimized
         sizes="(max-width: 768px) 100vw, 42vw"
-        className={`object-cover transition-[filter] duration-300 ${
-          reducedMotion
-            ? "grayscale-0"
-            : "grayscale group-hover:grayscale-0"
-        }`}
+        className="object-cover grayscale group-hover:grayscale-0"
       />
-      <figcaption
-        className={`pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/70 to-transparent px-4 py-5 md:px-5 md:py-6 ${
-          alwaysShowCaption || reducedMotion
-            ? "opacity-100"
-            : "opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-        }`}
-      >
+      <figcaption className="pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/70 to-transparent px-4 py-5 opacity-100 md:px-5 md:py-6">
         <p className="font-swiss text-xs font-medium tracking-[0.2em] text-white uppercase md:text-sm">
           {item.caption}
         </p>
@@ -297,11 +82,7 @@ function GalleryFigure({
   );
 }
 
-function GalleryStrip({
-  reducedMotion,
-}: {
-  reducedMotion: boolean | null;
-}) {
+function GalleryStrip() {
   const scrollerRef = useRef<HTMLDivElement>(null);
   const momentumRef = useRef<number | null>(null);
   const draggingRef = useRef(false);
@@ -330,7 +111,7 @@ function GalleryStrip({
 
       stopMomentum();
 
-      if (reducedMotion || Math.abs(releaseVelocity) < 0.04) {
+      if (Math.abs(releaseVelocity) < 0.04) {
         velocityRef.current = 0;
         smoothVelRef.current = 0;
         return;
@@ -372,7 +153,7 @@ function GalleryStrip({
 
       momentumRef.current = requestAnimationFrame(tick);
     },
-    [reducedMotion, stopMomentum],
+    [stopMomentum],
   );
 
   const onPointerDown = (e: PointerEvent<HTMLDivElement>) => {
@@ -455,11 +236,7 @@ function GalleryStrip({
           className="w-[calc(100vw-3rem)] shrink-0 px-6 md:w-[min(28rem,42vw)] md:px-5"
         >
           <div className="pointer-events-none aspect-[3/4] w-full">
-            <GalleryFigure
-              item={item}
-              reducedMotion={reducedMotion}
-              alwaysShowCaption
-            />
+            <GalleryFigure item={item} />
           </div>
         </div>
       ))}
@@ -467,24 +244,13 @@ function GalleryStrip({
   );
 }
 
-export function HomeWireframes({
-  revealEpoch = 1,
-}: {
-  /** `0` = deferred during return race; `>0` arms motto/Ages observers. */
-  revealEpoch?: number;
-}) {
+export function HomeWireframes() {
   const { t } = useLanguage();
   const pathname = usePathname();
   const router = useRouter();
   const navLockRef = useRef(false);
-  const programsRef = useRef<HTMLDivElement>(null);
-  const reducedMotion = useReducedMotion();
-
-  const { scrollYProgress } = useScroll({
-    target: programsRef,
-    offset: ["start 0.75", "end 0.9"],
-  });
-  const lineScale = useTransform(scrollYProgress, [0, 1], [0, 1]);
+  const programsBandRef = useRef<HTMLDivElement>(null);
+  const programsWashRef = useRef<HTMLDivElement>(null);
 
   const handleDelayedNavigation = (targetPath: string) => {
     if (typeof window === "undefined") return;
@@ -505,22 +271,129 @@ export function HomeWireframes({
     }, 500);
   };
 
-  const fadeUp = (delay = 0) =>
-    reducedMotion
-      ? { initial: false as const, whileInView: undefined, transition: undefined }
-      : {
-          initial: { opacity: 0, y: 24 },
-          whileInView: { opacity: 1, y: 0 },
-          transition: { duration: 0.55, delay, ease: [0.22, 1, 0.36, 1] as const },
-          viewport: { once: true, amount: 0.25 },
-        };
-
   const mottoLine1 = HOME_LOCKED_MOTTO.line1.replace(/[.,]$/, "");
   const mottoLine2 = HOME_LOCKED_MOTTO.line2.replace(/[.,]$/, "");
 
+  /**
+   * Wilian-style chapter wash: fixed full-viewport black, opacity scrubbed
+   * across enter/exit whitespace runways so the shift feels gradual.
+   */
+  useEffect(() => {
+    const band = programsBandRef.current;
+    const wash = programsWashRef.current;
+    if (!band || !wash) return;
+
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const isDark = document.documentElement.classList.contains("dark");
+
+    const setLightInk = () => {
+      band.style.setProperty("--programs-title", "#ffffff");
+      band.style.setProperty("--programs-body", "#a3a3a3");
+      band.style.setProperty("--programs-rail", "#ffffff");
+    };
+
+    const setDarkInk = () => {
+      band.style.setProperty("--programs-title", "#000000");
+      band.style.setProperty("--programs-body", "#6b6b6b");
+      band.style.setProperty("--programs-rail", "#000000");
+    };
+
+    const setRedSelection = (on: boolean) => {
+      if (on) {
+        band.setAttribute("data-selection-dark", "");
+        document.documentElement.classList.add("cdf-red-selection");
+      } else {
+        band.removeAttribute("data-selection-dark");
+        document.documentElement.classList.remove("cdf-red-selection");
+      }
+    };
+
+    const clearRedSelection = () => {
+      band.removeAttribute("data-selection-dark");
+      document.documentElement.classList.remove("cdf-red-selection");
+    };
+
+    if (reduced) {
+      gsap.set(wash, { opacity: 1 });
+      setLightInk();
+      setRedSelection(true);
+      return () => clearRedSelection();
+    }
+
+    if (isDark) setLightInk();
+
+    const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+    const inkFromWash = (opacity: number) => {
+      setRedSelection(opacity >= 0.45);
+      if (isDark) {
+        setLightInk();
+        return;
+      }
+      const t = Math.min(1, Math.max(0, (opacity - 0.15) / 0.55));
+      const ink = Math.round(lerp(0, 255, t));
+      const muted = Math.round(lerp(0x6b, 0xa3, t));
+      band.style.setProperty(
+        "--programs-title",
+        `rgb(${ink}, ${ink}, ${ink})`,
+      );
+      band.style.setProperty(
+        "--programs-body",
+        `rgb(${muted}, ${muted}, ${muted})`,
+      );
+      band.style.setProperty(
+        "--programs-rail",
+        `rgb(${ink}, ${ink}, ${ink})`,
+      );
+    };
+
+    const ctx = gsap.context(() => {
+      gsap.set(wash, { opacity: 0 });
+      if (!isDark) setDarkInk();
+
+      // One timeline over the whole chapter (enter runway → content → exit).
+      // Fade-in spans the tall enter whitespace; fade-out the exit runway.
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: band,
+          start: "top 65%",
+          end: "bottom top",
+          scrub: true,
+          invalidateOnRefresh: true,
+          onUpdate: () => {
+            inkFromWash(Number(gsap.getProperty(wash, "opacity")));
+          },
+        },
+      });
+
+      tl.fromTo(
+        wash,
+        { opacity: 0 },
+        { opacity: 1, duration: 0.34, ease: "none" },
+        0,
+      );
+      tl.to(wash, { opacity: 1, duration: 0.42, ease: "none" }, 0.34);
+      tl.to(wash, { opacity: 0, duration: 0.24, ease: "none" }, 0.76);
+    });
+
+    requestAnimationFrame(() => ScrollTrigger.refresh());
+    return () => {
+      clearRedSelection();
+      ctx.revert();
+    };
+  }, []);
+
   return (
-    <div className="relative w-full bg-white text-black dark:bg-black dark:text-white swiss-no-select">
-      {/* ── Motto ── */}
+    <div className="relative z-[1] w-full text-black dark:text-white">
+      {/* Fixed viewport wash — under content, above page canvas (Wilian). */}
+      <div
+        ref={programsWashRef}
+        aria-hidden="true"
+        data-programs-wash
+        className="pointer-events-none fixed inset-0 z-0 bg-black opacity-0"
+      />
+
+      <div className="relative z-[1]">
+      {/* ── Motto — opposite-side scrub slides ── */}
       <section
         aria-labelledby="home-motto-heading"
         className="relative flex min-h-dvh w-full items-center overflow-x-clip py-28 md:block md:min-h-0 md:pt-[20vw] md:pb-[14.5vw]"
@@ -529,26 +402,25 @@ export function HomeWireframes({
           id="home-motto-heading"
           className="font-swiss text-[clamp(1.85rem,8vw,3rem)] font-bold uppercase leading-[0.8] tracking-tighter md:text-[8.55vw]"
         >
-          <MottoLine
-            key={`motto-1-${revealEpoch}`}
-            fromX={-96}
-            delay={0}
-            reducedMotion={reducedMotion}
-            revealEpoch={revealEpoch}
+          <ScrollSlide
+            from="left"
+            as="span"
             className="block whitespace-nowrap"
+            scrollStart="top 90%"
+            scrollEnd="top 40%"
           >
             {mottoLine1}
-          </MottoLine>
-          <MottoLine
-            key={`motto-2-${revealEpoch}`}
-            fromX={96}
-            delay={0.08}
-            reducedMotion={reducedMotion}
-            revealEpoch={revealEpoch}
+          </ScrollSlide>
+          <ScrollSlide
+            from="right"
+            as="span"
             className="mt-[0.08em] block whitespace-nowrap pl-[1.4em]"
+            scrollStart="top 88%"
+            scrollEnd="top 38%"
+            distancePercent={50}
           >
             {mottoLine2}
-          </MottoLine>
+          </ScrollSlide>
         </h2>
       </section>
 
@@ -557,20 +429,16 @@ export function HomeWireframes({
         aria-labelledby="home-programs-heading"
         className="relative w-full pb-24 md:pt-[14.5vw] md:pb-[10vw]"
       >
-        {/* Header: Ages 3–18 + body / CTA */}
+        {/* Header: Ages 3–16 + body / CTA — stays on page canvas */}
         <div className="flex flex-col gap-10 md:flex-row md:items-start md:justify-between md:gap-12">
-          <CaretTypewriter
+          <h2
             id="home-programs-heading"
-            text={t.home.programs.headline}
-            reducedMotion={reducedMotion}
-            revealEpoch={revealEpoch}
             className="font-swiss text-[clamp(3rem,12vw,4.5rem)] font-bold leading-[0.92] tracking-tight md:text-[13.4vw]"
-          />
-
-          <motion.div
-            className="flex max-w-[28rem] shrink-0 gap-5 md:max-w-[32rem] md:pt-[1.5vw]"
-            {...fadeUp(0.1)}
           >
+            {t.home.programs.headline}
+          </h2>
+
+          <div className="flex max-w-[28rem] shrink-0 gap-5 md:max-w-[32rem] md:pt-[1.5vw]">
             <span
               aria-hidden="true"
               className="mt-1 hidden h-[11rem] w-px shrink-0 bg-black dark:bg-white md:block"
@@ -590,50 +458,46 @@ export function HomeWireframes({
                 {t.home.programs.cta}
               </Link>
             </div>
-          </motion.div>
+          </div>
         </div>
 
-        {/* Staggered program blocks */}
+        {/* Competitive / Recreational chapter */}
         <div
-          ref={programsRef}
-          className="relative mt-24 md:mt-[12vw] md:pb-[24vw]"
+          ref={programsBandRef}
+          className="programs-band relative mt-24 w-full select-text md:mt-[12vw]"
         >
-          <motion.div
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-y-0 left-1/2 hidden w-px -translate-x-1/2 bg-linear-to-b from-black from-75% to-transparent dark:from-white md:block"
-            style={{
-              scaleY: reducedMotion ? 1 : lineScale,
-              transformOrigin: "top",
-            }}
-          />
+          {/* Enter runway — scroll into black before the type */}
+          <div className="h-[60vh] md:h-[85vh]" aria-hidden="true" />
 
-          <ul className="flex flex-col gap-24 md:gap-0">
-            <li className="relative md:w-[48%] md:pt-[7.5vw] md:pr-8">
-              <ScrollTypewriter
-                text={t.home.programs.competitive.name}
-                reducedMotion={reducedMotion}
-                className="font-swiss text-[clamp(2.5rem,8vw,3.5rem)] font-bold leading-none tracking-tighter md:text-[7vw]"
-              />
-              <ScrollTypewriter
-                text={t.home.programs.competitive.line}
-                reducedMotion={reducedMotion}
-                className="mt-5 max-w-[34rem] font-alt text-[clamp(1rem,1.4vw,1.3125rem)] leading-[1.5] tracking-tight text-[#6b6b6b] md:mt-7"
-              />
-            </li>
+          <div className="relative pb-8 md:pb-[10vw]">
+            <div
+              aria-hidden="true"
+              className="programs-band-rail pointer-events-none absolute inset-y-0 left-1/2 hidden w-px -translate-x-1/2 md:block"
+            />
 
-            <li className="relative md:mt-[25vw] md:ml-auto md:w-[48%] md:pl-8">
-              <ScrollTypewriter
-                text={t.home.programs.recreational.name}
-                reducedMotion={reducedMotion}
-                className="font-swiss text-[clamp(2.5rem,8vw,3.5rem)] font-bold leading-none tracking-tighter md:text-[7vw]"
-              />
-              <ScrollTypewriter
-                text={t.home.programs.recreational.line}
-                reducedMotion={reducedMotion}
-                className="mt-5 max-w-[34rem] font-alt text-[clamp(1rem,1.4vw,1.3125rem)] leading-[1.5] tracking-tight text-[#6b6b6b] md:mt-7"
-              />
-            </li>
-          </ul>
+            <ul className="flex flex-col gap-24 md:gap-0">
+              <li className="relative md:w-[48%] md:pr-8">
+                <p className="programs-band-title font-swiss text-[clamp(2.5rem,8vw,3.5rem)] font-bold leading-none tracking-tighter md:text-[7vw]">
+                  {t.home.programs.competitive.name}
+                </p>
+                <p className="programs-band-body mt-5 max-w-[34rem] font-alt text-[clamp(1rem,1.4vw,1.3125rem)] leading-[1.5] tracking-tight md:mt-7">
+                  {t.home.programs.competitive.line}
+                </p>
+              </li>
+
+              <li className="relative md:mt-[25vw] md:ml-auto md:w-[48%] md:pl-8">
+                <p className="programs-band-title font-swiss text-[clamp(2.5rem,8vw,3.5rem)] font-bold leading-none tracking-tighter md:text-[7vw]">
+                  {t.home.programs.recreational.name}
+                </p>
+                <p className="programs-band-body mt-5 max-w-[34rem] font-alt text-[clamp(1rem,1.4vw,1.3125rem)] leading-[1.5] tracking-tight md:mt-7">
+                  {t.home.programs.recreational.line}
+                </p>
+              </li>
+            </ul>
+          </div>
+
+          {/* Exit runway — ease back out toward gallery */}
+          <div className="h-[45vh] md:h-[60vh]" aria-hidden="true" />
         </div>
       </section>
 
@@ -643,52 +507,23 @@ export function HomeWireframes({
         className="relative w-full"
       >
         <div className="relative pb-8 md:pb-8">
-          <motion.h2
+          <h2
             id="home-gallery-heading"
             className="font-swiss text-[clamp(3rem,12vw,4.5rem)] font-bold uppercase leading-[0.92] tracking-tighter md:text-[11.5vw]"
-            {...fadeUp(0)}
           >
             {t.home.gallery.label}
-          </motion.h2>
+          </h2>
           <div
             aria-hidden="true"
             className="mt-2 h-[3px] w-full bg-black dark:bg-white"
           />
         </div>
 
-        <motion.div className="pb-20 md:pb-12" {...fadeUp(0.08)}>
-          <GalleryStrip reducedMotion={reducedMotion} />
-        </motion.div>
+        <div className="pb-20 md:pb-12">
+          <GalleryStrip />
+        </div>
       </section>
-
-      {/* ── Fall enrollment CTA ── */}
-      <section
-        aria-labelledby="home-enrollment-heading"
-        className="relative w-full pb-20 md:pb-14"
-      >
-        <motion.div
-          className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between md:gap-10"
-          {...fadeUp(0)}
-        >
-          <h2
-            id="home-enrollment-heading"
-            className="font-swiss text-[clamp(2rem,7vw,3.75rem)] font-black leading-[0.95] tracking-tighter"
-          >
-            {t.home.enrollmentCta.line}
-          </h2>
-
-          <Link
-            href="/contact"
-            onClick={(e) => {
-              e.preventDefault();
-              handleDelayedNavigation("/contact");
-            }}
-            className="inline-flex w-fit border-2 border-black bg-black px-10 py-4 font-swiss text-base font-bold uppercase tracking-widest text-white transition-colors duration-150 hover:bg-white hover:text-black dark:border-white dark:bg-white dark:text-black dark:hover:bg-black dark:hover:text-white md:text-lg"
-          >
-            {t.home.enrollmentCta.cta}
-          </Link>
-        </motion.div>
-      </section>
+      </div>
     </div>
   );
 }

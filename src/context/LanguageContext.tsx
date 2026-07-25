@@ -26,9 +26,6 @@ export const HOME_LOCKED_MOTTO = {
   line2: "ALWAYS TOGETHER.",
 } as const;
 
-/** Hero discipline rail — locked English. */
-export const HOME_LOCKED_DISCIPLINES = "JAZZ · BALLET · ACRO";
-
 /** Current season mark — locked English. */
 export const HOME_LOCKED_SEASON = "SEASON 12";
 
@@ -40,8 +37,12 @@ type Dictionary = {
     about: string;
     classes: string;
     staff: string;
+    store: string;
     contact: string;
-    settings: string;
+    /** Short chrome label — MENU */
+    menu: string;
+    /** Short chrome label — CLOSE */
+    close: string;
     openMenu: string;
     closeMenu: string;
   };
@@ -71,17 +72,6 @@ type Dictionary = {
     gallery: {
       label: string;
     };
-    enrollmentCta: {
-      line: string;
-      cta: string;
-    };
-  };
-  settings: {
-    close: string;
-    theme: string;
-    light: string;
-    dark: string;
-    language: string;
   };
 };
 
@@ -92,8 +82,10 @@ const dictionaries: Record<Language, Dictionary> = {
       about: "ABOUT US",
       classes: "CLASSES",
       staff: "STAFF",
+      store: "Store",
       contact: "CONTACT US",
-      settings: "SETTINGS",
+      menu: "MENU",
+      close: "CLOSE",
       openMenu: "Open menu",
       closeMenu: "Close menu",
     },
@@ -112,7 +104,7 @@ const dictionaries: Record<Language, Dictionary> = {
     },
     home: {
       programs: {
-        headline: "Ages 3 - 18",
+        headline: "Ages 3 - 16",
         body: "Competitive and recreational groups built for every stage of the journey.",
         cta: "View classes →",
         competitive: {
@@ -127,17 +119,6 @@ const dictionaries: Record<Language, Dictionary> = {
       gallery: {
         label: "Gallery",
       },
-      enrollmentCta: {
-        line: "Fall enrollment is open",
-        cta: "Check fall enrollment →",
-      },
-    },
-    settings: {
-      close: "CLOSE",
-      theme: "THEME",
-      light: "LIGHT",
-      dark: "DARK",
-      language: "LANGUAGE",
     },
   },
   ru: {
@@ -146,8 +127,10 @@ const dictionaries: Record<Language, Dictionary> = {
       about: "О НАС",
       classes: "КЛАССЫ",
       staff: "ПЕДАГОГИ",
+      store: "Магазин",
       contact: "КОНТАКТЫ",
-      settings: "НАСТРОЙКИ",
+      menu: "МЕНЮ",
+      close: "ЗАКРЫТЬ",
       openMenu: "Открыть меню",
       closeMenu: "Закрыть меню",
     },
@@ -166,7 +149,7 @@ const dictionaries: Record<Language, Dictionary> = {
     },
     home: {
       programs: {
-        headline: "Возраст 3 - 18",
+        headline: "Возраст 3 - 16",
         body: "Соревновательные и любительские группы для каждого этапа пути.",
         cta: "Смотреть классы →",
         competitive: {
@@ -181,17 +164,6 @@ const dictionaries: Record<Language, Dictionary> = {
       gallery: {
         label: "Галерея",
       },
-      enrollmentCta: {
-        line: "Открыт набор на осень",
-        cta: "Узнать про осенний набор →",
-      },
-    },
-    settings: {
-      close: "ЗАКРЫТЬ",
-      theme: "ТЕМА",
-      light: "СВЕТЛАЯ",
-      dark: "ТЁМНАЯ",
-      language: "ЯЗЫК",
     },
   },
   uk: {
@@ -200,8 +172,10 @@ const dictionaries: Record<Language, Dictionary> = {
       about: "ПРО НАС",
       classes: "КЛАСИ",
       staff: "ПЕДАГОГИ",
+      store: "Магазин",
       contact: "КОНТАКТИ",
-      settings: "НАЛАШТУВАННЯ",
+      menu: "МЕНЮ",
+      close: "ЗАКРИТИ",
       openMenu: "Відкрити меню",
       closeMenu: "Закрити меню",
     },
@@ -220,7 +194,7 @@ const dictionaries: Record<Language, Dictionary> = {
     },
     home: {
       programs: {
-        headline: "Вік 3 - 18",
+        headline: "Вік 3 - 16",
         body: "Змагальні та аматорські групи для кожного етапу шляху.",
         cta: "Дивитися класи →",
         competitive: {
@@ -235,17 +209,6 @@ const dictionaries: Record<Language, Dictionary> = {
       gallery: {
         label: "Галерея",
       },
-      enrollmentCta: {
-        line: "Відкрито набір на осінь",
-        cta: "Дізнатися про осінній набір →",
-      },
-    },
-    settings: {
-      close: "ЗАКРИТИ",
-      theme: "ТЕМА",
-      light: "СВІТЛА",
-      dark: "ТЕМНА",
-      language: "МОВА",
     },
   },
   ja: {
@@ -254,8 +217,10 @@ const dictionaries: Record<Language, Dictionary> = {
       about: "私たちについて",
       classes: "クラス",
       staff: "スタッフ",
+      store: "ストア",
       contact: "お問い合わせ",
-      settings: "設定",
+      menu: "メニュー",
+      close: "閉じる",
       openMenu: "メニューを開く",
       closeMenu: "メニューを閉じる",
     },
@@ -274,7 +239,7 @@ const dictionaries: Record<Language, Dictionary> = {
     },
     home: {
       programs: {
-        headline: "対象年齢 3 - 18歳",
+        headline: "対象年齢 3 - 16歳",
         body: "競技グループとレクリエーショングループ — それぞれの段階に合わせて。",
         cta: "クラスを見る →",
         competitive: {
@@ -289,17 +254,6 @@ const dictionaries: Record<Language, Dictionary> = {
       gallery: {
         label: "ギャラリー",
       },
-      enrollmentCta: {
-        line: "秋の入学受付中",
-        cta: "秋の入学を確認 →",
-      },
-    },
-    settings: {
-      close: "閉じる",
-      theme: "テーマ",
-      light: "ライト",
-      dark: "ダーク",
-      language: "言語",
     },
   },
 };

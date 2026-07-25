@@ -73,6 +73,22 @@
   }
 }
 
+@keyframes selection-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.18;
+  }
+}
+
+@keyframes selection-ants {
+  to {
+    stroke-dashoffset: calc(-1 * var(--selection-ants-period, 12px));
+  }
+}
+
 :root {
   /* Swiss Design foundation colors */
   --background: #ffffff;
@@ -165,6 +181,85 @@
   h6 {
     @apply font-swiss tracking-tight text-balance;
   }
+
+  /* Light surfaces: custom dashed-frame overlay replaces the browser highlight */
+  ::selection {
+    background: transparent;
+    color: inherit;
+  }
+
+  ::-moz-selection {
+    background: transparent;
+    color: inherit;
+  }
+
+  input::selection,
+  textarea::selection,
+  [contenteditable="true"]::selection {
+    background: Highlight;
+    color: HighlightText;
+  }
+
+  input::-moz-selection,
+  textarea::-moz-selection,
+  [contenteditable="true"]::-moz-selection {
+    background: Highlight;
+    color: HighlightText;
+  }
+}
+
+/*
+ * Native red selection — outside @layer so it beats the transparent ::selection.
+ * Used on dark surfaces, Staff, and the programs black-wash chapter.
+ */
+.dark ::selection,
+[data-theme="dark"] ::selection,
+.lml-lab ::selection,
+.programs-band ::selection,
+.programs-band *::selection,
+html.cdf-red-selection ::selection,
+[data-selection-dark]::selection,
+[data-selection-dark] *::selection {
+  background-color: #c31716 !important;
+  color: #ffffff !important;
+}
+
+.dark ::-moz-selection,
+[data-theme="dark"] ::-moz-selection,
+.lml-lab ::-moz-selection,
+.programs-band ::-moz-selection,
+.programs-band *::-moz-selection,
+html.cdf-red-selection ::-moz-selection,
+[data-selection-dark]::-moz-selection,
+[data-selection-dark] *::-moz-selection {
+  background-color: #c31716 !important;
+  color: #ffffff !important;
+}
+
+.dark input::selection,
+.dark textarea::selection,
+.dark [contenteditable="true"]::selection,
+[data-theme="dark"] input::selection,
+[data-theme="dark"] textarea::selection,
+[data-theme="dark"] [contenteditable="true"]::selection,
+.lml-lab input::selection,
+.lml-lab textarea::selection,
+.lml-lab [contenteditable="true"]::selection {
+  background-color: #c31716 !important;
+  color: #ffffff !important;
+}
+
+.dark input::-moz-selection,
+.dark textarea::-moz-selection,
+.dark [contenteditable="true"]::-moz-selection,
+[data-theme="dark"] input::-moz-selection,
+[data-theme="dark"] textarea::-moz-selection,
+[data-theme="dark"] [contenteditable="true"]::-moz-selection,
+.lml-lab input::-moz-selection,
+.lml-lab textarea::-moz-selection,
+.lml-lab [contenteditable="true"]::-moz-selection {
+  background-color: #c31716 !important;
+  color: #ffffff !important;
 }
 
 @layer utilities {
@@ -189,6 +284,29 @@
   .swiss-diamond {
     clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
   }
+
+  .selection-pulse {
+    animation: selection-pulse 1.8s ease-in-out infinite;
+  }
+
+  .selection-ants {
+    animation: selection-ants var(--selection-ants-duration, 1.4s) linear infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .selection-pulse {
+      animation: none;
+      opacity: 1;
+    }
+
+    .selection-ants {
+      animation: none;
+    }
+
+    .store-item-in {
+      animation: none !important;
+    }
+  }
 }
 
 @utility no-scrollbar {
@@ -206,4 +324,55 @@
   -ms-user-select: none;
   user-select: none;
   -webkit-user-drag: none;
+}
+
+/** Subtle film grain for forced-dark cinematic surfaces (e.g. Staff). */
+@utility film-grain {
+  position: relative;
+
+  &::after {
+    content: "";
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    z-index: 40;
+    opacity: 0.045;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+    background-size: 180px 180px;
+  }
+}
+
+/**
+ * Home programs chapter — Competitive / Recreational.
+ * Ink vars are scrubbed from JS to match the fixed black wash.
+ */
+.programs-band {
+  --programs-title: #000000;
+  --programs-body: #6b6b6b;
+  --programs-rail: #000000;
+}
+
+.dark .programs-band {
+  --programs-title: #ffffff;
+  --programs-body: #a3a3a3;
+  --programs-rail: #ffffff;
+}
+
+.programs-band-title {
+  color: var(--programs-title);
+}
+
+.programs-band-body {
+  color: var(--programs-body);
+}
+
+.programs-band-rail {
+  background-image: linear-gradient(
+    to bottom,
+    var(--programs-rail) 0%,
+    var(--programs-rail) 75%,
+    transparent 100%
+  );
 }

@@ -9,6 +9,7 @@ import { ROUTE_COVER_EVENT } from "@/lib/route-cover";
 export default function RouteTemplate({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [covering, setCovering] = useState(false);
+  const isLab = pathname.startsWith("/lab");
 
   useEffect(() => {
     setCovering(false);
@@ -19,6 +20,10 @@ export default function RouteTemplate({ children }: { children: React.ReactNode 
     window.addEventListener(ROUTE_COVER_EVENT, onCover);
     return () => window.removeEventListener(ROUTE_COVER_EVENT, onCover);
   }, []);
+
+  if (isLab) {
+    return <>{children}</>;
+  }
 
   return (
     <>
@@ -32,7 +37,7 @@ export default function RouteTemplate({ children }: { children: React.ReactNode 
           duration: 0.5,
           ease: [0.25, 1, 0.5, 1], // Stable, linear-deceleration curve
         }}
-        className="fixed inset-0 w-screen h-screen bg-black z-50 pointer-events-none transform-gpu"
+        className="fixed inset-0 w-screen h-screen bg-black z-[1010] pointer-events-none transform-gpu"
       />
 
       {/* Core Page Render Output */}

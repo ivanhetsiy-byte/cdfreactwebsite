@@ -1,0 +1,119 @@
+.lml-lab {
+  --lml-red: #e10600;
+  --lml-muted: rgba(255, 255, 255, 0.5);
+  color: #fff;
+  background: #000 !important;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+html:has(.lml-lab),
+body:has(.lml-lab) {
+  background: #000 !important;
+}
+
+.lml-lab * {
+  box-sizing: border-box;
+}
+
+.lml-lab .split-char,
+.lml-lab .split-word,
+.lml-lab .char {
+  display: inline-block;
+  position: relative;
+  will-change: transform, opacity;
+}
+
+.lml-lab .noise-overlay {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 9999;
+  mix-blend-mode: soft-light;
+  opacity: 0.35;
+  image-rendering: pixelated;
+}
+
+.lml-lab .glitch-text {
+  position: relative;
+  color: #6a6a6a;
+  letter-spacing: 0.08em;
+}
+
+.lml-lab .glitch-text::before,
+.lml-lab .glitch-text::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  opacity: 0.75;
+}
+
+.lml-lab .glitch-text::before {
+  color: #8a8a8a;
+  clip-path: inset(0 0 55% 0);
+  transform: translate(-2px, 1px);
+  animation: lml-glitch-a 1.2s infinite linear alternate-reverse;
+}
+
+.lml-lab .glitch-text::after {
+  color: #4a4a4a;
+  clip-path: inset(45% 0 0 0);
+  transform: translate(2px, -1px);
+  animation: lml-glitch-b 0.9s infinite linear alternate-reverse;
+}
+
+@keyframes lml-glitch-a {
+  0% {
+    transform: translate(-2px, 1px);
+  }
+  100% {
+    transform: translate(2px, -1px);
+  }
+}
+
+@keyframes lml-glitch-b {
+  0% {
+    transform: translate(2px, -1px);
+  }
+  100% {
+    transform: translate(-1px, 2px);
+  }
+}
+
+@keyframes loader-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes loader-spin-rev {
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
+.lml-lab .loader-spin {
+  animation: loader-spin 4.5s linear infinite;
+}
+
+.lml-lab .loader-spin-rev {
+  animation: loader-spin-rev 2.8s linear infinite;
+}
+
+.lml-lab .custom-scrollbar {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 2px;
+  height: 100%;
+  z-index: 5000;
+  pointer-events: none;
+}
+
+.lml-lab .custom-scrollbar-thumb {
+  width: 100%;
+  background: #fff;
+  opacity: 0.35;
+}
