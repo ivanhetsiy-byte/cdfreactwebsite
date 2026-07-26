@@ -8,7 +8,7 @@ import {
   useLanguage,
 } from "@/context/LanguageContext";
 
-/** Figma frame 64:6 — desktop canvas (unchanged). */
+/** Figma frame 64:6 — same canvas on all breakpoints. */
 const FRAME_W = 1422;
 const FRAME_H = 1247;
 
@@ -36,7 +36,7 @@ function GrowsUnderline({ className = "" }: { className?: string }) {
       viewBox="0 0 601.148 14.289"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      className={`pointer-events-none absolute left-0 bottom-[-0.12em] h-auto w-full text-black dark:text-white ${className}`}
+      className={`pointer-events-none absolute left-0 top-[calc(1cap+0.14em)] h-[0.11em] w-full text-black dark:text-white ${className}`}
       aria-hidden="true"
       preserveAspectRatio="none"
     >
@@ -48,7 +48,7 @@ function GrowsUnderline({ className = "" }: { className?: string }) {
   );
 }
 
-/** Desktop Figma grid line (static). */
+/** Figma grid line (static). */
 function GridLine({
   orientation,
   left,
@@ -79,9 +79,6 @@ function GridLine({
 export function MissionStatement() {
   const { t } = useLanguage();
 
-  const wordClass =
-    "font-swiss text-[clamp(5rem,25vw,14rem)] font-black leading-[0.86] tracking-tighter text-black dark:text-white";
-
   return (
     <section
       id="mission-section"
@@ -92,60 +89,14 @@ export function MissionStatement() {
         {MISSION_LOCKED_TITLE.full}
       </h2>
 
-      {/* ── Mobile only — static layout ── */}
-      <div className="relative px-5 pt-32 pb-28 md:hidden">
-        <div className="relative z-10 flex flex-col gap-32">
-          <div className="-ml-4 flex flex-col gap-10" aria-hidden="true">
-            <div className="mr-auto text-left">
-              <p className={wordClass}>{MISSION_LOCKED_TITLE.where}</p>
-            </div>
-
-            <div className="mr-auto pl-[8%] text-left">
-              <p className={wordClass}>{MISSION_LOCKED_TITLE.talent}</p>
-            </div>
-
-            <div className="mr-auto pl-[14%] text-left">
-              <p className={`${wordClass} italic`}>
-                <span className="relative inline-block">
-                  {MISSION_LOCKED_TITLE.grows}
-                  <span className="absolute inset-x-0 bottom-0 block">
-                    <GrowsUnderline />
-                  </span>
-                </span>
-              </p>
-            </div>
-          </div>
-
-          <div className="flex flex-col">
-            <div className="border-t border-black py-5 dark:border-white">
-              <p className="text-right font-swiss text-[clamp(1.375rem,6vw,2rem)] font-black leading-[1.05] tracking-tight text-black dark:text-white">
-                {t.mission.professionalPedagogy}
-              </p>
-            </div>
-
-            <div className="border-t border-black py-5 dark:border-white">
-              <p className="text-right font-swiss text-[clamp(1.375rem,6vw,2rem)] font-black leading-[1.05] tracking-tight text-[#666666]">
-                {t.mission.danceForAllAges}
-              </p>
-            </div>
-
-            <div
-              aria-hidden="true"
-              className="h-0.5 w-full bg-black dark:bg-white"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* ── Desktop — original Figma canvas ── */}
-      {/* overflow visible so 10vw title type isn’t clipped at the right edge */}
-      <div className="relative mx-auto hidden w-full max-w-[1422px] pt-44 pb-32 md:block">
+      {/* Same Figma canvas on all breakpoints — type scales with the frame (cqi), not vw */}
+      <div className="relative mx-auto w-full max-w-[1422px] pt-24 pb-16 md:pt-44 md:pb-32">
         <div
-          className="relative w-full"
+          className="@container relative w-full"
           style={{ aspectRatio: `${FRAME_W} / ${FRAME_H}` }}
         >
           <p
-            className="absolute font-alt font-normal leading-none tracking-tight text-black dark:text-white whitespace-nowrap text-[clamp(1.125rem,3.87vw,3.4375rem)]"
+            className="absolute font-alt font-normal leading-none tracking-tight text-black dark:text-white whitespace-nowrap text-[3.87cqi]"
             style={{ left: pct(0, FRAME_W), top: pct(10, FRAME_H) }}
           >
             {t.mission.jazzBalletAcro}
@@ -164,7 +115,7 @@ export function MissionStatement() {
               src="/images/mission-dancer.jpg"
               alt="Dancer in a dynamic leap"
               fill
-              sizes="24vw"
+              sizes="(max-width: 768px) 28vw, 24vw"
               className="object-cover object-[38.34%_100%]"
             />
           </div>
@@ -206,29 +157,46 @@ export function MissionStatement() {
               height: pct(690, FRAME_H),
             }}
           >
-            <p className="-rotate-90 font-swiss text-[clamp(0.875rem,4.7vw,4.1875rem)] leading-none whitespace-nowrap text-black dark:text-white">
+            <p className="-rotate-90 font-swiss text-[4.7cqi] leading-none whitespace-nowrap text-black dark:text-white">
               {t.mission.professionalPedagogy}
             </p>
           </div>
 
+          {/* Title words — Figma tops; size fills to the rule; slight drop seats caps on the line */}
           <p
             aria-hidden="true"
-            className="absolute font-swiss text-[10vw] font-black leading-none tracking-tighter text-black dark:text-white whitespace-nowrap"
-            style={{ left: pct(274, FRAME_W), top: pct(275, FRAME_H) }}
+            className="absolute font-swiss font-black leading-none tracking-tighter text-black dark:text-white whitespace-nowrap"
+            style={{
+              left: pct(274, FRAME_W),
+              top: pct(275, FRAME_H),
+              fontSize: "16.7cqi",
+              transform: "translateY(0.14em)",
+            }}
           >
             {MISSION_LOCKED_TITLE.where}
           </p>
           <p
             aria-hidden="true"
-            className="absolute font-swiss text-[10vw] font-black leading-none tracking-tighter text-black dark:text-white whitespace-nowrap"
-            style={{ left: pct(595, FRAME_W), top: pct(549, FRAME_H) }}
+            className="absolute font-swiss font-black leading-none tracking-tighter text-black dark:text-white whitespace-nowrap"
+            style={{
+              left: pct(595, FRAME_W),
+              top: pct(549, FRAME_H),
+              fontSize: "16.7cqi",
+              transform: "translateY(0.14em)",
+            }}
           >
             {MISSION_LOCKED_TITLE.talent}
           </p>
           <p
             aria-hidden="true"
-            className="absolute font-swiss text-[10vw] font-black italic leading-none tracking-tighter text-black dark:text-white whitespace-nowrap"
-            style={{ left: pct(846, FRAME_W), top: pct(795, FRAME_H) }}
+            className="absolute font-swiss font-black italic leading-none tracking-tighter text-black dark:text-white whitespace-nowrap"
+            style={{
+              // Slight left nudge so the trailing “s” clears the viewport edge
+              left: `calc(${pct(846, FRAME_W)} - 0.35em)`,
+              top: pct(795, FRAME_H),
+              fontSize: "16.7cqi",
+              transform: "translateY(0.22em)",
+            }}
           >
             <span className="relative inline-block whitespace-nowrap">
               {MISSION_LOCKED_TITLE.grows}
@@ -237,7 +205,7 @@ export function MissionStatement() {
           </p>
 
           <p
-            className="absolute font-swiss text-[clamp(0.75rem,2.39vw,2.125rem)] leading-none whitespace-nowrap text-black dark:text-white"
+            className="absolute font-swiss text-[2.39cqi] leading-none whitespace-nowrap text-black dark:text-white"
             style={{ left: pct(524, FRAME_W), top: pct(1022, FRAME_H) }}
           >
             {t.mission.danceForAllAges}

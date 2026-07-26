@@ -251,6 +251,7 @@ export function HomeWireframes() {
   const navLockRef = useRef(false);
   const programsBandRef = useRef<HTMLDivElement>(null);
   const programsWashRef = useRef<HTMLDivElement>(null);
+  const mottoSectionRef = useRef<HTMLElement>(null);
 
   const handleDelayedNavigation = (targetPath: string) => {
     if (typeof window === "undefined") return;
@@ -393,8 +394,9 @@ export function HomeWireframes() {
       />
 
       <div className="relative z-[1]">
-      {/* ── Motto — opposite-side scrub slides ── */}
+      {/* ── Motto — opposite-side slides; play on enter, reverse on scroll-up ── */}
       <section
+        ref={mottoSectionRef}
         aria-labelledby="home-motto-heading"
         className="relative flex min-h-dvh w-full items-center overflow-x-clip py-28 md:block md:min-h-0 md:pt-[20vw] md:pb-[14.5vw]"
       >
@@ -406,8 +408,11 @@ export function HomeWireframes() {
             from="left"
             as="span"
             className="block whitespace-nowrap"
-            scrollStart="top 90%"
-            scrollEnd="top 40%"
+            scrub={false}
+            duration={1.25}
+            ease="power3.out"
+            scrollStart="top 78%"
+            triggerRef={mottoSectionRef}
           >
             {mottoLine1}
           </ScrollSlide>
@@ -415,8 +420,11 @@ export function HomeWireframes() {
             from="right"
             as="span"
             className="mt-[0.08em] block whitespace-nowrap pl-[1.4em]"
-            scrollStart="top 88%"
-            scrollEnd="top 38%"
+            scrub={false}
+            duration={1.25}
+            ease="power3.out"
+            scrollStart="top 78%"
+            triggerRef={mottoSectionRef}
             distancePercent={50}
           >
             {mottoLine2}
