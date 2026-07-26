@@ -46,7 +46,6 @@ function StudioContent({ ready }: { ready: boolean }) {
   const portraitRef = useRef<HTMLDivElement>(null);
   const taglineRef = useRef<HTMLDivElement>(null);
   const bioRef = useRef<HTMLSpanElement>(null);
-  const teamRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     if (!ready) return;
@@ -168,25 +167,24 @@ function StudioContent({ ready }: { ready: boolean }) {
         );
       }
 
-      // Secondary team — quiet scrubbed rise, same language as bio
-      if (teamRef.current) {
+      // Team chapters — quiet scrubbed rise
+      gsap.utils.toArray<HTMLElement>(".team-chapter").forEach((chapter) => {
         gsap.fromTo(
-          teamRef.current.querySelectorAll(".team-row"),
+          chapter,
           { y: 48, opacity: 0 },
           {
             y: 0,
             opacity: 1,
             ease: "none",
-            stagger: 0.12,
             scrollTrigger: {
-              trigger: teamRef.current,
+              trigger: chapter,
               start: "top 85%",
-              end: "top 40%",
+              end: "top 45%",
               scrub: true,
             },
           },
         );
-      }
+      });
 
       requestAnimationFrame(() => ScrollTrigger.refresh());
     });
@@ -277,44 +275,46 @@ function StudioContent({ ready }: { ready: boolean }) {
         </div>
       </section>
 
-      {/* Secondary team — larger chapters with square portraits (echo founder column) */}
+      {/* Teaching team — vertical stacks: first left, second right */}
       <section
-        ref={teamRef}
         aria-label="Teaching team"
         className="pointer-events-none relative z-10 w-full bg-black px-5 pt-16 pb-[100px] md:px-6.5 md:pt-32 md:pb-[140px]"
       >
-        <div className="pointer-events-auto flex w-full flex-col gap-0">
+        <div className="pointer-events-auto flex w-full flex-col gap-24 md:gap-36">
           {TEAM.map((person, index) => {
-            const photoRight = index % 2 === 0;
+            const alignRight = index % 2 === 1;
             return (
               <article
                 key={person.name}
                 className={[
-                  "team-row flex flex-col gap-10 border-t border-white/15 py-16 md:flex-row md:items-start md:gap-12 md:py-28 lg:gap-20",
-                  photoRight ? "md:flex-row-reverse" : "md:flex-row",
+                  "team-chapter flex w-full flex-col gap-8 md:w-[min(42%,34rem)] md:gap-10",
+                  alignRight ? "md:ml-auto md:items-end md:text-right" : "md:mr-auto md:items-start md:text-left",
                 ].join(" ")}
               >
-                <div className="order-1 w-full md:order-none md:w-[min(40%,28rem)] md:shrink-0 lg:w-[min(40%,32rem)]">
-                  <div className="relative aspect-square w-full overflow-hidden bg-[#0a0a0a] select-none">
-                    <Image
-                      src={person.photo}
-                      alt={person.name}
-                      fill
-                      draggable={false}
-                      sizes="(max-width: 768px) 90vw, 40vw"
-                      className="object-cover object-center select-none swiss-no-select"
-                    />
-                  </div>
+                <div className="relative aspect-square w-full overflow-hidden bg-[#0a0a0a] select-none">
+                  <Image
+                    src={person.photo}
+                    alt={person.name}
+                    fill
+                    draggable={false}
+                    sizes="(max-width: 768px) 90vw, 42vw"
+                    className="object-cover object-center select-none swiss-no-select"
+                  />
                 </div>
 
-                <div className="order-2 flex min-w-0 flex-1 flex-col md:order-none md:pt-2">
-                  <h2 className="text-[clamp(2.75rem,7vw,5.25rem)] leading-[0.95] font-medium tracking-tight">
+                <div
+                  className={[
+                    "flex w-full flex-col",
+                    alignRight ? "items-end text-right" : "items-start text-left",
+                  ].join(" ")}
+                >
+                  <h2 className="text-[clamp(2.5rem,5.5vw,4.5rem)] leading-[0.95] font-medium tracking-tight">
                     {person.name}
                   </h2>
-                  <p className="mt-4 text-[1.15rem] text-white/45 md:mt-5 md:text-[1.5rem]">
+                  <p className="mt-4 text-[1.05rem] text-white/45 md:mt-5 md:text-[1.25rem]">
                     {person.role}
                   </p>
-                  <p className="mt-8 max-w-xl text-[1.05rem] leading-[1.45] text-white/75 md:mt-10 md:text-[1.35rem] md:leading-[1.4]">
+                  <p className="mt-8 max-w-xl text-[1rem] leading-[1.4] text-white/80 md:mt-10 md:text-[1.375rem]">
                     {person.line}
                   </p>
                 </div>

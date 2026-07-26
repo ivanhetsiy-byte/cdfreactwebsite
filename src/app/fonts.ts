@@ -5,6 +5,11 @@ export const helvetica = localFont({
   src: [
     {
       path: "./fonts/Helvetica.woff2",
+      weight: "300",
+      style: "normal",
+    },
+    {
+      path: "./fonts/Helvetica.woff2",
       weight: "400",
       style: "normal",
     },

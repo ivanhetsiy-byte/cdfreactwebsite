@@ -25,7 +25,7 @@ I believe that outstanding work comes from the ability to build end to end—an 
 
 I look forward to collaborating with you to create a world woven together by dance and aesthetics.`;
 
-/** Secondary team — quieter than the founder chapter above. */
+/** Teaching team — framed professional portraits below founder. */
 export const TEAM = [
   {
     name: "Yuliia Shkoliarova",
