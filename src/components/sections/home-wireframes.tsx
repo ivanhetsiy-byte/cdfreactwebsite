@@ -16,7 +16,7 @@ import {
   HOME_LOCKED_MOTTO,
   useLanguage,
 } from "@/context/LanguageContext";
-import { requestRouteCover } from "@/lib/route-cover";
+import { requestRouteCover, ROUTE_COVER_MS } from "@/lib/route-cover";
 import { ScrollSlide } from "@/components/motion/ScrollSlide";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -269,7 +269,7 @@ export function HomeWireframes() {
     setTimeout(() => {
       router.push(targetPath);
       navLockRef.current = false;
-    }, 500);
+    }, ROUTE_COVER_MS);
   };
 
   const mottoLine1 = HOME_LOCKED_MOTTO.line1.replace(/[.,]$/, "");

@@ -23,7 +23,7 @@ import {
   type RefObject,
 } from "react";
 
-import { requestRouteCover } from "@/lib/route-cover";
+import { requestRouteCover, ROUTE_COVER_MS } from "@/lib/route-cover";
 
 /** Classes page copy — hardcoded English for now; translations can follow later. */
 const COPY = {
@@ -817,7 +817,7 @@ export function ClassesWireframes() {
     setTimeout(() => {
       router.push(targetPath);
       navLockRef.current = false;
-    }, 500);
+    }, ROUTE_COVER_MS);
   };
 
   return (

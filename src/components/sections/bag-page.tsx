@@ -6,7 +6,7 @@ import { useRef, useState, type FormEvent } from "react";
 
 import { useBag } from "@/context/BagContext";
 import { formatMoney, MAX_BAG_QUANTITY, parsePrice } from "@/lib/bag";
-import { requestRouteCover } from "@/lib/route-cover";
+import { requestRouteCover, ROUTE_COVER_MS } from "@/lib/route-cover";
 
 export function BagPage() {
   const router = useRouter();
@@ -28,7 +28,7 @@ export function BagPage() {
     setTimeout(() => {
       router.push(targetPath);
       navLockRef.current = false;
-    }, 500);
+    }, ROUTE_COVER_MS);
   };
 
   const handleCheckout = async (e: FormEvent) => {

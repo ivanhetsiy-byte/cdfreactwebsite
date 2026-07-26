@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useRef } from "react";
 
 import { useLanguage } from "@/context/LanguageContext";
-import { requestRouteCover } from "@/lib/route-cover";
+import { requestRouteCover, ROUTE_COVER_MS } from "@/lib/route-cover";
 
 export default function NotFound() {
   const router = useRouter();
@@ -23,12 +23,11 @@ export default function NotFound() {
 
     requestRouteCover();
 
-    // Wait exactly 500ms for the black curtain to reach full opacity,
-    // then switch the route behind the mask so the viewer never sees the swap
+    // Wait for the red→dark wipe to finish covering, then swap the route.
     setTimeout(() => {
       router.push(targetPath);
       navLockRef.current = false;
-    }, 500);
+    }, ROUTE_COVER_MS);
   };
 
   return (

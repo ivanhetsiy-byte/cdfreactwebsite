@@ -11,7 +11,7 @@ import {
   useState,
 } from "react";
 
-import { requestRouteCover } from "@/lib/route-cover";
+import { requestRouteCover, ROUTE_COVER_MS } from "@/lib/route-cover";
 import { STORE_PRODUCTS, type StoreProduct } from "@/lib/store-products";
 
 /**
@@ -106,7 +106,7 @@ export function StoreWireframes() {
       setTimeout(() => {
         router.push(target);
         navLockRef.current = false;
-      }, 500);
+      }, ROUTE_COVER_MS);
     },
     [pathname, router],
   );

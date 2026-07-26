@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { useBag } from "@/context/BagContext";
 import { useLanguage, type Language } from "@/context/LanguageContext";
-import { requestRouteCover } from "@/lib/route-cover";
+import { requestRouteCover, ROUTE_COVER_MS } from "@/lib/route-cover";
 import { SITE_MENU_STATE_EVENT } from "@/lib/site-menu";
 
 const LANG_OPTIONS: { code: Language; label: string }[] = [
@@ -101,7 +101,7 @@ export function SiteStatusBar() {
     window.setTimeout(() => {
       router.push("/bag");
       navLockRef.current = false;
-    }, 500);
+    }, ROUTE_COVER_MS);
   };
 
   const badgeLabel = count > 99 ? "99+" : String(count);

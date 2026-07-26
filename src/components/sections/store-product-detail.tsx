@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 
 import { useBag } from "@/context/BagContext";
-import { requestRouteCover } from "@/lib/route-cover";
+import { requestRouteCover, ROUTE_COVER_MS } from "@/lib/route-cover";
 import type { StoreProduct } from "@/lib/store-products";
 
 const ASPECT_CLASS = {
@@ -33,7 +33,7 @@ export function StoreProductDetail({ product }: StoreProductDetailProps) {
     setTimeout(() => {
       router.push("/store");
       navLockRef.current = false;
-    }, 500);
+    }, ROUTE_COVER_MS);
   };
 
   const handleAdd = () => {

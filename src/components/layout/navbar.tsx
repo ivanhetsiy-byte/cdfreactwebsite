@@ -8,7 +8,7 @@ import { useEffect, useRef, useState } from "react";
 import { Logo } from "@/components/layout/Logo";
 import { NavProgressiveBlur } from "@/components/layout/NavProgressiveBlur";
 import { useLanguage } from "@/context/LanguageContext";
-import { requestRouteCover } from "@/lib/route-cover";
+import { requestRouteCover, ROUTE_COVER_MS } from "@/lib/route-cover";
 import {
   OPEN_SITE_MENU_EVENT,
   broadcastSiteMenuState,
@@ -652,7 +652,7 @@ export function Navbar() {
     setTimeout(() => {
       router.push(targetPath);
       navLockRef.current = false;
-    }, 500);
+    }, ROUTE_COVER_MS);
   };
 
   const toggleMenu = () => {

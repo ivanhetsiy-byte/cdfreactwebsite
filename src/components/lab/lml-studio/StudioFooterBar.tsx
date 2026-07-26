@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useRef } from "react";
 
 import { SiteStatusBar } from "@/components/layout/site-status-bar";
-import { requestRouteCover } from "@/lib/route-cover";
+import { requestRouteCover, ROUTE_COVER_MS } from "@/lib/route-cover";
 
 function useDelayedNav() {
   const pathname = usePathname();
@@ -20,7 +20,7 @@ function useDelayedNav() {
     setTimeout(() => {
       router.push(targetPath);
       lockRef.current = false;
-    }, 500);
+    }, ROUTE_COVER_MS);
   };
 }
 

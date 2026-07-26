@@ -6,7 +6,7 @@ import type { ReactNode } from "react";
 import { Footer } from "@/components/layout/footer";
 import { Navbar } from "@/components/layout/navbar";
 import { SiteStatusBar } from "@/components/layout/site-status-bar";
-import { FirstVisitLoader } from "@/components/loading/FirstVisitLoader";
+import { PageTransition } from "@/components/loading/PageTransition";
 import { SelectionHighlight } from "@/components/providers/SelectionHighlight";
 
 /**
@@ -27,8 +27,7 @@ export function LabShell({ children }: { children: ReactNode }) {
   }
 
   return (
-    <>
-      <FirstVisitLoader />
+    <PageTransition>
       <div
         className={`relative w-full min-h-screen pb-28 ${
           forceDark
@@ -42,6 +41,6 @@ export function LabShell({ children }: { children: ReactNode }) {
         <SiteStatusBar />
       </div>
       <SelectionHighlight />
-    </>
+    </PageTransition>
   );
 }

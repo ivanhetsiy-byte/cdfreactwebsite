@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useRef } from "react";
 
 import { Logo } from "@/components/layout/Logo";
-import { requestRouteCover } from "@/lib/route-cover";
+import { requestRouteCover, ROUTE_COVER_MS } from "@/lib/route-cover";
 import { requestOpenSiteMenu } from "@/lib/site-menu";
 
 /**
@@ -47,7 +47,7 @@ export function StudioHeader({ variant = "lab" }: StudioHeaderProps) {
     setTimeout(() => {
       router.push(targetPath);
       navLockRef.current = false;
-    }, 500);
+    }, ROUTE_COVER_MS);
   };
 
   return (

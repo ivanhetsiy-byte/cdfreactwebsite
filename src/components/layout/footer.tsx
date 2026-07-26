@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useRef } from "react";
 
 import { SocialLinks } from "@/components/layout/social-links";
-import { requestRouteCover } from "@/lib/route-cover";
+import { requestRouteCover, ROUTE_COVER_MS } from "@/lib/route-cover";
 
 /**
  * Site-wide closing footer — large type CTA + sparse studio details.
@@ -31,8 +31,15 @@ export function Footer() {
     setTimeout(() => {
       router.push(targetPath);
       navLockRef.current = false;
-    }, 500);
+    }, ROUTE_COVER_MS);
   };
+
+  const cta =
+    pathname === "/contact"
+      ? { href: "/about", left: "Learn more", right: "→ About" }
+      : pathname === "/about"
+        ? { href: "/classes", left: "Check Out", right: "→ Classes" }
+        : { href: "/contact", left: "Train", right: "→ Contact" };
 
   return (
     <footer
@@ -44,10 +51,10 @@ export function Footer() {
       }
     >
       <Link
-        href="/contact"
+        href={cta.href}
         onClick={(e) => {
           e.preventDefault();
-          go("/contact");
+          go(cta.href);
         }}
         className={
           forceDark
@@ -56,10 +63,10 @@ export function Footer() {
         }
       >
         <span className="font-swiss text-[2.25rem] leading-none font-medium tracking-tight md:text-[4rem]">
-          Train
+          {cta.left}
         </span>
         <span className="font-swiss text-[2.25rem] leading-none font-medium tracking-tight transition-transform duration-300 group-hover:translate-x-[-10px] md:text-[4rem]">
-          → Contact
+          {cta.right}
         </span>
       </Link>
 

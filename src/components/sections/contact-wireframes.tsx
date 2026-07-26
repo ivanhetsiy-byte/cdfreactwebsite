@@ -11,11 +11,10 @@ import {
 } from "react";
 
 import { SocialLinks } from "@/components/layout/social-links";
-import { requestRouteCover } from "@/lib/route-cover";
+import { requestRouteCover, ROUTE_COVER_MS } from "@/lib/route-cover";
 
 /** Contact page copy — hardcoded English for now; translations can follow later. */
 const COPY = {
-  kicker: "CDF · GET IN TOUCH",
   headline: "Contact Us",
   headerBody:
     "Questions about classes, schedules, or joining the team? Send us a message and we'll get back to you soon.",
@@ -143,7 +142,7 @@ export function ContactWireframes() {
     setTimeout(() => {
       router.push(targetPath);
       navLockRef.current = false;
-    }, 500);
+    }, ROUTE_COVER_MS);
   };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -200,10 +199,6 @@ export function ContactWireframes() {
         aria-labelledby="contact-heading"
         className="relative w-full pb-24 md:pb-[8vw]"
       >
-        <p className="mb-6 font-swiss text-xs font-medium tracking-[0.28em] text-[#666666] uppercase md:mb-[2vw] md:text-sm">
-          {COPY.kicker}
-        </p>
-
         <div className="flex flex-col gap-10 md:flex-row md:items-start md:justify-between md:gap-12">
           <h1
             id="contact-heading"
