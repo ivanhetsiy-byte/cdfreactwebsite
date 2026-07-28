@@ -140,11 +140,14 @@ export function GuidePath({
       const tip = tipLen * tipScale;
 
       for (let i = 0; i < paths.length; i++) {
-        const layer = TIP_LAYERS[i] ?? TIP_LAYERS[TIP_LAYERS.length - 1];
+        const path = paths[i];
+        if (!path) continue;
+        const layer = TIP_LAYERS[Math.min(i, TIP_LAYERS.length - 1)] ?? TIP_LAYERS[0];
+        if (!layer) continue;
         const visible = Math.min(len, Math.max(0, drawn + tip * layer.lead));
         const offset = len - visible;
-        paths[i].style.strokeDasharray = `${len}`;
-        paths[i].style.strokeDashoffset = `${offset}`;
+        path.style.strokeDasharray = `${len}`;
+        path.style.strokeDashoffset = `${offset}`;
       }
     };
 
@@ -168,7 +171,9 @@ export function GuidePath({
         p.setAttribute("d", d);
       }
 
-      pathLength = paths[0].getTotalLength();
+      const first = paths[0];
+      if (!first) return 0;
+      pathLength = first.getTotalLength();
       tipLen = Math.min(160, Math.max(90, pathLength * 0.06));
       return pathLength;
     };
