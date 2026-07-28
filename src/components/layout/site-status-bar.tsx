@@ -106,9 +106,6 @@ export function SiteStatusBar() {
 
   const badgeLabel = count > 99 ? "99+" : String(count);
   const showBadge = showBag && count > 0 && !bagHovered;
-  const hidden = menuOpen
-    ? "max-md:pointer-events-none max-md:opacity-0"
-    : "";
 
   return (
     <>
@@ -117,7 +114,8 @@ export function SiteStatusBar() {
         role="contentinfo"
         aria-label="Site status"
         aria-hidden={menuOpen}
-        className={`pointer-events-none fixed inset-x-0 bottom-0 z-[10050] mix-blend-difference font-swiss text-white transition-opacity duration-300 ${hidden}`}
+        data-site-status-bar
+        className="pointer-events-none fixed inset-x-0 bottom-0 z-[10050] mix-blend-difference font-swiss text-white transition-opacity duration-300"
       >
         <div className={`pointer-events-auto ${CHROME_PAD}`}>
           <div className="flex w-full items-center justify-between gap-3 text-[0.7rem] md:text-[0.95rem]">
@@ -190,7 +188,8 @@ export function SiteStatusBar() {
       {/* Non-blended overlay — hit target, red hover, count badge (store only) */}
       {showBag ? (
         <div
-          className={`pointer-events-none fixed inset-x-0 bottom-0 z-[10051] font-swiss transition-opacity duration-300 ${hidden}`}
+          data-site-status-bar
+          className="pointer-events-none fixed inset-x-0 bottom-0 z-[10051] font-swiss transition-opacity duration-300"
         >
           <div className={CHROME_PAD}>
             <div className={BAG_SLOT_CLASS}>

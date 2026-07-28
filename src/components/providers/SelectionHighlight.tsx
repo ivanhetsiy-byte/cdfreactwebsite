@@ -332,7 +332,7 @@ function isDarkSelectionSurface(node: Node): boolean {
   if (!el) return false;
   return Boolean(
     el.closest(
-      ".dark, [data-theme='dark'], .lml-lab, .programs-band, [data-selection-dark]",
+      ".dark, [data-theme='dark'], .lml-lab, [data-selection-dark]",
     ),
   );
 }

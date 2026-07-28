@@ -47,8 +47,10 @@ export function ScrollFloat({
     if (!el) return;
 
     const split = new SplitType(el, {
-      types: "chars",
+      types: "words, chars",
       tagName: "span",
+      // Keep words intact so inline-block chars don’t wrap mid-word on mobile
+      wordClass: "word inline-block whitespace-nowrap",
       charClass: "char inline-block",
     });
 

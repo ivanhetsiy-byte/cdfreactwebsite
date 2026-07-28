@@ -18,10 +18,15 @@ body:has(.lml-lab) {
 
 .lml-lab .split-char,
 .lml-lab .split-word,
+.lml-lab .word,
 .lml-lab .char {
   display: inline-block;
   position: relative;
   will-change: transform, opacity;
+}
+
+.lml-lab .word {
+  white-space: nowrap;
 }
 
 .lml-lab .noise-overlay {

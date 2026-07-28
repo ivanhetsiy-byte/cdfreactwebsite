@@ -210,13 +210,11 @@
 
 /*
  * Native red selection — outside @layer so it beats the transparent ::selection.
- * Used on dark surfaces, Staff, and the programs black-wash chapter.
+ * Used on dark surfaces and Staff.
  */
 .dark ::selection,
 [data-theme="dark"] ::selection,
 .lml-lab ::selection,
-.programs-band ::selection,
-.programs-band *::selection,
 html.cdf-red-selection ::selection,
 [data-selection-dark]::selection,
 [data-selection-dark] *::selection {
@@ -227,8 +225,6 @@ html.cdf-red-selection ::selection,
 .dark ::-moz-selection,
 [data-theme="dark"] ::-moz-selection,
 .lml-lab ::-moz-selection,
-.programs-band ::-moz-selection,
-.programs-band *::-moz-selection,
 html.cdf-red-selection ::-moz-selection,
 [data-selection-dark]::-moz-selection,
 [data-selection-dark] *::-moz-selection {
@@ -309,6 +305,12 @@ html.cdf-red-selection ::-moz-selection,
   }
 }
 
+/* Hide status bar when compact nav menu is open */
+body.site-menu-open.site-nav-compact [data-site-status-bar] {
+  opacity: 0;
+  pointer-events: none;
+}
+
 @utility no-scrollbar {
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;     /* Firefox */
@@ -342,37 +344,4 @@ html.cdf-red-selection ::-moz-selection,
     background-repeat: repeat;
     background-size: 180px 180px;
   }
-}
-
-/**
- * Home programs chapter — Competitive / Recreational.
- * Ink vars are scrubbed from JS to match the fixed black wash.
- */
-.programs-band {
-  --programs-title: #000000;
-  --programs-body: #6b6b6b;
-  --programs-rail: #000000;
-}
-
-.dark .programs-band {
-  --programs-title: #ffffff;
-  --programs-body: #a3a3a3;
-  --programs-rail: #ffffff;
-}
-
-.programs-band-title {
-  color: var(--programs-title);
-}
-
-.programs-band-body {
-  color: var(--programs-body);
-}
-
-.programs-band-rail {
-  background-image: linear-gradient(
-    to bottom,
-    var(--programs-rail) 0%,
-    var(--programs-rail) 75%,
-    transparent 100%
-  );
 }

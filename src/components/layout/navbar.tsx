@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from "react";
 import { Logo } from "@/components/layout/Logo";
 import { NavProgressiveBlur } from "@/components/layout/NavProgressiveBlur";
 import { useLanguage } from "@/context/LanguageContext";
+import { useCompactNavMeasure } from "@/hooks/useCompactNav";
 import { requestRouteCover, ROUTE_COVER_MS } from "@/lib/route-cover";
 import {
   OPEN_SITE_MENU_EVENT,
@@ -164,13 +165,6 @@ function readScrollY() {
   return window.scrollY || document.documentElement.scrollTop || 0;
 }
 
-function isDesktopNav() {
-  return (
-    typeof window !== "undefined" &&
-    window.matchMedia("(min-width: 768px)").matches
-  );
-}
-
 /**
  * Full word always laid out; clip reveals from the right (RTL on open).
  * Caret sits on the reveal edge — right when opening, left when closing.
@@ -215,12 +209,23 @@ export function Navbar() {
   const mobilePanelRef = useRef<HTMLDivElement>(null);
   const desktopNavRef = useRef<HTMLElement>(null);
   const storeLinkRef = useRef<HTMLAnchorElement>(null);
+  const headerRowRef = useRef<HTMLDivElement>(null);
+  const probeBandRef = useRef<HTMLDivElement>(null);
+  const contactProbeRef = useRef<HTMLSpanElement>(null);
+  const linksProbeRef = useRef<HTMLDivElement>(null);
   const openTlRef = useRef<gsap.core.Timeline | null>(null);
   const [activeIndicator, setActiveIndicator] = useState(pathname);
   const [menuOpen, setMenuOpen] = useState(false);
   const [blurProgress, setBlurProgress] = useState(0);
   const [localTime, setLocalTime] = useState<string | null>(null);
-  const [isDesktop, setIsDesktop] = useState(false);
+  const navLabels = NAV_HREFS.map((link) => t.nav[link.key]);
+  const { compact: useCompactNav, compactRef } = useCompactNavMeasure(
+    headerRowRef,
+    probeBandRef,
+    contactProbeRef,
+    linksProbeRef,
+    [t.nav.contact, MENU_TOGGLE_CLOSE, ...navLabels],
+  );
   const [toggleLabel, setToggleLabel] = useState(MENU_TOGGLE_OPEN);
   const toggleLabelRef = useRef<HTMLSpanElement>(null);
   const toggleFadeRef = useRef<gsap.core.Tween | null>(null);
@@ -304,12 +309,9 @@ export function Navbar() {
   }, [pathname]);
 
   useEffect(() => {
-    const mq = window.matchMedia("(min-width: 768px)");
-    const sync = () => setIsDesktop(mq.matches);
-    sync();
-    mq.addEventListener("change", sync);
-    return () => mq.removeEventListener("change", sync);
-  }, []);
+    document.body.classList.toggle("site-nav-compact", useCompactNav);
+    return () => document.body.classList.remove("site-nav-compact");
+  }, [useCompactNav]);
 
   useEffect(() => {
     broadcastSiteMenuState(menuOpen);
@@ -354,12 +356,12 @@ export function Navbar() {
 
   // Live EST clock for mobile menu footer (LML “locale • time” slot)
   useEffect(() => {
-    if (!menuOpen || isDesktop) return;
+    if (!menuOpen || !useCompactNav) return;
     const tick = () => setLocalTime(formatEstTime(new Date()));
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
-  }, [menuOpen, isDesktop]);
+  }, [menuOpen, useCompactNav]);
 
   // Gradual frost — fades in as content scrolls under the nav (LML pattern)
   useEffect(() => {
@@ -415,17 +417,22 @@ export function Navbar() {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- close uses refs
   }, [menuOpen]);
 
-  // Open animation — desktop: typewriter; mobile: full-screen panel
+  // Open animation — inline: typewriter; compact: full-screen panel
   useEffect(() => {
     if (!menuOpen) return;
 
     openTlRef.current?.kill();
+    linksTweenRef.current?.kill();
     closingRef.current = false;
 
     const reduced = prefersReducedMotion();
-    const desktop = isDesktopNav();
+    const inline = !compactRef.current;
 
-    if (desktop) {
+    if (inline) {
+      if (mobilePanelRef.current) {
+        gsap.set(mobilePanelRef.current, { yPercent: -100 });
+      }
+
       const gen = bumpTypewriterGen();
 
       if (reduced) {
@@ -473,6 +480,13 @@ export function Navbar() {
       };
     }
 
+    linksRevealRef.current = 0;
+    setLinksReveal(0);
+    setLinksTyping(false);
+    setStoreTyped("");
+    setStoreTyping(false);
+    storeTypedRef.current = "";
+
     const panel = mobilePanelRef.current;
     if (!panel) return;
 
@@ -515,24 +529,24 @@ export function Navbar() {
       if (openTlRef.current === tl) openTlRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- t.nav stable enough per open
-  }, [menuOpen]);
+  }, [menuOpen, useCompactNav]);
 
-  // Lock page scroll only for full-screen mobile menu
+  // Lock page scroll only for full-screen compact menu
   useEffect(() => {
-    if (!menuOpen || isDesktop) return;
+    if (!menuOpen || !useCompactNav) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = prev;
     };
-  }, [menuOpen, isDesktop]);
+  }, [menuOpen, useCompactNav]);
 
   const requestClose = () => {
     if (closingRef.current) return;
     if (!menuOpen) return;
 
     const reduced = prefersReducedMotion();
-    const desktop = isDesktopNav();
+    const inline = !compactRef.current;
 
     if (reduced) {
       bumpTypewriterGen();
@@ -548,7 +562,7 @@ export function Navbar() {
     closingRef.current = true;
     openTlRef.current?.kill();
 
-    if (desktop) {
+    if (inline) {
       const gen = bumpTypewriterGen();
       linksTweenRef.current?.kill();
 
@@ -664,10 +678,38 @@ export function Navbar() {
     setMenuOpen(true);
   };
 
-  const showBlur = !menuOpen || isDesktop;
+  const showBlur = !menuOpen || !useCompactNav;
 
   return (
     <>
+      {/* Hidden probe — mirrors open-menu inline chrome for overflow measurement */}
+      <div
+        aria-hidden
+        className="pointer-events-none fixed top-0 -left-[9999px] opacity-0"
+      >
+        <div
+          ref={probeBandRef}
+          className="flex items-end justify-between font-medium"
+        >
+          <span ref={contactProbeRef} className={studioLinkClassFor(false)}>
+            Contact
+          </span>
+          <div
+            ref={linksProbeRef}
+            className="flex items-end gap-5 lg:gap-7"
+          >
+            <ul className="flex flex-nowrap items-end gap-x-4 lg:gap-x-6">
+              {NAV_HREFS.map((link) => (
+                <li key={link.href} className="shrink-0">
+                  <span className={menuLinkClass(false)}>{t.nav[link.key]}</span>
+                </li>
+              ))}
+            </ul>
+            <span className={studioLinkClass}>{MENU_TOGGLE_CLOSE}</span>
+          </div>
+        </div>
+      </div>
+
       {/* LML progressive frost — under chrome, above page; fades in on scroll */}
       {showBlur ? <NavProgressiveBlur progress={blurProgress} /> : null}
 
@@ -679,9 +721,9 @@ export function Navbar() {
         aria-modal="true"
         aria-label={t.nav.menu}
         aria-hidden={!menuOpen}
-        className={`fixed inset-0 z-[1003] bg-black text-white will-change-transform md:hidden ${
-          menuOpen ? "pointer-events-auto" : "pointer-events-none"
-        }`}
+        className={`fixed inset-0 z-[1003] bg-black text-white will-change-transform ${
+          useCompactNav ? "" : "hidden"
+        } ${menuOpen ? "pointer-events-auto" : "pointer-events-none"}`}
       >
         <div className="flex h-full flex-col px-5 pt-20 pb-6">
           <nav
@@ -758,7 +800,12 @@ export function Navbar() {
         <div
           className={`relative z-20 flex w-full items-center justify-between ${CHROME_PAD_X} ${CHROME_PAD_Y}`}
         >
-          <div className="relative flex h-16 w-full items-center justify-between md:items-start">
+          <div
+            ref={headerRowRef}
+            className={`relative flex h-16 w-full justify-between ${
+              useCompactNav ? "items-center" : "items-start"
+            }`}
+          >
             <Link
               href="/"
               onClick={(e) => {
@@ -771,10 +818,10 @@ export function Navbar() {
               {/* White mark on black mobile menu; blend mark otherwise */}
               {menuOpen ? (
                 <>
-                  <span className="block h-full md:hidden">
+                  <span className={`h-full ${useCompactNav ? "block" : "hidden"}`}>
                     <Logo className={LOGO_IMG_CLASS} forceWhite />
                   </span>
-                  <span className="hidden h-full md:block">
+                  <span className={`h-full ${useCompactNav ? "hidden" : "block"}`}>
                     <Logo className={LOGO_IMG_CLASS} blend />
                   </span>
                 </>
@@ -785,7 +832,11 @@ export function Navbar() {
 
             {/* Desktop open: Store — same row + type size as Contact / Close */}
             {menuOpen && (storeTyped || storeTyping) ? (
-              <div className="pointer-events-none absolute inset-y-0 left-1/2 z-10 hidden -translate-x-1/2 items-start md:flex">
+              <div
+                className={`pointer-events-none absolute inset-y-0 left-1/2 z-10 -translate-x-1/2 items-start ${
+                  useCompactNav ? "hidden" : "flex"
+                }`}
+              >
                 <Link
                   ref={storeLinkRef}
                   href="/store"
@@ -807,7 +858,11 @@ export function Navbar() {
             ) : null}
 
             {/* Desktop: Contact …… Menu — original 40% band; links sit next to Menu, bottom-aligned */}
-            <nav className="pointer-events-auto hidden w-[40%] shrink-0 items-end justify-between font-medium md:flex">
+            <nav
+              className={`pointer-events-auto w-[40%] shrink-0 items-end justify-between font-medium ${
+                useCompactNav ? "hidden" : "flex"
+              }`}
+            >
               <Link
                 href="/contact"
                 onClick={(e) => {
@@ -889,7 +944,9 @@ export function Navbar() {
             <button
               type="button"
               onClick={toggleMenu}
-              className="pointer-events-auto relative z-10 text-current transition-opacity hover:opacity-70 md:hidden"
+              className={`pointer-events-auto relative z-10 text-current transition-opacity hover:opacity-70 ${
+                useCompactNav ? "" : "hidden"
+              }`}
               aria-label={menuOpen ? t.nav.closeMenu : t.nav.openMenu}
               aria-expanded={menuOpen}
               aria-controls="site-nav-menu-mobile"

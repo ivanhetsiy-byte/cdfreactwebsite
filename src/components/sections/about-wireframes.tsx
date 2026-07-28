@@ -5,53 +5,25 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useRef } from "react";
 
-import { requestRouteCover } from "@/lib/route-cover";
+import { requestRouteCover, ROUTE_COVER_MS } from "@/lib/route-cover";
 
 /** About page copy — hardcoded English for now; translations can follow later. */
 const COPY = {
-  kicker: "CDF · THE STUDIO",
   headline: "About Us",
   headerBody:
     "CDF is a competitive and recreational dance studio where dancers aged 3–16 train, perform, and grow together.",
   headerCta: "MEET OUR STAFF →",
-  intro:
-    "Always to the top, always together — a studio built on professional pedagogy and the belief that every dancer deserves a stage.",
-  story: {
-    title: "Who We Are",
+  statement: {
+    lead: "Always to the top, always together — a studio built on professional pedagogy and the belief that every dancer deserves a stage.",
     p1: "CDF is a home for dancers of every level — from a first plié to national finals. Our training is rooted in gymnastics, ballet, and acrobatics, taught with structure, patience, and high standards.",
     p2: "We grow dancers, not just routines. Every class builds technique, discipline, and confidence that carry far beyond the studio floor.",
   },
   imageCaption: "SEASON 12 · CDF",
-  values: {
-    heading: "What We Teach",
-    items: [
-      {
-        name: "Gymnastics",
-        line: "Flexibility, strength, and control that power every routine — trained safely from the ground up.",
-      },
-      {
-        name: "Ballet",
-        line: "The technical foundation: posture, lines, and discipline that elevate every other discipline.",
-      },
-      {
-        name: "Jazz",
-        line: "Sharp musicality, style, and stage presence — from clean isolations to full-out performance energy.",
-      },
-      {
-        name: "Acrobatics",
-        line: "Dynamic tumbling and partner skills built on solid technique, so every trick lands with confidence.",
-      },
-    ],
-  },
   stats: [
     { value: "12", label: "Seasons on stage" },
     { value: "200+", label: "Dancers trained" },
     { value: "50+", label: "Competition awards" },
   ],
-  cta: {
-    line: "Ready to join the family?",
-    button: "Contact us →",
-  },
 } as const;
 
 export function AboutWireframes() {
@@ -75,20 +47,16 @@ export function AboutWireframes() {
     setTimeout(() => {
       router.push(targetPath);
       navLockRef.current = false;
-    }, 500);
+    }, ROUTE_COVER_MS);
   };
 
   return (
     <div className="relative w-full bg-white text-black dark:bg-black dark:text-white">
-      {/* ── Page header — programs-header slot: big type left, rail + body right ── */}
+      {/* ── Page header — Contact / programs pattern ── */}
       <section
         aria-labelledby="about-heading"
         className="relative w-full pb-24 md:pb-[10vw]"
       >
-        <p className="mb-6 font-swiss text-xs font-medium tracking-[0.28em] text-[#666666] uppercase md:mb-[2vw] md:text-sm">
-          {COPY.kicker}
-        </p>
-
         <div className="flex flex-col gap-10 md:flex-row md:items-start md:justify-between md:gap-12">
           <h1
             id="about-heading"
@@ -112,7 +80,7 @@ export function AboutWireframes() {
                   e.preventDefault();
                   handleDelayedNavigation("/staff");
                 }}
-                className="inline-flex w-fit font-alt text-[clamp(1rem,1.6vw,1.5rem)] font-bold leading-[1.45] uppercase tracking-tight text-[#616161] transition-colors duration-150 hover:text-black dark:hover:text-white"
+                className="inline-flex w-fit font-swiss text-[clamp(1rem,1.6vw,1.5rem)] font-bold leading-[1.45] uppercase tracking-tight text-[#616161] transition-colors duration-150 hover:text-black dark:hover:text-white"
               >
                 {COPY.headerCta}
               </Link>
@@ -121,104 +89,50 @@ export function AboutWireframes() {
         </div>
       </section>
 
-      {/* ── Intro statement — right-shifted like the home statement block ── */}
-      <section aria-label="Studio intro" className="relative w-full pb-28 md:pb-[10vw]">
-        <div className="flex gap-5 md:ml-auto md:max-w-[52rem] md:gap-8">
-          <span
-            aria-hidden="true"
-            className="mt-1 hidden w-px shrink-0 self-stretch bg-black dark:bg-white md:block"
-          />
-          <p className="border-t border-black/20 pt-5 font-alt text-[clamp(1.375rem,2.6vw,2.5rem)] leading-[1.35] tracking-tight text-[#6b6b6b] dark:border-white/20 md:border-t-0 md:pt-0">
-            {COPY.intro}
-          </p>
-        </div>
-      </section>
-
-      {/* ── Story — heading + copy left, diamond media right ── */}
+      {/* ── Visual chapter — merged statement + dominant team image ── */}
       <section
-        aria-labelledby="about-story-heading"
+        aria-label="Studio story"
         className="relative w-full pb-28 md:pb-[10vw]"
       >
-        <div className="flex flex-col gap-14 md:flex-row md:items-start md:justify-between md:gap-16">
-          <div className="md:max-w-[46rem]">
-            <h2
-              id="about-story-heading"
-              className="font-swiss text-[clamp(2.5rem,10vw,4rem)] font-bold leading-[0.92] tracking-tighter uppercase md:text-[6.5vw]"
-            >
-              {COPY.story.title}
-            </h2>
-
-            <div className="mt-10 flex flex-col gap-6 md:mt-[3vw]">
-              <p className="font-alt text-[clamp(1rem,1.4vw,1.3125rem)] leading-[1.55] tracking-tight text-[#6b6b6b]">
-                {COPY.story.p1}
-              </p>
-              <p className="font-alt text-[clamp(1rem,1.4vw,1.3125rem)] leading-[1.55] tracking-tight text-[#6b6b6b]">
-                {COPY.story.p2}
-              </p>
-            </div>
+        <div className="flex flex-col gap-14 md:flex-row md:items-start md:justify-between md:gap-16 lg:gap-20">
+          <div className="flex max-w-[34rem] flex-col gap-6 md:max-w-[28rem] lg:max-w-[34rem]">
+            <p className="border-t border-black/20 pt-5 font-alt text-[clamp(1.375rem,2.6vw,2.5rem)] leading-[1.35] tracking-tight text-[#6b6b6b] dark:border-white/20 md:border-t-0 md:pt-0">
+              {COPY.statement.lead}
+            </p>
+            <p className="font-alt text-[clamp(1rem,1.4vw,1.3125rem)] leading-[1.55] tracking-tight text-[#6b6b6b]">
+              {COPY.statement.p1}
+            </p>
+            <p className="font-alt text-[clamp(1rem,1.4vw,1.3125rem)] leading-[1.55] tracking-tight text-[#6b6b6b]">
+              {COPY.statement.p2}
+            </p>
           </div>
 
-          <div className="relative mx-auto flex shrink-0 items-center gap-6 md:mx-0 md:gap-8">
+          <div className="relative mx-auto flex w-full max-w-[36rem] shrink-0 flex-col gap-4 md:mx-0 md:w-[min(42vw,36rem)] md:max-w-none md:flex-row md:items-end md:gap-8">
             <p
               aria-hidden="true"
-              className="hidden rotate-180 font-swiss text-sm font-medium tracking-[0.28em] text-[#666666] uppercase md:block"
+              className="mb-2 hidden rotate-180 font-swiss text-sm font-medium tracking-[0.28em] text-[#666666] uppercase md:block"
               style={{ writingMode: "vertical-rl" }}
             >
               {COPY.imageCaption}
             </p>
-            <div className="relative aspect-[2/3] w-[16rem] overflow-hidden bg-black md:w-[19rem] lg:w-[22rem]">
+            <div className="relative aspect-[2/3] w-full overflow-hidden bg-black">
               <Image
                 src="/images/about-team.png"
                 alt="CDF team posing with the World Champion trophy"
                 fill
-                sizes="(max-width: 768px) 64vw, 22rem"
+                sizes="(max-width: 768px) 92vw, min(42vw, 36rem)"
                 className="object-cover"
+                priority
               />
             </div>
+            <p className="font-swiss text-xs font-medium tracking-[0.28em] text-[#666666] uppercase md:hidden">
+              {COPY.imageCaption}
+            </p>
           </div>
         </div>
       </section>
 
-      {/* ── Disciplines list — gallery-style heading rule + mission-style rows ── */}
-      <section
-        aria-labelledby="about-values-heading"
-        className="relative w-full pb-28 md:pb-[10vw]"
-      >
-        <div className="relative pb-8">
-          <h2
-            id="about-values-heading"
-            className="font-swiss text-[clamp(2.5rem,10vw,4.5rem)] font-bold uppercase leading-[0.92] tracking-tighter md:text-[8vw]"
-          >
-            {COPY.values.heading}
-          </h2>
-          <div
-            aria-hidden="true"
-            className="mt-2 h-[3px] w-full bg-black dark:bg-white"
-          />
-        </div>
-
-        <ul className="flex flex-col">
-          {COPY.values.items.map((item) => (
-            <li
-              key={item.name}
-              className="grid grid-cols-1 gap-4 border-b border-black/20 py-9 dark:border-white/20 md:grid-cols-12 md:items-baseline md:gap-8 md:py-[3.2vw]"
-            >
-              <h3 className="font-swiss text-[clamp(1.875rem,7vw,3rem)] font-bold leading-none tracking-tighter md:col-span-6 md:text-[4.4vw]">
-                {item.name}
-              </h3>
-              <p className="max-w-[34rem] font-alt text-[clamp(0.9375rem,1.3vw,1.25rem)] leading-[1.5] tracking-tight text-[#6b6b6b] md:col-span-6">
-                {item.line}
-              </p>
-            </li>
-          ))}
-        </ul>
-        <div
-          aria-hidden="true"
-          className="h-0.5 w-full bg-black dark:bg-white"
-        />
-      </section>
-
-      {/* ── Stats — three ruled columns with oversized numerals ── */}
+      {/* ── Quiet closer — ruled stats ── */}
       <section
         aria-label="CDF in numbers"
         className="relative w-full pb-28 md:pb-[10vw]"
@@ -238,32 +152,6 @@ export function AboutWireframes() {
             </div>
           ))}
         </dl>
-      </section>
-
-      {/* ── Closing CTA — motto-scale line + muted link ── */}
-      <section
-        aria-labelledby="about-cta-heading"
-        className="relative w-full pb-10 md:pb-[4vw]"
-      >
-        <h2
-          id="about-cta-heading"
-          className="font-swiss text-[clamp(1.85rem,8vw,3rem)] font-bold uppercase leading-[0.95] tracking-tighter md:text-[5.8vw]"
-        >
-          {COPY.cta.line}
-        </h2>
-
-        <div>
-          <Link
-            href="/contact"
-            onClick={(e) => {
-              e.preventDefault();
-              handleDelayedNavigation("/contact");
-            }}
-            className="mt-8 inline-flex w-fit border-2 border-black bg-black px-10 py-4 font-swiss text-base font-bold uppercase tracking-widest text-white transition-colors duration-150 hover:bg-white hover:text-black dark:border-white dark:bg-white dark:text-black dark:hover:bg-black dark:hover:text-white md:mt-[2vw] md:text-lg"
-          >
-            {COPY.cta.button}
-          </Link>
-        </div>
       </section>
     </div>
   );

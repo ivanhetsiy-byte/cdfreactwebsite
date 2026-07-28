@@ -1,10 +1,6 @@
 "use client";
 
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Image from "next/image";
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
 import {
   useCallback,
   useEffect,
@@ -16,10 +12,9 @@ import {
   HOME_LOCKED_MOTTO,
   useLanguage,
 } from "@/context/LanguageContext";
-import { requestRouteCover, ROUTE_COVER_MS } from "@/lib/route-cover";
 import { ScrollSlide } from "@/components/motion/ScrollSlide";
-
-gsap.registerPlugin(ScrollTrigger);
+import { ProgramsGuidePath } from "@/components/motion/ProgramsGuidePath";
+import { GuidePhoto } from "@/components/motion/GuidePhoto";
 
 type GalleryItem = {
   id: string;
@@ -246,159 +241,18 @@ function GalleryStrip() {
 
 export function HomeWireframes() {
   const { t } = useLanguage();
-  const pathname = usePathname();
-  const router = useRouter();
-  const navLockRef = useRef(false);
-  const programsBandRef = useRef<HTMLDivElement>(null);
-  const programsWashRef = useRef<HTMLDivElement>(null);
   const mottoSectionRef = useRef<HTMLElement>(null);
-
-  const handleDelayedNavigation = (targetPath: string) => {
-    if (typeof window === "undefined") return;
-    if (targetPath === pathname) return;
-    if (navLockRef.current) return;
-
-    navLockRef.current = true;
-
-    if (targetPath === "/") {
-      sessionStorage.setItem("fromSubpage", "true");
-    }
-
-    requestRouteCover();
-
-    setTimeout(() => {
-      router.push(targetPath);
-      navLockRef.current = false;
-    }, ROUTE_COVER_MS);
-  };
 
   const mottoLine1 = HOME_LOCKED_MOTTO.line1.replace(/[.,]$/, "");
   const mottoLine2 = HOME_LOCKED_MOTTO.line2.replace(/[.,]$/, "");
 
-  /**
-   * Wilian-style chapter wash: fixed full-viewport black, opacity scrubbed
-   * across enter/exit whitespace runways so the shift feels gradual.
-   */
-  useEffect(() => {
-    const band = programsBandRef.current;
-    const wash = programsWashRef.current;
-    if (!band || !wash) return;
-
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const isDark = document.documentElement.classList.contains("dark");
-
-    const setLightInk = () => {
-      band.style.setProperty("--programs-title", "#ffffff");
-      band.style.setProperty("--programs-body", "#a3a3a3");
-      band.style.setProperty("--programs-rail", "#ffffff");
-    };
-
-    const setDarkInk = () => {
-      band.style.setProperty("--programs-title", "#000000");
-      band.style.setProperty("--programs-body", "#6b6b6b");
-      band.style.setProperty("--programs-rail", "#000000");
-    };
-
-    const setRedSelection = (on: boolean) => {
-      if (on) {
-        band.setAttribute("data-selection-dark", "");
-        document.documentElement.classList.add("cdf-red-selection");
-      } else {
-        band.removeAttribute("data-selection-dark");
-        document.documentElement.classList.remove("cdf-red-selection");
-      }
-    };
-
-    const clearRedSelection = () => {
-      band.removeAttribute("data-selection-dark");
-      document.documentElement.classList.remove("cdf-red-selection");
-    };
-
-    if (reduced) {
-      gsap.set(wash, { opacity: 1 });
-      setLightInk();
-      setRedSelection(true);
-      return () => clearRedSelection();
-    }
-
-    if (isDark) setLightInk();
-
-    const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
-    const inkFromWash = (opacity: number) => {
-      setRedSelection(opacity >= 0.45);
-      if (isDark) {
-        setLightInk();
-        return;
-      }
-      const t = Math.min(1, Math.max(0, (opacity - 0.15) / 0.55));
-      const ink = Math.round(lerp(0, 255, t));
-      const muted = Math.round(lerp(0x6b, 0xa3, t));
-      band.style.setProperty(
-        "--programs-title",
-        `rgb(${ink}, ${ink}, ${ink})`,
-      );
-      band.style.setProperty(
-        "--programs-body",
-        `rgb(${muted}, ${muted}, ${muted})`,
-      );
-      band.style.setProperty(
-        "--programs-rail",
-        `rgb(${ink}, ${ink}, ${ink})`,
-      );
-    };
-
-    const ctx = gsap.context(() => {
-      gsap.set(wash, { opacity: 0 });
-      if (!isDark) setDarkInk();
-
-      // One timeline over the whole chapter (enter runway → content → exit).
-      // Fade-in spans the tall enter whitespace; fade-out the exit runway.
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: band,
-          start: "top 65%",
-          end: "bottom top",
-          scrub: true,
-          invalidateOnRefresh: true,
-          onUpdate: () => {
-            inkFromWash(Number(gsap.getProperty(wash, "opacity")));
-          },
-        },
-      });
-
-      tl.fromTo(
-        wash,
-        { opacity: 0 },
-        { opacity: 1, duration: 0.34, ease: "none" },
-        0,
-      );
-      tl.to(wash, { opacity: 1, duration: 0.42, ease: "none" }, 0.34);
-      tl.to(wash, { opacity: 0, duration: 0.24, ease: "none" }, 0.76);
-    });
-
-    requestAnimationFrame(() => ScrollTrigger.refresh());
-    return () => {
-      clearRedSelection();
-      ctx.revert();
-    };
-  }, []);
-
   return (
     <div className="relative z-[1] w-full text-black dark:text-white">
-      {/* Fixed viewport wash — under content, above page canvas (Wilian). */}
-      <div
-        ref={programsWashRef}
-        aria-hidden="true"
-        data-programs-wash
-        className="pointer-events-none fixed inset-0 z-0 bg-black opacity-0"
-      />
-
-      <div className="relative z-[1]">
       {/* ── Motto — opposite-side slides; play on enter, reverse on scroll-up ── */}
       <section
         ref={mottoSectionRef}
         aria-labelledby="home-motto-heading"
-        className="relative flex min-h-dvh w-full items-center overflow-x-clip py-28 md:block md:min-h-0 md:pt-[20vw] md:pb-[14.5vw]"
+        className="relative flex min-h-dvh w-full items-center overflow-x-clip pt-28 pb-40 md:block md:min-h-0 md:pt-[20vw] md:pb-[24vw]"
       >
         <h2
           id="home-motto-heading"
@@ -432,105 +286,213 @@ export function HomeWireframes() {
         </h2>
       </section>
 
-      {/* ── Programs ── */}
-      <section
-        aria-labelledby="home-programs-heading"
-        className="relative w-full pb-24 md:pt-[14.5vw] md:pb-[10vw]"
-      >
-        {/* Header: Ages 3–16 + body / CTA — stays on page canvas */}
-        <div className="flex flex-col gap-10 md:flex-row md:items-start md:justify-between md:gap-12">
+      {/* Programs + Gallery */}
+      <div className="relative w-full">
+        {/* ── Programs — Ages headline, winding line, Competitive → Recreational ── */}
+        <section
+          aria-labelledby="home-programs-ages"
+          className="relative w-full"
+        >
           <h2
-            id="home-programs-heading"
-            className="font-swiss text-[clamp(3rem,12vw,4.5rem)] font-bold leading-[0.92] tracking-tight md:text-[13.4vw]"
+            id="home-programs-ages"
+            className="relative z-10 font-swiss text-[clamp(3rem,13.93vw,21.3rem)] font-bold leading-[0.92] tracking-[-0.025em]"
           >
             {t.home.programs.headline}
           </h2>
 
-          <div className="flex max-w-[28rem] shrink-0 gap-5 md:max-w-[32rem] md:pt-[1.5vw]">
-            <span
-              aria-hidden="true"
-              className="mt-1 hidden h-[11rem] w-px shrink-0 bg-black dark:bg-white md:block"
-            />
-            <div className="flex flex-col gap-4 border-t border-black/20 pt-5 dark:border-white/20 md:border-t-0 md:pt-0">
-              <p className="font-alt text-[clamp(1.125rem,1.8vw,1.75rem)] leading-[1.45] tracking-tight text-[#6b6b6b]">
-                {t.home.programs.body}
-              </p>
-              <Link
-                href="/classes"
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleDelayedNavigation("/classes");
-                }}
-                className="inline-flex w-fit font-swiss text-[clamp(1rem,1.6vw,1.5rem)] font-bold leading-[1.45] uppercase tracking-tight text-[#616161] transition-colors duration-150 hover:text-black dark:hover:text-white"
-              >
-                {t.home.programs.cta}
-              </Link>
+          {/* Mobile layout — stacked photos, guide line, and program copy */}
+          <div className="relative mt-10 w-full pt-20 pb-36 md:hidden">
+            <ProgramsGuidePath showOnMobile />
+
+            <div className="relative z-10 pt-32">
+              <div className="relative aspect-[3/4] w-[28vw] overflow-hidden">
+                <Image
+                  src="/images/classes/ballet.jpg"
+                  alt="Ballet class in the studio"
+                  fill
+                  unoptimized
+                  sizes="28vw"
+                  className="object-cover"
+                />
+              </div>
             </div>
-          </div>
-        </div>
 
-        {/* Competitive / Recreational chapter */}
-        <div
-          ref={programsBandRef}
-          className="programs-band relative mt-24 w-full select-text md:mt-[12vw]"
-        >
-          {/* Enter runway — scroll into black before the type */}
-          <div className="h-[60vh] md:h-[85vh]" aria-hidden="true" />
-
-          <div className="relative pb-8 md:pb-[10vw]">
-            <div
-              aria-hidden="true"
-              className="programs-band-rail pointer-events-none absolute inset-y-0 left-1/2 hidden w-px -translate-x-1/2 md:block"
-            />
-
-            <ul className="flex flex-col gap-24 md:gap-0">
-              <li className="relative md:w-[48%] md:pr-8">
-                <p className="programs-band-title font-swiss text-[clamp(2.5rem,8vw,3.5rem)] font-bold leading-none tracking-tighter md:text-[7vw]">
+            <article
+              aria-labelledby="home-program-competitive-mobile"
+              className="relative z-10 mt-28 w-full"
+            >
+              <ScrollSlide
+                from="up"
+                as="div"
+                distancePercent={12}
+                scrollStart="top 88%"
+                scrollEnd="top 55%"
+              >
+                <h3
+                  id="home-program-competitive-mobile"
+                  className="font-swiss text-[clamp(2.75rem,8.58vw,13.1rem)] font-bold leading-[0.9] tracking-tighter"
+                >
                   {t.home.programs.competitive.name}
-                </p>
-                <p className="programs-band-body mt-5 max-w-[34rem] font-alt text-[clamp(1rem,1.4vw,1.3125rem)] leading-[1.5] tracking-tight md:mt-7">
+                </h3>
+                <p className="mt-8 max-w-[32rem] font-alt text-[clamp(1rem,0.98vw,1.5rem)] leading-[1.54] tracking-tight text-[#1a1a1a] dark:text-[#f2f2f2]">
                   {t.home.programs.competitive.line}
                 </p>
-              </li>
+              </ScrollSlide>
+            </article>
 
-              <li className="relative md:mt-[25vw] md:ml-auto md:w-[48%] md:pl-8">
-                <p className="programs-band-title font-swiss text-[clamp(2.5rem,8vw,3.5rem)] font-bold leading-none tracking-tighter md:text-[7vw]">
+            <div className="relative z-10 mt-36 flex justify-end">
+              <div className="relative aspect-[3/4] w-[28vw] overflow-hidden">
+                <Image
+                  src="/images/classes/acrobatics.jpg"
+                  alt="Acrobatics class in the studio"
+                  fill
+                  unoptimized
+                  sizes="28vw"
+                  className="object-cover"
+                />
+              </div>
+            </div>
+
+            <article
+              aria-labelledby="home-program-recreational-mobile"
+              className="relative z-10 mt-36 w-full text-right"
+            >
+              <ScrollSlide
+                from="up"
+                as="div"
+                distancePercent={12}
+                scrollStart="top 88%"
+                scrollEnd="top 55%"
+              >
+                <h3
+                  id="home-program-recreational-mobile"
+                  className="font-swiss text-[clamp(2.75rem,8.58vw,13.1rem)] font-bold leading-[0.9] tracking-tighter"
+                >
                   {t.home.programs.recreational.name}
-                </p>
-                <p className="programs-band-body mt-5 max-w-[34rem] font-alt text-[clamp(1rem,1.4vw,1.3125rem)] leading-[1.5] tracking-tight md:mt-7">
+                </h3>
+                <p className="mt-8 ml-auto max-w-[32rem] font-alt text-[clamp(1rem,0.98vw,1.5rem)] leading-[1.54] tracking-tight text-[#1a1a1a] dark:text-[#f2f2f2]">
                   {t.home.programs.recreational.line}
                 </p>
-              </li>
-            </ul>
+              </ScrollSlide>
+            </article>
+
+            <div className="relative z-10 mt-32">
+              <div className="relative aspect-[3/4] w-[28vw] overflow-hidden">
+                <Image
+                  src="/images/mission-dancer.jpg"
+                  alt="Dancer mid-movement"
+                  fill
+                  unoptimized
+                  sizes="28vw"
+                  className="object-cover"
+                />
+              </div>
+            </div>
           </div>
 
-          {/* Exit runway — ease back out toward gallery */}
-          <div className="h-[45vh] md:h-[60vh]" aria-hidden="true" />
-        </div>
-      </section>
+          {/* Desktop canvas — coordinates below map to the 2448×3456 design region */}
+          <div className="relative mt-6 hidden w-full md:mt-0 md:block md:aspect-[2448/3456]">
+            <ProgramsGuidePath />
 
-      {/* ── Gallery ── */}
-      <section
-        aria-labelledby="home-gallery-heading"
-        className="relative w-full"
-      >
-        <div className="relative pb-8 md:pb-8">
-          <h2
-            id="home-gallery-heading"
-            className="font-swiss text-[clamp(3rem,12vw,4.5rem)] font-bold uppercase leading-[0.92] tracking-tighter md:text-[11.5vw]"
-          >
-            {t.home.gallery.label}
-          </h2>
-          <div
-            aria-hidden="true"
-            className="mt-2 h-[3px] w-full bg-black dark:bg-white"
-          />
-        </div>
+            {/* Photos at the rectangle positions along the line */}
+            <GuidePhoto
+              src="/images/classes/ballet.jpg"
+              alt="Ballet class in the studio"
+              className="md:absolute md:left-[37.3%] md:top-[6.3%] md:h-[6.7%] md:w-[6.6%]"
+            />
+            <GuidePhoto
+              src="/images/classes/jazz.jpg"
+              alt="Jazz class in the studio"
+              className="md:absolute md:left-[32.2%] md:top-[30.8%] md:h-[6.7%] md:w-[6.6%]"
+            />
+            <GuidePhoto
+              src="/images/classes/acrobatics.jpg"
+              alt="Acrobatics class in the studio"
+              className="md:absolute md:left-[63.6%] md:top-[44.8%] md:h-[6.7%] md:w-[6.6%]"
+            />
+            <GuidePhoto
+              src="/images/classes/gymnastics.jpg"
+              alt="Gymnastics class in the studio"
+              className="md:absolute md:left-[7.5%] md:top-[58.7%] md:h-[10.6%] md:w-[14.9%]"
+            />
+            <GuidePhoto
+              src="/images/mission-dancer.jpg"
+              alt="Dancer mid-movement"
+              className="md:absolute md:left-[79%] md:top-[71.4%] md:h-[12.2%] md:w-[11.6%]"
+            />
 
-        <div className="pb-20 md:pb-12">
-          <GalleryStrip />
-        </div>
-      </section>
+            {/* Competitive — left of the line */}
+            <article
+              aria-labelledby="home-program-competitive"
+              className="relative z-10 mt-10 w-full md:absolute md:top-[19.8%] md:left-[2.65%] md:mt-0"
+            >
+              <ScrollSlide
+                from="up"
+                as="div"
+                distancePercent={12}
+                scrollStart="top 88%"
+                scrollEnd="top 55%"
+              >
+                <h3
+                  id="home-program-competitive"
+                  className="font-swiss text-[clamp(2.75rem,8.58vw,13.1rem)] font-bold leading-[0.9] tracking-tighter"
+                >
+                  {t.home.programs.competitive.name}
+                </h3>
+                <p className="mt-6 max-w-[32rem] font-alt text-[clamp(1rem,0.98vw,1.5rem)] leading-[1.54] tracking-tight text-[#1a1a1a] md:mt-8 md:w-[20vw] md:max-w-none dark:text-[#f2f2f2]">
+                  {t.home.programs.competitive.line}
+                </p>
+              </ScrollSlide>
+            </article>
+
+            {/* Recreational — right of the line, flush right */}
+            <article
+              aria-labelledby="home-program-recreational"
+              className="relative z-10 mt-10 w-full md:absolute md:top-[52%] md:right-0 md:mt-0 md:text-right"
+            >
+              <ScrollSlide
+                from="up"
+                as="div"
+                distancePercent={12}
+                scrollStart="top 88%"
+                scrollEnd="top 55%"
+              >
+                <h3
+                  id="home-program-recreational"
+                  className="font-swiss text-[clamp(2.75rem,8.58vw,13.1rem)] font-bold leading-[0.9] tracking-tighter"
+                >
+                  {t.home.programs.recreational.name}
+                </h3>
+                <p className="mt-6 max-w-[32rem] font-alt text-[clamp(1rem,0.98vw,1.5rem)] leading-[1.54] tracking-tight text-[#1a1a1a] md:mt-8 md:ml-auto md:w-[20vw] dark:text-[#f2f2f2]">
+                  {t.home.programs.recreational.line}
+                </p>
+              </ScrollSlide>
+            </article>
+          </div>
+        </section>
+
+        {/* ── Gallery ── */}
+        <section
+          aria-labelledby="home-gallery-heading"
+          className="relative w-full pt-24 md:pt-[10vw]"
+        >
+          <div className="relative pb-8 md:pb-8">
+            <h2
+              id="home-gallery-heading"
+              className="font-swiss text-[clamp(3rem,12vw,4.5rem)] font-bold uppercase leading-[0.92] tracking-tighter md:text-[11.5vw]"
+            >
+              {t.home.gallery.label}
+            </h2>
+            <div
+              aria-hidden="true"
+              className="mt-2 h-[3px] w-full bg-black dark:bg-white"
+            />
+          </div>
+
+          <div className="pb-20 md:pb-12">
+            <GalleryStrip />
+          </div>
+        </section>
       </div>
     </div>
   );
