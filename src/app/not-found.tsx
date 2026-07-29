@@ -1,39 +1,16 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useRef } from "react";
-
 import { useLanguage } from "@/context/LanguageContext";
-import { requestRouteCover, ROUTE_COVER_MS } from "@/lib/route-cover";
+import { useDelayedNavigation } from "@/hooks/useDelayedNavigation";
 
 export default function NotFound() {
-  const router = useRouter();
   const { t } = useLanguage();
-  const navLockRef = useRef(false);
-
-  const handleDelayedNavigation = (targetPath: string) => {
-    if (typeof window === "undefined") return;
-    if (navLockRef.current) return;
-
-    navLockRef.current = true;
-
-    if (targetPath === "/") {
-      sessionStorage.setItem("fromSubpage", "true");
-    }
-
-    requestRouteCover();
-
-    // Wait for the red→dark wipe to finish covering, then swap the route.
-    setTimeout(() => {
-      router.push(targetPath);
-      navLockRef.current = false;
-    }, ROUTE_COVER_MS);
-  };
+  const go = useDelayedNavigation();
 
   return (
     <main
       id="main-content"
-      className="relative min-h-screen w-full bg-white px-6 pb-24 pt-32 font-swiss-compressed text-black dark:bg-black dark:text-white md:p-10 md:pt-44"
+      className="relative min-h-screen w-full bg-background px-6 pb-24 pt-32 font-swiss-compressed text-foreground md:p-10 md:pt-44"
     >
       {/* Geometric grid — absolute-locked Swiss canvas */}
       <div
@@ -59,7 +36,7 @@ export default function NotFound() {
       <div className="absolute inset-x-0 bottom-0 z-10 flex justify-center p-6 md:p-10">
         <button
           type="button"
-          onClick={() => handleDelayedNavigation("/")}
+          onClick={() => go("/")}
           className="inline-flex items-center justify-center border-2 border-black bg-black px-8 py-3 font-swiss text-sm font-bold uppercase tracking-widest text-white transition-colors duration-150 hover:bg-white hover:text-black dark:border-white dark:bg-white dark:text-black dark:hover:bg-black dark:hover:text-white"
         >
           {t.notFound.backToHome}

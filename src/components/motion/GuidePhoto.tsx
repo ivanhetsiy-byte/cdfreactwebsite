@@ -63,9 +63,9 @@ export function GuidePhoto({ src, alt, className = "" }: GuidePhotoProps) {
         src={src}
         alt={alt}
         fill
-        unoptimized
         sizes="(max-width: 768px) 0px, 16vw"
         className="object-cover"
+        quality={80}
       />
     </div>
   );

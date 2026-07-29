@@ -45,22 +45,7 @@ export function BagPage() {
     setError(null);
 
     try {
-      const verifyRes = await fetch("/api/checkout/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lastName: trimmed }),
-      });
-      const verifyData = (await verifyRes.json()) as {
-        ok?: boolean;
-        error?: string;
-      };
-
-      if (!verifyRes.ok || !verifyData.ok) {
-        setError(verifyData.error || "Last name not found.");
-        setSubmitting(false);
-        return;
-      }
-
+      // Order route re-validates the roster — single RTT (no separate verify).
       const orderRes = await fetch("/api/checkout/order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -256,11 +241,16 @@ export function BagPage() {
                       if (error) setError(null);
                     }}
                     placeholder="Family last name"
-                    className="mt-3 w-full border-0 border-b border-white/30 bg-transparent py-3 font-swiss text-base text-white placeholder:text-white/30 focus:border-white focus:outline-none"
+                    className="mt-3 w-full border-0 border-b border-white/30 bg-transparent py-3 font-swiss text-base text-white placeholder:text-white/30 focus:border-white focus:outline-none focus-visible:outline-none focus-visible:border-brand-red"
                     required
+                    aria-invalid={error ? true : undefined}
+                    aria-describedby={error ? "bag-checkout-error" : "bag-checkout-hint"}
                   />
                 </label>
-                <p className="mt-3 font-swiss text-xs leading-relaxed text-white/35">
+                <p
+                  id="bag-checkout-hint"
+                  className="mt-3 font-swiss text-xs leading-relaxed text-white/35"
+                >
                   Checkout is limited to families on our roster. Enter the last
                   name on file to submit your request. Payment is in person at
                   the studio after your request is approved.
@@ -268,8 +258,9 @@ export function BagPage() {
 
                 {error ? (
                   <p
+                    id="bag-checkout-error"
                     role="alert"
-                    className="mt-4 font-swiss text-sm text-[#ff6b6b]"
+                    className="mt-4 font-swiss text-sm text-brand-red-error"
                   >
                     {error}
                   </p>

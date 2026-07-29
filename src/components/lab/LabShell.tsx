@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 
@@ -7,7 +8,14 @@ import { Footer } from "@/components/layout/footer";
 import { Navbar } from "@/components/layout/navbar";
 import { SiteStatusBar } from "@/components/layout/site-status-bar";
 import { PageTransition } from "@/components/loading/PageTransition";
-import { SelectionHighlight } from "@/components/providers/SelectionHighlight";
+
+const SelectionHighlight = dynamic(
+  () =>
+    import("@/components/providers/SelectionHighlight").then(
+      (m) => m.SelectionHighlight,
+    ),
+  { ssr: false },
+);
 
 /**
  * Isolates `/lab/*` from production chrome so sandbox pages own their UI/scroll.

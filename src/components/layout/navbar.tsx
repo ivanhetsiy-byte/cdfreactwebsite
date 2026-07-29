@@ -67,7 +67,7 @@ const BLUR_SCROLL_RANGE = 120;
  * channel-inverse of accent red + white text → composites to red + black.
  * Under `.dark` / force-dark pages, true accent + white (difference preserves it). */
 const NAV_ACTIVE_MARK =
-  "bg-[#3CE8E9] text-white dark:bg-[#C31716]";
+  "bg-[#3CE8E9] text-white dark:bg-brand-red";
 
 /** Desktop open-menu links — small uppercase. */
 function menuLinkClass(active: boolean) {
@@ -111,7 +111,7 @@ function mobileMenuLinkClass(active: boolean) {
 }
 
 function mobileMenuLabelClass(active: boolean) {
-  return active ? "bg-[#C31716] text-white px-[0.12em]" : undefined;
+  return active ? "bg-brand-red text-white px-[0.12em]" : undefined;
 }
 
 function HamburgerIcon({ open }: { open: boolean }) {
@@ -214,9 +214,10 @@ export function Navbar() {
   const contactProbeRef = useRef<HTMLSpanElement>(null);
   const linksProbeRef = useRef<HTMLDivElement>(null);
   const openTlRef = useRef<gsap.core.Timeline | null>(null);
+  const requestCloseRef = useRef<() => void>(() => {});
   const [activeIndicator, setActiveIndicator] = useState(pathname);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [blurProgress, setBlurProgress] = useState(0);
+  const blurRootRef = useRef<HTMLDivElement>(null);
   const [localTime, setLocalTime] = useState<string | null>(null);
   const navLabels = NAV_HREFS.map((link) => t.nav[link.key]);
   const { compact: useCompactNav, compactRef } = useCompactNavMeasure(
@@ -363,11 +364,15 @@ export function Navbar() {
     return () => clearInterval(id);
   }, [menuOpen, useCompactNav]);
 
-  // Gradual frost — fades in as content scrolls under the nav (LML pattern)
+  // Gradual frost — CSS var on blur root (avoids navbar re-renders on scroll)
   useEffect(() => {
     const update = () => {
       const y = readScrollY();
-      setBlurProgress(Math.min(1, Math.max(0, y / BLUR_SCROLL_RANGE)));
+      const p = Math.min(1, Math.max(0, y / BLUR_SCROLL_RANGE));
+      blurRootRef.current?.style.setProperty(
+        "--nav-blur-progress",
+        p.toFixed(4),
+      );
     };
 
     update();
@@ -409,12 +414,11 @@ export function Navbar() {
 
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
-      requestClose();
+      requestCloseRef.current();
     };
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- close uses refs
   }, [menuOpen]);
 
   // Open animation — inline: typewriter; compact: full-screen panel
@@ -634,6 +638,49 @@ export function Navbar() {
     );
   };
 
+  useEffect(() => {
+    requestCloseRef.current = requestClose;
+  });
+
+  // Focus trap + restore for compact (dialog) menu
+  useEffect(() => {
+    if (!menuOpen || !useCompactNav) return;
+    const panel = mobilePanelRef.current;
+    if (!panel) return;
+
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    const focusables = () =>
+      Array.from(
+        panel.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ),
+      ).filter((el) => el.tabIndex !== -1 && !el.hasAttribute("disabled"));
+
+    const first = focusables()[0];
+    first?.focus();
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== "Tab") return;
+      const items = focusables();
+      if (items.length === 0) return;
+      const firstEl = items[0]!;
+      const lastEl = items[items.length - 1]!;
+      if (e.shiftKey && document.activeElement === firstEl) {
+        e.preventDefault();
+        lastEl.focus();
+      } else if (!e.shiftKey && document.activeElement === lastEl) {
+        e.preventDefault();
+        firstEl.focus();
+      }
+    };
+
+    panel.addEventListener("keydown", onKeyDown);
+    return () => {
+      panel.removeEventListener("keydown", onKeyDown);
+      previouslyFocused?.focus?.();
+    };
+  }, [menuOpen, useCompactNav]);
+
   const handleDelayedNavigation = (targetPath: string) => {
     if (typeof window === "undefined") return;
     if (targetPath === pathname) {
@@ -711,7 +758,7 @@ export function Navbar() {
       </div>
 
       {/* LML progressive frost — under chrome, above page; fades in on scroll */}
-      {showBlur ? <NavProgressiveBlur progress={blurProgress} /> : null}
+      {showBlur ? <NavProgressiveBlur rootRef={blurRootRef} /> : null}
 
       {/* Mobile only — full-screen black menu */}
       <div
@@ -780,7 +827,7 @@ export function Navbar() {
                 e.preventDefault();
                 handleDelayedNavigation("/contact");
               }}
-              className="menu-drop-link inline-flex items-center gap-2 rounded-full bg-[#C31716] px-5 py-2.5 font-swiss text-sm font-medium text-white transition-opacity hover:opacity-90"
+              className="menu-drop-link inline-flex items-center gap-2 rounded-full bg-brand-red px-5 py-2.5 font-swiss text-sm font-medium text-white transition-opacity hover:opacity-90"
               tabIndex={menuOpen ? 0 : -1}
             >
               <span

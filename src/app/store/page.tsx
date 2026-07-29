@@ -1,15 +1,17 @@
 import type { Metadata } from "next";
 
-import { StoreWireframes } from "@/components/sections/store-wireframes";
+import { PageShell } from "@/components/layout/page-shell";
+import { StoreWireframes } from "@/components/sections/store-page";
 
 export const metadata: Metadata = {
   title: "Store",
+  description: "Official Childance Factory studio apparel and accessories.",
 };
 
 export default function Page() {
   return (
-    <main id="main-content" className="relative w-full min-h-screen bg-black text-white">
+    <PageShell variant="dark">
       <StoreWireframes />
-    </main>
+    </PageShell>
   );
 }

@@ -16,7 +16,6 @@ import {
   TEAM,
 } from "./content";
 import { CustomScrollbar } from "./CustomScrollbar";
-import { GuidePath } from "./GuidePath";
 import { LabScrollProvider } from "./LabScrollProvider";
 import { NoiseOverlay } from "./NoiseOverlay";
 import { PortraitCanvas } from "./PortraitCanvas";
@@ -47,11 +46,6 @@ function StudioContent({ ready }: { ready: boolean }) {
   const portraitRef = useRef<HTMLDivElement>(null);
   const taglineRef = useRef<HTMLDivElement>(null);
   const bioRef = useRef<HTMLSpanElement>(null);
-  const guideRegionRef = useRef<HTMLDivElement>(null);
-  const visionaryYRef = useRef<HTMLSpanElement>(null);
-  const yuliiaGuideRef = useRef<HTMLSpanElement>(null);
-  const tatianaGuideRef = useRef<HTMLSpanElement>(null);
-  const footerGuideRef = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
     if (!ready) return;
@@ -201,7 +195,11 @@ function StudioContent({ ready }: { ready: boolean }) {
   }, [ready]);
 
   return (
-    <div className="studio-page relative z-10 bg-black" id="studio">
+    <main
+      id="main-content"
+      className="studio-page relative z-10 bg-black"
+      data-studio-root
+    >
       {/* Hero */}
       <section className="pointer-events-none relative z-10 flex min-h-screen w-full flex-col items-start overflow-visible bg-black px-5 pt-[120px] md:px-6.5">
         <div className="relative flex w-full flex-col items-start justify-between overflow-visible md:flex-row">
@@ -247,123 +245,91 @@ function StudioContent({ ready }: { ready: boolean }) {
         </div>
       </section>
 
-      {/* Tagline → teachers: shared space for the Visionary guide path */}
-      <div ref={guideRegionRef} className="relative">
-        <GuidePath
-          ready={ready}
-          regionRef={guideRegionRef}
-          startRef={visionaryYRef}
-          midRef={yuliiaGuideRef}
-          endRef={tatianaGuideRef}
-          footerRef={footerGuideRef}
-        />
+      {/* Tagline — portrait scrub centers on this block (LML pattern) */}
+      <section
+        ref={taglineRef}
+        className="pointer-events-none relative z-20 flex min-h-[50vh] w-full items-center px-5 pt-[100px] md:h-[80vh] md:px-6.5 md:pt-[200px]"
+      >
+        <div className="scroll-float w-full">
+          <ScrollFloat
+            ready={ready}
+            scrollStart="top 90%"
+            scrollEnd="top 25%"
+            stagger={0.03}
+            className="pointer-events-auto w-full whitespace-pre-wrap text-[2rem] leading-none font-medium md:text-[5vw]"
+          >
+            {TAGLINE_LINES[0]}
+            <br />
+            {TAGLINE_LINES[1]}
+            <br />
+            {TAGLINE_LINES[2]}
+          </ScrollFloat>
+        </div>
+      </section>
 
-        {/* Tagline — portrait scrub centers on this block (LML pattern) */}
-        <section
-          ref={taglineRef}
-          className="pointer-events-none relative z-20 flex min-h-[50vh] w-full items-center px-5 pt-[100px] md:h-[80vh] md:px-6.5 md:pt-[200px]"
-        >
-          <div className="scroll-float w-full">
-            <ScrollFloat
-              ready={ready}
-              scrollStart="top 90%"
-              scrollEnd="top 25%"
-              stagger={0.03}
-              className="pointer-events-auto w-full whitespace-pre-wrap text-[2rem] leading-none font-medium md:text-[5vw]"
-            >
-              {TAGLINE_LINES[0]}
-              <br />
-              {TAGLINE_LINES[1]}
-              <br />
-              {TAGLINE_LINES[2].slice(
-                0,
-                TAGLINE_LINES[2].indexOf("Visionary"),
-              )}
-              Visionar
-              <span
-                ref={visionaryYRef}
-                data-guide-anchor="visionary-y"
-                className="inline-block"
+      {/* Bio — transparent bg so descending portrait isn’t covered */}
+      <section className="pointer-events-none relative z-10 flex h-auto w-full flex-col items-end px-5 pb-[140px] md:px-6.5 md:pb-[280px]">
+        <div className="flex w-full max-w-full flex-row justify-end md:w-[40%]">
+          <span
+            ref={bioRef}
+            className="pointer-events-auto w-full whitespace-pre-wrap text-left text-[1rem] leading-[1.4] md:text-[1.375rem]"
+          >
+            {BIO}
+          </span>
+        </div>
+      </section>
+
+      {/* Secondary teachers — Yuliia left, Tatiana mirrored right; viewport-fit */}
+      <section
+        aria-label="Teaching team"
+        className="pointer-events-none relative z-10 w-full pt-40 pb-[280px] md:pt-72 md:pb-[420px]"
+      >
+        <div className="pointer-events-auto flex w-full flex-col gap-36 px-5 md:gap-64 md:px-0">
+          {TEAM.map((person, index) => {
+            const mirror = index % 2 === 1;
+            return (
+              <article
+                key={person.name}
+                className={`team-chapter relative w-full font-swiss text-white md:w-[min(55.2%,calc(85svh*1405/1495))] ${
+                  mirror ? "md:ml-auto md:mr-[18.6%]" : "md:ml-[18.6%]"
+                }`}
               >
-                y
-              </span>
-            </ScrollFloat>
-          </div>
-        </section>
-
-        {/* Bio — transparent bg so descending portrait isn’t covered */}
-        <section className="pointer-events-none relative z-10 flex h-auto w-full flex-col items-end px-5 pb-[140px] md:px-6.5 md:pb-[280px]">
-          <div className="flex w-full max-w-full flex-row justify-end md:w-[40%]">
-            <span
-              ref={bioRef}
-              className="pointer-events-auto w-full whitespace-pre-wrap text-left text-[1rem] leading-[1.4] md:text-[1.375rem]"
-            >
-              {BIO}
-            </span>
-          </div>
-        </section>
-
-        {/* Secondary teachers — Yuliia left, Tatiana mirrored right; viewport-fit */}
-        <section
-          aria-label="Teaching team"
-          className="pointer-events-none relative z-10 w-full pt-40 pb-[280px] md:pt-72 md:pb-[420px]"
-        >
-          <div className="pointer-events-auto flex w-full flex-col gap-36 px-5 md:gap-64 md:px-0">
-            {TEAM.map((person, index) => {
-              const mirror = index % 2 === 1;
-              const guideRef = index === 0 ? yuliiaGuideRef : tatianaGuideRef;
-              return (
-                <article
-                  key={person.name}
-                  className={`team-chapter relative w-full font-swiss text-white md:w-[min(55.2%,calc(85svh*1405/1495))] ${
-                    mirror ? "md:ml-auto md:mr-[18.6%]" : "md:ml-[18.6%]"
-                  }`}
-                >
-                  {/* Desktop: Figma 1405×1495 — height capped to ~85svh */}
-                  <div className="relative hidden w-full md:block md:aspect-[1405/1495]">
-                    <div
-                      className={`absolute top-0 z-0 aspect-[989/1007] w-[70.4%] select-none ${
-                        mirror ? "right-[21.6%]" : "left-[21.6%]"
-                      }`}
-                    >
-                      <Image
-                        src={person.photo}
-                        alt={person.name}
-                        fill
-                        draggable={false}
-                        sizes="40vw"
-                        className={`object-contain object-top select-none swiss-no-select ${
-                          mirror ? "object-right" : "object-left"
-                        }`}
-                      />
-                    </div>
-
-                    <span
-                      ref={guideRef}
-                      data-guide-anchor={mirror ? "tatiana" : "yuliia"}
-                      aria-hidden
-                      className={`pointer-events-none absolute top-[8%] z-[5] h-0 w-0 ${
-                        mirror ? "right-0" : "left-0"
+                {/* Desktop: Figma 1405×1495 — height capped to ~85svh */}
+                <div className="relative hidden w-full md:block md:aspect-[1405/1495]">
+                  <div
+                    className={`absolute top-0 z-0 aspect-[989/1007] w-[70.4%] select-none ${
+                      mirror ? "right-[21.6%]" : "left-[21.6%]"
+                    }`}
+                  >
+                    <Image
+                      src={person.photo}
+                      alt={person.name}
+                      fill
+                      draggable={false}
+                      sizes="40vw"
+                      className={`object-contain object-top select-none swiss-no-select ${
+                        mirror ? "object-right" : "object-left"
                       }`}
                     />
+                  </div>
 
-                    <div
-                      className={`absolute top-[8%] z-10 flex w-[78%] flex-col ${
-                        mirror
-                          ? "right-0 items-end text-right"
-                          : "left-0 items-start text-left"
-                      }`}
+                  <div
+                    className={`absolute top-[8%] z-10 flex w-[78%] flex-col ${
+                      mirror
+                        ? "right-0 items-end text-right"
+                        : "left-0 items-start text-left"
+                    }`}
+                  >
+                    <ScrollFloat
+                      ready={ready}
+                      as="h2"
+                      scrollStart="top 80%"
+                      scrollEnd="top 30%"
+                      stagger={0.03}
+                      className="text-[clamp(2rem,4.2vw,5.75rem)] leading-[1.05] font-normal tracking-tight"
                     >
-                      <ScrollFloat
-                        ready={ready}
-                        as="h2"
-                        scrollStart="top 80%"
-                        scrollEnd="top 30%"
-                        stagger={0.03}
-                        className="text-[clamp(2rem,4.2vw,5.75rem)] leading-[1.05] font-normal tracking-tight"
-                      >
-                        {person.name}
-                      </ScrollFloat>
+                      {person.name}
+                    </ScrollFloat>
                     <ScrollFloat
                       ready={ready}
                       as="p"
@@ -436,16 +402,7 @@ function StudioContent({ ready }: { ready: boolean }) {
           })}
         </div>
       </section>
-
-        {/* Path terminus — line continues through padding into the site footer */}
-        <span
-          ref={footerGuideRef}
-          data-guide-anchor="footer"
-          aria-hidden
-          className="pointer-events-none absolute bottom-0 left-1/2 h-0 w-0"
-        />
-      </div>
-    </div>
+    </main>
   );
 }
 

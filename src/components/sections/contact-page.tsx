@@ -55,7 +55,7 @@ const labelClass =
   "font-swiss text-xs font-medium tracking-[0.24em] text-[#666666] uppercase md:text-sm";
 
 const inputClass =
-  "w-full select-text border-0 border-b border-black/30 bg-transparent py-3 font-alt text-[clamp(1rem,1.3vw,1.25rem)] leading-[1.4] tracking-tight text-black placeholder:text-[#9a9a9a] focus:border-black focus:outline-none dark:border-white/30 dark:text-white dark:placeholder:text-[#666666] dark:focus:border-white";
+  "w-full select-text border-0 border-b border-black/30 bg-transparent py-3 font-alt text-[clamp(1rem,1.3vw,1.25rem)] leading-[1.4] tracking-tight text-black placeholder:text-[#9a9a9a] focus:border-black focus:outline-none focus-visible:outline-none focus-visible:border-brand-red dark:border-white/30 dark:text-white dark:placeholder:text-[#666666] dark:focus:border-white dark:focus-visible:border-brand-red";
 
 /** Digits only, capped at 10, displayed as (XXX) XXX-XXXX. */
 function formatPhoneInput(raw: string) {
@@ -283,7 +283,11 @@ export function ContactWireframes() {
                 </div>
               </div>
             ) : (
-              <form className="flex flex-col gap-10" onSubmit={handleSubmit}>
+              <form
+                className="flex flex-col gap-10"
+                onSubmit={handleSubmit}
+                aria-describedby={submitError ? "contact-form-error" : undefined}
+              >
                 <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 sm:gap-8">
                   <div className="flex flex-col gap-2">
                     <label htmlFor="contact-name" className={labelClass}>
@@ -393,8 +397,9 @@ export function ContactWireframes() {
                   </button>
                   {submitError ? (
                     <p
+                      id="contact-form-error"
                       role="alert"
-                      className="font-alt text-[clamp(0.95rem,1.2vw,1.125rem)] leading-[1.4] tracking-tight text-[#b42318]"
+                      className="font-alt text-[clamp(0.95rem,1.2vw,1.125rem)] leading-[1.4] tracking-tight text-brand-red-error"
                     >
                       {submitError}
                     </p>

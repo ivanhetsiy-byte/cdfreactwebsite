@@ -1,12 +1,13 @@
 "use client";
 
+import type { CSSProperties, RefObject } from "react";
+
 /**
  * LML-style progressive frosted edge: stacked backdrop-blur bands
  * masked so blur is strongest at the top and fades downward.
  *
- * Progress scales the blur radius (not opacity). Fading backdrop-filter
- * via opacity makes the frost pop on — browsers skip compositing at 0
- * then apply full blur the moment opacity goes non-zero.
+ * Progress is driven via CSS `--nav-blur-progress` (0–1) so scroll
+ * updates do not re-render the navbar React tree.
  */
 const BLUR_LAYERS = [
   {
@@ -44,17 +45,16 @@ const BLUR_LAYERS = [
 ] as const;
 
 type NavProgressiveBlurProps = {
-  /** 0 = no frost (top of page), 1 = full frost after scroll */
-  progress: number;
+  rootRef?: RefObject<HTMLDivElement | null>;
 };
 
-export function NavProgressiveBlur({ progress }: NavProgressiveBlurProps) {
-  const p = Math.max(0, Math.min(1, progress));
-
+export function NavProgressiveBlur({ rootRef }: NavProgressiveBlurProps) {
   return (
     <div
+      ref={rootRef}
       aria-hidden="true"
       className="pointer-events-none fixed top-0 right-0 left-0 z-[999] h-[100px] md:h-[120px]"
+      style={{ "--nav-blur-progress": 0 } as CSSProperties}
     >
       <div
         className="relative h-full w-full"
@@ -63,25 +63,20 @@ export function NavProgressiveBlur({ progress }: NavProgressiveBlurProps) {
             "linear-gradient(to bottom, transparent 0%, transparent 100%)",
         }}
       >
-        {BLUR_LAYERS.map((layer, i) => {
-          const blur = layer.blur * p;
-          return (
-            <div
-              key={layer.blur}
-              className="absolute inset-0"
-              style={{
-                zIndex: i + 1,
-                backdropFilter: `blur(${blur}px)`,
-                WebkitBackdropFilter: `blur(${blur}px)`,
-                transition:
-                  "backdrop-filter 400ms, -webkit-backdrop-filter 400ms",
-                willChange: "backdrop-filter",
-                maskImage: layer.mask,
-                WebkitMaskImage: layer.mask,
-              }}
-            />
-          );
-        })}
+        {BLUR_LAYERS.map((layer, i) => (
+          <div
+            key={layer.blur}
+            className="absolute inset-0"
+            style={{
+              zIndex: i + 1,
+              backdropFilter: `blur(calc(${layer.blur}px * var(--nav-blur-progress, 0)))`,
+              WebkitBackdropFilter: `blur(calc(${layer.blur}px * var(--nav-blur-progress, 0)))`,
+              willChange: "backdrop-filter",
+              maskImage: layer.mask,
+              WebkitMaskImage: layer.mask,
+            }}
+          />
+        ))}
       </div>
     </div>
   );

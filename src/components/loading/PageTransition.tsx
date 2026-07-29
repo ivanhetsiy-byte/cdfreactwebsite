@@ -15,7 +15,7 @@ import { ROUTE_COVER_EVENT } from "@/lib/route-cover";
 type Phase = "idle" | "covering" | "holding" | "exiting";
 
 /** Brand red — same family as LML’s wipe accent. */
-const WIPE_RED = "#C31716";
+const WIPE_RED = "var(--brand-red)";
 const WIPE_DARK = "#121212";
 
 const COVER_RED_S = 0.42;

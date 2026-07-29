@@ -18,7 +18,7 @@ type ProgramsGuidePathProps = {
 /**
  * Desktop guide line: draws itself with scroll (scrubbed stroke-dash) so the
  * tip travels the Figma curve as the programs box moves through the viewport.
- * Positioned over the scaled canvas in home-wireframes (2448:3456 region).
+ * Positioned over the scaled canvas in home-page (2448:3456 region).
  */
 export function ProgramsGuidePath({
   showOnMobile = false,

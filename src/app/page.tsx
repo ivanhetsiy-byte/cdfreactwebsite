@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { Hero } from "@/components/sections/hero";
-import { HomeWireframes } from "@/components/sections/home-wireframes";
+import { HomeWireframes } from "@/components/sections/home-page";
 import { MissionStatement } from "@/components/sections/mission-statement";
 import { expoEaseInOut, getLenis, quinticEase } from "@/lib/lenis";
 

@@ -1,18 +1,18 @@
 import type { Metadata } from "next";
 
-import { AboutWireframes } from "@/components/sections/about-wireframes";
+import { PageShell } from "@/components/layout/page-shell";
+import { AboutWireframes } from "@/components/sections/about-page";
 
 export const metadata: Metadata = {
   title: "About Us",
+  description:
+    "Learn about Childance Factory — our mission, programs, and studio community.",
 };
 
 export default function Page() {
   return (
-    <main
-      id="main-content"
-      className="relative w-full min-h-screen bg-white text-black dark:bg-black dark:text-white pt-32 pb-24 px-6 md:p-10 md:pt-44"
-    >
+    <PageShell>
       <AboutWireframes />
-    </main>
+    </PageShell>
   );
 }

@@ -454,17 +454,27 @@ function MaskedPhoto({
   className,
   sizes,
   knockout,
+  priority = false,
 }: {
   src: string;
   className?: string;
   sizes: string;
   knockout?: ReactNode;
+  priority?: boolean;
 }) {
   return (
     <div
       className={`relative isolate overflow-hidden bg-black ${className ?? ""}`}
     >
-      <Image src={src} alt="" fill sizes={sizes} className="object-cover" />
+      <Image
+        src={src}
+        alt=""
+        fill
+        sizes={sizes}
+        className="object-cover"
+        quality={80}
+        priority={priority}
+      />
       {knockout}
     </div>
   );
@@ -504,6 +514,8 @@ function ClassMask({
                 fill
                 sizes={sizes}
                 className={`object-cover ${crop}`}
+                quality={80}
+                priority={i === 0}
               />
             </div>
             <KnockoutGlyph name={name} titleRef={titleRef} />

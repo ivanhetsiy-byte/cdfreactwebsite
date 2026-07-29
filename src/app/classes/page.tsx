@@ -1,18 +1,30 @@
 import type { Metadata } from "next";
+import dynamic from "next/dynamic";
 
-import { ClassesWireframes } from "@/components/sections/classes-wireframes";
+import { PageShell } from "@/components/layout/page-shell";
 
 export const metadata: Metadata = {
   title: "Classes",
+  description:
+    "Ballet, jazz, gymnastics, and acrobatics classes at Childance Factory.",
 };
+
+const ClassesWireframes = dynamic(
+  () =>
+    import("@/components/sections/classes-page").then(
+      (m) => m.ClassesWireframes,
+    ),
+  {
+    loading: () => (
+      <div className="min-h-[50vh]" aria-busy aria-label="Loading classes" />
+    ),
+  },
+);
 
 export default function Page() {
   return (
-    <main
-      id="main-content"
-      className="relative w-full min-h-screen bg-white text-black dark:bg-black dark:text-white pt-32 pb-24 px-6 md:p-10 md:pt-44"
-    >
+    <PageShell>
       <ClassesWireframes />
-    </main>
+    </PageShell>
   );
 }

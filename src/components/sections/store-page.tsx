@@ -245,6 +245,7 @@ export function StoreWireframes() {
 
   return (
     <section className="relative h-auto min-h-screen w-full bg-black px-5 pt-[130px] pb-40 text-white md:px-6.5">
+      <h1 className="sr-only">Store</h1>
       <div ref={listRef} className="store-masonry-list relative w-full">
         {layout.map((item) => (
           <article

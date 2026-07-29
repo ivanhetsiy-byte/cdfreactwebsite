@@ -1,5 +1,5 @@
 .lml-lab {
-  --lml-red: #e10600;
+  --lml-red: var(--brand-red, #c31716);
   --lml-muted: rgba(255, 255, 255, 0.5);
   color: #fff;
   background: #000 !important;

@@ -46,6 +46,8 @@
   --color-secondary: var(--secondary);
   --color-primary-foreground: var(--primary-foreground);
   --color-primary: var(--primary);
+  --color-brand-red: var(--brand-red);
+  --color-brand-red-error: var(--brand-red-error);
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
@@ -95,6 +97,17 @@
   --foreground: #000000;
   --muted: #666666;
   --muted-foreground: #666666;
+  --brand-red: #c31716;
+  --brand-red-error: #b42318;
+
+  /* Z-index scale — prefer these over ad-hoc z-[…] values */
+  --z-base: 0;
+  --z-nav-blur: 999;
+  --z-nav: 1003;
+  --z-nav-overlay: 1004;
+  --z-status: 10050;
+  --z-transition: 10060;
+  --z-loader: 10070;
 
   --card: #ffffff;
   --card-foreground: #000000;
@@ -170,7 +183,7 @@
   }
 
   body {
-    @apply font-swiss bg-white text-black antialiased dark:bg-black dark:text-white;
+    @apply font-swiss bg-background text-foreground antialiased;
   }
 
   h1,
@@ -180,6 +193,11 @@
   h5,
   h6 {
     @apply font-swiss tracking-tight text-balance;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--brand-red);
+    outline-offset: 3px;
   }
 
   /* Light surfaces: custom dashed-frame overlay replaces the browser highlight */
@@ -218,7 +236,7 @@
 html.cdf-red-selection ::selection,
 [data-selection-dark]::selection,
 [data-selection-dark] *::selection {
-  background-color: #c31716 !important;
+  background-color: var(--brand-red) !important;
   color: #ffffff !important;
 }
 
@@ -228,7 +246,7 @@ html.cdf-red-selection ::selection,
 html.cdf-red-selection ::-moz-selection,
 [data-selection-dark]::-moz-selection,
 [data-selection-dark] *::-moz-selection {
-  background-color: #c31716 !important;
+  background-color: var(--brand-red) !important;
   color: #ffffff !important;
 }
 
@@ -241,7 +259,7 @@ html.cdf-red-selection ::-moz-selection,
 .lml-lab input::selection,
 .lml-lab textarea::selection,
 .lml-lab [contenteditable="true"]::selection {
-  background-color: #c31716 !important;
+  background-color: var(--brand-red) !important;
   color: #ffffff !important;
 }
 
@@ -254,7 +272,7 @@ html.cdf-red-selection ::-moz-selection,
 .lml-lab input::-moz-selection,
 .lml-lab textarea::-moz-selection,
 .lml-lab [contenteditable="true"]::-moz-selection {
-  background-color: #c31716 !important;
+  background-color: var(--brand-red) !important;
   color: #ffffff !important;
 }
 

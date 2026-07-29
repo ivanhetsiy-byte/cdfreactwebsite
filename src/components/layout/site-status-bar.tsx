@@ -15,7 +15,7 @@ const LANG_OPTIONS: { code: Language; label: string }[] = [
   { code: "ja", label: "JA" },
 ];
 
-const BAG_RED = "#C31716";
+const BAG_RED = "var(--brand-red)";
 
 function formatEstTime(date: Date): string {
   return new Intl.DateTimeFormat("en-US", {
@@ -204,10 +204,10 @@ export function SiteStatusBar() {
 
               {bagHovered ? (
                 <div
-                  className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-full text-[#C31716]"
+                  className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-full text-brand-red"
                   style={{
                     backgroundColor:
-                      "color-mix(in srgb, #C31716 22%, transparent)",
+                      "color-mix(in srgb, var(--brand-red) 22%, transparent)",
                   }}
                   aria-hidden
                 >

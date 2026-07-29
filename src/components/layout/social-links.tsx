@@ -96,28 +96,36 @@ function YouTubeIcon({ sizeClass }: { sizeClass: string }) {
 const SOCIAL_META = [
   {
     label: "Instagram",
-    href: "https://instagram.com",
+    href:
+      process.env.NEXT_PUBLIC_INSTAGRAM_URL ??
+      "https://www.instagram.com/childancefactory",
     kind: "instagram" as const,
     className:
       "group/instagram text-[#666666] dark:text-[#888888] transition-colors duration-200 cursor-pointer",
   },
   {
     label: "TikTok",
-    href: "https://tiktok.com",
+    href:
+      process.env.NEXT_PUBLIC_TIKTOK_URL ??
+      "https://www.tiktok.com/@childancefactory",
     kind: "tiktok" as const,
     className:
       "group/tiktok text-[#666666] dark:text-[#888888] transition-transform duration-200 cursor-pointer hover:[filter:drop-shadow(-1.5px_-1.5px_0_#FE0979)_drop-shadow(1.5px_1.5px_0_#00F2FE)]",
   },
   {
     label: "Facebook",
-    href: "https://facebook.com",
+    href:
+      process.env.NEXT_PUBLIC_FACEBOOK_URL ??
+      "https://www.facebook.com/childancefactory",
     kind: "facebook" as const,
     className:
       "text-[#666666] dark:text-[#888888] hover:text-[#1877F2] dark:hover:text-[#1877F2] transition-colors duration-200 cursor-pointer",
   },
   {
     label: "YouTube",
-    href: "https://youtube.com",
+    href:
+      process.env.NEXT_PUBLIC_YOUTUBE_URL ??
+      "https://www.youtube.com/@childancefactory",
     kind: "youtube" as const,
     className:
       "text-[#666666] dark:text-[#888888] hover:text-[#FF0000] dark:hover:text-[#FF0000] transition-colors duration-200 cursor-pointer",

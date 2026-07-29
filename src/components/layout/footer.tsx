@@ -58,8 +58,8 @@ export function Footer() {
         }}
         className={
           forceDark
-            ? "group relative z-10 flex h-[110px] w-full cursor-pointer items-center justify-between border-t border-b border-white/20 bg-black px-5 text-white transition-colors duration-300 hover:border-[#C31716] hover:bg-[#C31716] md:h-[150px] md:px-8 lg:px-10"
-            : "group relative z-10 flex h-[110px] w-full cursor-pointer items-center justify-between border-t border-b border-black/20 bg-white px-5 text-black transition-colors duration-300 hover:border-[#C31716] hover:bg-[#C31716] hover:text-white dark:border-white/20 dark:bg-black dark:text-white md:h-[150px] md:px-8 lg:px-10"
+            ? "group relative z-10 flex h-[110px] w-full cursor-pointer items-center justify-between border-t border-b border-white/20 bg-black px-5 text-white transition-colors duration-300 hover:border-brand-red hover:bg-brand-red md:h-[150px] md:px-8 lg:px-10"
+            : "group relative z-10 flex h-[110px] w-full cursor-pointer items-center justify-between border-t border-b border-black/20 bg-white px-5 text-black transition-colors duration-300 hover:border-brand-red hover:bg-brand-red hover:text-white dark:border-white/20 dark:bg-black dark:text-white md:h-[150px] md:px-8 lg:px-10"
         }
       >
         <span className="font-swiss text-[2.25rem] leading-none font-medium tracking-tight md:text-[4rem]">

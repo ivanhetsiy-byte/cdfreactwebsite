@@ -310,9 +310,9 @@ export function HomeWireframes() {
                   src="/images/classes/ballet.jpg"
                   alt="Ballet class in the studio"
                   fill
-                  unoptimized
                   sizes="28vw"
                   className="object-cover"
+                  quality={80}
                 />
               </div>
             </div>
@@ -346,9 +346,9 @@ export function HomeWireframes() {
                   src="/images/classes/acrobatics.jpg"
                   alt="Acrobatics class in the studio"
                   fill
-                  unoptimized
                   sizes="28vw"
                   className="object-cover"
+                  quality={80}
                 />
               </div>
             </div>
@@ -382,9 +382,9 @@ export function HomeWireframes() {
                   src="/images/mission-dancer.jpg"
                   alt="Dancer mid-movement"
                   fill
-                  unoptimized
                   sizes="28vw"
                   className="object-cover"
+                  quality={80}
                 />
               </div>
             </div>

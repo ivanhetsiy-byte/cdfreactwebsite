@@ -123,7 +123,7 @@ export function StudioHeader({ variant = "lab" }: StudioHeaderProps) {
                 Work
               </a>
               <a
-                href="#studio"
+                href="#main-content"
                 className={`${linkBase} after:w-full`}
               >
                 Studio

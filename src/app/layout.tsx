@@ -9,13 +9,24 @@ import { ThemeProvider } from "@/providers/theme-provider";
 import { Analytics } from "@vercel/analytics/next";
 import "@/styles/globals.css";
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://cdf.studio";
+const siteDescription =
+  "Dance studio offering competitive and recreational programs in ballet, jazz, gymnastics, and acrobatics.";
+
 export const metadata: Metadata = {
   title: {
-    default: "CDF Website",
-    template: "%s | CDF Website",
+    default: "Childance Factory",
+    template: "%s | Childance Factory",
   },
-  description: "CDF Website",
-  metadataBase: new URL("https://example.com"),
+  description: siteDescription,
+  metadataBase: new URL(siteUrl),
+  openGraph: {
+    type: "website",
+    siteName: "Childance Factory",
+    title: "Childance Factory",
+    description: siteDescription,
+  },
+  twitter: { card: "summary_large_image" },
 };
 
 export const viewport: Viewport = {
@@ -32,6 +43,24 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "DanceSchool",
+    name: "Childance Factory",
+    url: siteUrl,
+    description: siteDescription,
+    sameAs: [
+      process.env.NEXT_PUBLIC_INSTAGRAM_URL ??
+        "https://www.instagram.com/childancefactory",
+      process.env.NEXT_PUBLIC_TIKTOK_URL ??
+        "https://www.tiktok.com/@childancefactory",
+      process.env.NEXT_PUBLIC_FACEBOOK_URL ??
+        "https://www.facebook.com/childancefactory",
+      process.env.NEXT_PUBLIC_YOUTUBE_URL ??
+        "https://www.youtube.com/@childancefactory",
+    ],
+  };
+
   return (
     <html
       lang="en"
@@ -39,6 +68,10 @@ export default function RootLayout({
       className={`${helvetica.variable} ${helveticaCompressed.variable} ${montserrat.variable} no-scrollbar`}
     >
       <body className="min-h-screen no-scrollbar">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
         <ThemeProvider
           attribute="class"
           defaultTheme="light"

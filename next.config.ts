@@ -14,6 +14,9 @@ const nextConfig: NextConfig = {
   images: {
     formats: ["image/avif", "image/webp"],
   },
+  experimental: {
+    optimizePackageImports: ["lucide-react", "gsap", "motion"],
+  },
 };
 
 export default nextConfig;
