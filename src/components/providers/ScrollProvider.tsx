@@ -52,24 +52,30 @@ export function ScrollProvider({ children }: { children: ReactNode }) {
       syncTouch: false,
     });
 
-    instance.scrollTo(0, { immediate: true });
+    // Deep-linked hashes own their landing scroll; don't fight them on boot.
+    if (!window.location.hash) {
+      instance.scrollTo(0, { immediate: true });
+    }
 
     (window as unknown as LenisWindow).lenis = instance;
 
     // Keep GSAP ScrollTrigger in sync with Lenis (window scroll).
     instance.on("scroll", ScrollTrigger.update);
 
-    let rafId = 0;
-    const raf = (time: number) => {
-      instance.raf(time);
-      rafId = requestAnimationFrame(raf);
+    // Drive Lenis from GSAP's ticker rather than a separate rAF loop, so scroll
+    // position and pinned/scrubbed transforms are always applied in the same
+    // frame. Two loops let them land a frame apart, which shows up as a jump
+    // when a pin engages or releases.
+    const ticker = (time: number) => {
+      instance.raf(time * 1000);
     };
-    rafId = requestAnimationFrame(raf);
+    gsap.ticker.add(ticker);
+    gsap.ticker.lagSmoothing(0);
 
     requestAnimationFrame(() => ScrollTrigger.refresh());
 
     return () => {
-      cancelAnimationFrame(rafId);
+      gsap.ticker.remove(ticker);
       instance.destroy();
       const win = window as unknown as LenisWindow;
       if (win.lenis === instance) {
@@ -92,6 +98,9 @@ export function ScrollProvider({ children }: { children: ReactNode }) {
     } catch {
       // sessionStorage unavailable
     }
+
+    // Deep links (e.g. /about#where-weve-been) own their own landing scroll.
+    if (typeof window !== "undefined" && window.location.hash) return;
 
     resetScrollToTop();
   }, [pathname, ownsOwnScroll]);

@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 
 export default function Page() {
   return (
-    <PageShell>
+    <PageShell className="!bg-white !pt-0 !px-0 !pb-0 md:!p-0 !text-black">
       <AboutWireframes />
     </PageShell>
   );

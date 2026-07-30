@@ -62,21 +62,12 @@ const CHROME_PAD_Y = "py-4 md:py-6.5";
 /** Scroll distance (px) over which nav frost fades in. */
 const BLUR_SCROLL_RANGE = 120;
 
-/** Selection-style active mark.
- * Header uses mix-blend-difference, so on light surfaces we paint the
- * channel-inverse of accent red + white text → composites to red + black.
- * Under `.dark` / force-dark pages, true accent + white (difference preserves it). */
-const NAV_ACTIVE_MARK =
-  "bg-[#3CE8E9] text-white dark:bg-brand-red";
-
-/** Desktop open-menu links — small uppercase. */
+/** Desktop open-menu links — small uppercase; active = underline + italic. */
 function menuLinkClass(active: boolean) {
   return [
-    "menu-inline-link relative shrink-0 font-swiss text-sm font-medium uppercase leading-none tracking-widest md:text-base",
-    "after:absolute after:bottom-0 after:left-0 after:h-0.5 after:transition-[width] after:duration-300 after:ease-out after:content-['']",
-    active
-      ? `${NAV_ACTIVE_MARK} px-[0.12em] after:w-0`
-      : "text-white after:w-0 after:bg-white hover:after:w-full",
+    "menu-inline-link relative shrink-0 font-swiss text-sm font-medium uppercase leading-none tracking-widest text-white md:text-base",
+    "after:absolute after:bottom-0 after:left-0 after:h-0.5 after:bg-white after:transition-[width] after:duration-300 after:ease-out after:content-['']",
+    active ? "italic after:w-full" : "after:w-0 hover:after:w-full",
   ].join(" ");
 }
 
