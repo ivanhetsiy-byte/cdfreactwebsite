@@ -23,6 +23,7 @@ const SelectionHighlight = dynamic(
 export function LabShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const isLab = pathname.startsWith("/lab");
+  const isMaintenance = pathname === "/maintenance";
   const isStaff = pathname === "/staff";
   const isStore =
     pathname === "/store" ||
@@ -30,7 +31,7 @@ export function LabShell({ children }: { children: ReactNode }) {
     pathname === "/bag";
   const forceDark = isStaff || isStore;
 
-  if (isLab) {
+  if (isLab || isMaintenance) {
     return <>{children}</>;
   }
 
