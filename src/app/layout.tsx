@@ -7,6 +7,7 @@ import { LanguageProvider } from "@/context/LanguageContext";
 import { BagProvider } from "@/context/BagContext";
 import { ThemeProvider } from "@/providers/theme-provider";
 import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import "@/styles/globals.css";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://cdf.studio";
@@ -94,6 +95,7 @@ export default function RootLayout({
           </LanguageProvider>
         </ThemeProvider>
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
