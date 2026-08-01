@@ -4,6 +4,10 @@ import Link from "next/link";
 import { LightRays } from "@/components/backgrounds/LightRays";
 import { Logo } from "@/components/layout/Logo";
 
+const INSTAGRAM =
+  process.env.NEXT_PUBLIC_INSTAGRAM_URL ??
+  "https://www.instagram.com/childancefactory";
+
 export const metadata: Metadata = {
   title: "Under Maintenance",
   description:
@@ -53,7 +57,7 @@ export default function MaintenancePage() {
             Email the studio
           </a>
           <Link
-            href="https://www.instagram.com/childancefactory"
+            href={INSTAGRAM}
             className="font-swiss text-sm tracking-wide text-white/55 underline-offset-4 transition-colors hover:text-white hover:underline"
           >
             Instagram
