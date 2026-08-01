@@ -15,15 +15,15 @@ const siteDescription =
 
 export const metadata: Metadata = {
   title: {
-    default: "Childance Factory",
-    template: "%s | Childance Factory",
+    default: "Childrens Dance Factory",
+    template: "%s | Childrens Dance Factory",
   },
   description: siteDescription,
   metadataBase: new URL(siteUrl),
   openGraph: {
     type: "website",
-    siteName: "Childance Factory",
-    title: "Childance Factory",
+    siteName: "Childrens Dance Factory",
+    title: "Childrens Dance Factory",
     description: siteDescription,
   },
   twitter: { card: "summary_large_image" },
@@ -46,7 +46,7 @@ export default function RootLayout({
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "DanceSchool",
-    name: "Childance Factory",
+    name: "Childrens Dance Factory",
     url: siteUrl,
     description: siteDescription,
     sameAs: [

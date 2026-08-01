@@ -31,8 +31,18 @@ export function LabShell({ children }: { children: ReactNode }) {
     pathname === "/bag";
   const forceDark = isStaff || isStore;
 
-  if (isLab || isMaintenance) {
+  // Maintenance keeps site navbar (logo) but skips footer/status chrome.
+  if (isLab) {
     return <>{children}</>;
+  }
+
+  if (isMaintenance) {
+    return (
+      <div className="relative w-full min-h-screen dark bg-black text-white">
+        <Navbar />
+        {children}
+      </div>
+    );
   }
 
   return (

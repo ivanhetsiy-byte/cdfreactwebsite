@@ -17,7 +17,7 @@ export function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  return NextResponse.rewrite(new URL("/maintenance", request.url));
+  return NextResponse.redirect(new URL("/maintenance", request.url));
 }
 
 export const config = {
