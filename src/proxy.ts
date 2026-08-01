@@ -1,14 +1,13 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
+
+import { isMaintenanceMode } from "@/lib/maintenance";
 
 /**
- * Site-wide maintenance gate.
- * Set to `false` (or remove this file) to restore normal routing.
+ * Site-wide maintenance gate (production only by default).
+ * Local `next dev` skips this. Set MAINTENANCE_MODE=false to disable in production.
  */
-const MAINTENANCE_MODE = true;
-
 export function proxy(request: NextRequest) {
-  if (!MAINTENANCE_MODE) {
+  if (!isMaintenanceMode()) {
     return NextResponse.next();
   }
 
@@ -18,7 +17,7 @@ export function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  return NextResponse.redirect(new URL("/maintenance", request.url));
+  return NextResponse.rewrite(new URL("/maintenance", request.url));
 }
 
 export const config = {
