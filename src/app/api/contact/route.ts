@@ -110,7 +110,7 @@ function buildContactEmailHtml(fields: {
           <tr>
             <td style="padding:16px 32px 28px;border-top:3px solid #000000;">
               <p style="margin:0;font-size:12px;line-height:1.4;color:#999999;">
-                Child Dance Factory · cdf.studio
+                Childrens Dance Factory · cdf.studio
               </p>
             </td>
           </tr>

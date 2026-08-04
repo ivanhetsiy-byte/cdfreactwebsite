@@ -47,10 +47,9 @@ describe("checkout roster", () => {
 });
 
 describe("store catalog", () => {
-  it("exposes stable product ids", () => {
-    const ids = getStoreProductIds();
-    expect(ids.length).toBe(STORE_PRODUCTS.length);
-    expect(getStoreProduct(ids[0]!)).toBeDefined();
+  it("starts empty in the committed catalog", () => {
+    expect(STORE_PRODUCTS).toHaveLength(0);
+    expect(getStoreProductIds()).toHaveLength(0);
     expect(getStoreProduct("missing-product")).toBeUndefined();
   });
 });

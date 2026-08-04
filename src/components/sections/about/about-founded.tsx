@@ -13,13 +13,13 @@ const YEAR = "2015";
 const LEAD = "Founded In";
 
 /**
- * Pinned founding-year statement.
+ * Founding-year statement.
  *
  * The lead line uses the same reveal as the "Where We've Been" heading:
  * characters rise out of a mask on a power4.out curve, self-running rather than
  * scrubbed so the motion stays smooth regardless of scroll speed. The year then
  * lands digit by digit via Shuffle, each digit rolling past random numerals
- * before settling. The pin holds the composition before releasing.
+ * before settling. The section is a normal full-viewport beat — no pin dwell.
  */
 export function AboutFounded() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -67,17 +67,6 @@ export function AboutFounded() {
         onEnter: () => reveal.play(),
         onLeaveBack: () => reveal.reverse(),
       });
-
-      // Separate trigger so the hold is pure dwell time — the reveal has
-      // already run by the time the section reaches the top.
-      ScrollTrigger.create({
-        trigger: section,
-        start: "top top",
-        end: () => `+=${window.innerHeight}`,
-        pin: true,
-        pinSpacing: true,
-        invalidateOnRefresh: true,
-      });
     }, section);
 
     requestAnimationFrame(() => ScrollTrigger.refresh());
@@ -117,8 +106,7 @@ export function AboutFounded() {
                 stagger={0.08}
                 shuffleTimes={3}
                 scrambleCharset="0123456789"
-                // Late enough that the whole year clears the fold before it
-                // rolls, early enough to land during the pin's hold
+                // Late enough that the whole year clears the fold before it rolls
                 threshold={0.42}
                 rootMargin="0px"
               />

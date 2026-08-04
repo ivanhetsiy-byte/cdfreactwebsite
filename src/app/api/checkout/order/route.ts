@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 
 import { formatMoney, MAX_BAG_QUANTITY, parsePrice } from "@/lib/bag";
 import { isLastNameOnRoster } from "@/lib/checkout-roster";
-import { getStoreProduct } from "@/lib/store-products";
+import { loadStoreProduct } from "@/lib/store-catalog.server";
 
 type OrderItemBody = {
   productId?: unknown;
@@ -56,7 +56,7 @@ function validateItems(raw: unknown): ValidLine[] | null {
     if (!productId || !size || !Number.isFinite(quantity)) return null;
     if (quantity < 1 || quantity > MAX_BAG_QUANTITY) return null;
 
-    const product = getStoreProduct(productId);
+    const product = loadStoreProduct(productId);
     if (!product) return null;
     if (!product.sizes.some((s) => s === size)) return null;
 
@@ -146,7 +146,7 @@ function buildOrderEmailHtml(fields: {
           <tr>
             <td style="padding:16px 32px 28px;border-top:3px solid #000000;">
               <p style="margin:0;font-size:12px;line-height:1.4;color:#999999;">
-                Child Dance Factory · cdf.studio · Pay in person at the studio
+                Childrens Dance Factory · cdf.studio · Pay in person at the studio
               </p>
             </td>
           </tr>

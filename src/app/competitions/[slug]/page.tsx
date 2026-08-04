@@ -24,7 +24,7 @@ export async function generateMetadata({
   if (!competition) return { title: "Competition" };
   return {
     title: competition.name,
-    description: `${competition.name} — ${competition.achievement} at Childance Factory.`,
+    description: `${competition.name} — ${competition.achievement} at Childrens Dance Factory.`,
   };
 }
 

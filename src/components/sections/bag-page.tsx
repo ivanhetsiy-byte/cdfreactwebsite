@@ -89,7 +89,7 @@ export function BagPage() {
   if (confirmed) {
     return (
       <section className="relative w-full bg-black px-5 pt-[130px] pb-32 text-white md:px-6.5 md:pb-40">
-        <p className="font-swiss text-xs font-medium tracking-[0.24em] text-white/40 uppercase">
+        <p className="type-eyebrow text-xs font-medium text-white/40">
           Request received
         </p>
         <h1 className="mt-4 font-swiss text-[clamp(2rem,5vw,3.25rem)] font-medium leading-[1.05] tracking-tight">
@@ -228,7 +228,7 @@ export function BagPage() {
 
               <form onSubmit={handleCheckout} className="mt-8">
                 <label className="block">
-                  <span className="font-swiss text-xs font-medium tracking-[0.24em] text-white/40 uppercase">
+                  <span className="type-eyebrow text-xs font-medium text-white/40">
                     Last name
                   </span>
                   <input

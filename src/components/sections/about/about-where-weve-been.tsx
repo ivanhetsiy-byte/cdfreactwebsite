@@ -20,8 +20,8 @@ gsap.registerPlugin(ScrollTrigger);
  * Scroll-choreographed "Where We've Been" section.
  *
  * A tall runway pins a full-viewport stage. Heading chars rise on white, then
- * one scroll snaps to the black state: curtain up, heading white and moved to
- * the top, light rays in, all five names revealed at once.
+ * scroll scrubs into the black state: curtain up, heading white and moved to
+ * the top, light rays in, all five names revealed together.
  *
  * Opening a name swaps it for its achievement on a full-bleed white band —
  * hover on desktop, tap to toggle on mobile. An ↗ in the band corner links
@@ -37,8 +37,8 @@ export function AboutWhereWeveBeen() {
   const headingRef = useRef<HTMLHeadingElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
   const rowRefs = useRef<(HTMLLIElement | null)[]>([]);
-  /** Active black-stage timeline — hash land completes it without a scroll crossing. */
-  const snapRef = useRef<gsap.core.Timeline | null>(null);
+  /** Scrubbed black-stage timeline — hash land forces complete if scrub hasn't caught up. */
+  const scrubRef = useRef<gsap.core.Timeline | null>(null);
 
   useEffect(() => {
     const section = sectionRef.current;
@@ -151,11 +151,11 @@ export function AboutWhereWeveBeen() {
     };
 
     /**
-     * The white "Where We've Been" state, then a single self-running snap to the
-     * full black state. Deliberately not scrubbed — there are exactly two states
-     * and no partial in-between renders.
+     * White intro heading, then a scrubbed runway that plays the same curtain /
+     * heading / rays / rows choreography as scroll progress — continuous rather
+     * than a binary snap.
      */
-    const buildSnap = () => {
+    const buildScrub = () => {
       gsap.set(chars, {
         opacity: 0,
         yPercent: 110,
@@ -171,7 +171,7 @@ export function AboutWhereWeveBeen() {
       });
       gsap.set(headingWrap, { y: centreOffset });
 
-      // State 1 — heading rises on the white page as the section approaches.
+      // Heading rises on the white page as the section approaches.
       // Overflow on the wrap clips the rising glyphs so they can never paint
       // over the competition list below, even mid-tween.
       gsap.fromTo(
@@ -197,50 +197,52 @@ export function AboutWhereWeveBeen() {
         },
       );
 
-      // State 2 — one scroll past the threshold snaps everything to black
-      const snap = gsap.timeline({
-        paused: true,
+      const scrub = gsap.timeline({
         defaults: { ease: "power3.inOut" },
+        scrollTrigger: {
+          trigger: runway,
+          start: "top top",
+          end: "bottom bottom",
+          scrub: 0.6,
+          invalidateOnRefresh: true,
+        },
       });
 
-      snap.to(curtain, { clipPath: "inset(0% 0 0 0)", duration: 0.55 }, 0);
-      snap.to(heading, { color: "#ffffff", duration: 0.35 }, 0.1);
-      snap.to(rays, { opacity: 1, duration: 0.6, ease: "power1.out" }, 0.2);
-      snap.to(headingWrap, { y: 0, duration: 0.6 }, 0);
+      scrub.to(curtain, { clipPath: "inset(0% 0 0 0)", duration: 0.55 }, 0);
+      scrub.to(heading, { color: "#ffffff", duration: 0.35 }, 0.1);
+      scrub.to(rays, { opacity: 1, duration: 0.6, ease: "power1.out" }, 0.2);
+      scrub.fromTo(
+        headingWrap,
+        { y: () => centreOffset() },
+        { y: 0, duration: 0.6, immediateRender: false },
+        0,
+      );
 
       // All five names together — once the heading has finished sliding up so
       // it is no longer travelling through the row stack.
-      snap.to(
+      scrub.to(
         rows,
         { opacity: 1, yPercent: 0, duration: 0.5, ease: "power3.out" },
         0.55,
       );
 
-      const snapTrigger = ScrollTrigger.create({
-        trigger: runway,
-        // A short beat after the stage pins, so the white state reads first
-        start: () => `top top-=${Math.round(window.innerHeight * 0.2)}`,
-        invalidateOnRefresh: true,
-        onEnter: () => snap.play(),
-        onLeaveBack: () => snap.reverse(),
-      });
+      scrubRef.current = scrub;
 
-      snapRef.current = snap;
-
-      // Deep links can land past the threshold before this trigger exists —
-      // onEnter never fires for a crossing that already happened, so sync.
-      if (snapTrigger.scroll() >= snapTrigger.start) {
-        snap.progress(1).pause();
+      // Deep links can land past the scrub start before this trigger exists —
+      // force the finished black stage to match the hash landing position.
+      const st = scrub.scrollTrigger;
+      if (st && st.scroll() >= st.start) {
+        scrub.progress(1);
       }
 
-      return snap;
+      return scrub;
     };
 
     const mm = gsap.matchMedia();
 
     // ── Desktop: sticky stage, hover-driven rows ───────────────────────────
     mm.add("(min-width: 768px)", () => {
-      const snap = buildSnap();
+      const scrub = buildScrub();
 
       const handlers: Array<{
         row: HTMLLIElement;
@@ -262,14 +264,15 @@ export function AboutWhereWeveBeen() {
           row.removeEventListener("pointerleave", leave);
         });
         setActive(null);
-        if (snapRef.current === snap) snapRef.current = null;
-        snap.kill();
+        if (scrubRef.current === scrub) scrubRef.current = null;
+        scrub.scrollTrigger?.kill();
+        scrub.kill();
       };
     });
 
     // ── Mobile: tap a row to open its hover state; tap again to close ──────
     mm.add("(max-width: 767px)", () => {
-      const snap = buildSnap();
+      const scrub = buildScrub();
 
       const handlers: Array<{ row: HTMLLIElement; click: (e: Event) => void }> =
         [];
@@ -289,8 +292,9 @@ export function AboutWhereWeveBeen() {
           row.removeEventListener("click", click);
         });
         setActive(null);
-        if (snapRef.current === snap) snapRef.current = null;
-        snap.kill();
+        if (scrubRef.current === scrub) scrubRef.current = null;
+        scrub.scrollTrigger?.kill();
+        scrub.kill();
       };
     });
 
@@ -326,8 +330,8 @@ export function AboutWhereWeveBeen() {
         window.scrollTo(0, y);
       }
       ScrollTrigger.update();
-      // Jumping past the snap threshold skips onEnter — complete the stage here.
-      snapRef.current?.progress(1).pause();
+      // Land on the finished black stage even if scrub lag hasn't caught up.
+      scrubRef.current?.progress(1);
     };
 
     const raf = requestAnimationFrame(() => {
@@ -350,16 +354,17 @@ export function AboutWhereWeveBeen() {
       aria-labelledby="about-where-heading"
       className="relative w-full overflow-x-clip bg-white"
     >
-      {/* The runway holds the sticky stage: a beat of white, the snap to black,
-          then dwell time to open names (hover / tap) and follow the arrow. */}
+      {/* The runway holds the sticky stage while scroll scrubs white → black,
+          then leaves room to open names (hover / tap) and follow the arrow. */}
       <div ref={runwayRef} className="relative h-[180vh] md:h-[250vh]">
-        {/* Deep-link target — sits past the white beat so #where-weve-been
-            opens on the snapped black stage the competition arrows leave from. */}
+        {/* Deep-link target — near scrub end so #where-weve-been opens on the
+            finished black stage the competition arrows leave from. */}
         <div
           id={ABOUT_WHERE_HASH}
           aria-hidden
-          className="pointer-events-none absolute top-[25vh] left-0 h-px w-px"
-        />        {/* Full-viewport stage. Content is top-aligned, so whatever height the
+          className="pointer-events-none absolute top-[calc(100%-100svh)] left-0 h-px w-px"
+        />
+        {/* Full-viewport stage. Content is top-aligned, so whatever height the
             names do not need is simply black rather than stretched type. */}
         <div
           ref={stageRef}

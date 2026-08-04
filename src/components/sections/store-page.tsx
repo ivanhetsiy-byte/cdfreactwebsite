@@ -12,7 +12,7 @@ import {
 } from "react";
 
 import { requestRouteCover, ROUTE_COVER_MS } from "@/lib/route-cover";
-import { STORE_PRODUCTS, type StoreProduct } from "@/lib/store-products";
+import type { StoreProduct } from "@/lib/store-products";
 
 /**
  * Store catalog — layout/motion mirrored from lml.cc/en/journal masonry:
@@ -83,7 +83,11 @@ function useElementWidth<T extends HTMLElement>() {
   return [ref, width] as const;
 }
 
-export function StoreWireframes() {
+export function StoreWireframes({
+  products = [],
+}: {
+  products?: readonly StoreProduct[];
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const navLockRef = useRef(false);
@@ -112,13 +116,13 @@ export function StoreWireframes() {
   );
 
   const layout = useMemo(() => {
-    if (!listWidth) return [] as PlacedItem[];
+    if (!listWidth || products.length === 0) return [] as PlacedItem[];
 
     const gap = Math.max(20, Math.min(80, 0.05 * listWidth));
     const itemW = Math.max(0, (listWidth - gap * (cols - 1)) / cols);
     const colHeights = Array(cols).fill(0) as number[];
 
-    return STORE_PRODUCTS.map((product) => {
+    return products.map((product) => {
       const col = Math.max(0, colHeights.indexOf(Math.min(...colHeights)));
       const imgH = Math.round(ASPECT_RATIO[product.aspect] * itemW);
       const h = imgH + CONTENT_H;
@@ -127,7 +131,7 @@ export function StoreWireframes() {
       colHeights[col] = y + h + gap;
       return { ...product, x, y, w: itemW, h, imgH };
     });
-  }, [cols, listWidth]);
+  }, [cols, listWidth, products]);
 
   useLayoutEffect(() => {
     if (!listWidth || layout.length === 0) return;
@@ -246,42 +250,50 @@ export function StoreWireframes() {
   return (
     <section className="relative h-auto min-h-screen w-full bg-black px-5 pt-[130px] pb-40 text-white md:px-6.5">
       <h1 className="sr-only">Store</h1>
-      <div ref={listRef} className="store-masonry-list relative w-full">
-        {layout.map((item) => (
-          <article
-            key={item.id}
-            data-key={item.id}
-            className="store-masonry-item absolute cursor-pointer p-0 will-change-[transform,width,height,opacity]"
-            style={{ width: item.w, height: item.h, opacity: 0 }}
-            onMouseEnter={() => onEnter(item.id)}
-            onMouseLeave={() => onLeave(item.id)}
-          >
-            <button
-              type="button"
-              onClick={() => goProduct(item.id)}
-              className="item-card block h-full w-full cursor-pointer border-0 bg-transparent p-0 text-left text-inherit"
-              aria-label={`View ${item.title}`}
+      {products.length === 0 ? (
+        <div className="flex min-h-[50vh] items-center justify-center">
+          <p className="font-swiss text-sm tracking-wide text-white/45 md:text-base">
+            Store coming soon.
+          </p>
+        </div>
+      ) : (
+        <div ref={listRef} className="store-masonry-list relative w-full">
+          {layout.map((item) => (
+            <article
+              key={item.id}
+              data-key={item.id}
+              className="store-masonry-item absolute cursor-pointer p-0 will-change-[transform,width,height,opacity]"
+              style={{ width: item.w, height: item.h, opacity: 0 }}
+              onMouseEnter={() => onEnter(item.id)}
+              onMouseLeave={() => onLeave(item.id)}
             >
-              <div
-                className="item-img relative w-full overflow-hidden bg-white"
-                style={{ height: item.imgH, width: "100%" }}
-                aria-hidden
-              />
-              <div
-                className="item-content mt-2.5 box-border pt-3"
-                style={{ height: CONTENT_H }}
+              <button
+                type="button"
+                onClick={() => goProduct(item.id)}
+                className="item-card block h-full w-full cursor-pointer border-0 bg-transparent p-0 text-left text-inherit"
+                aria-label={`View ${item.title}`}
               >
-                <h2 className="mb-1 line-clamp-2 font-swiss text-[14px] leading-[1.2] font-medium text-white md:text-lg">
-                  {item.title}
-                </h2>
-                <p className="mt-2.5 font-swiss text-sm text-white/50">
-                  {item.price}
-                </p>
-              </div>
-            </button>
-          </article>
-        ))}
-      </div>
+                <div
+                  className="item-img relative w-full overflow-hidden bg-white"
+                  style={{ height: item.imgH, width: "100%" }}
+                  aria-hidden
+                />
+                <div
+                  className="item-content mt-2.5 box-border pt-3"
+                  style={{ height: CONTENT_H }}
+                >
+                  <h2 className="mb-1 line-clamp-2 font-swiss text-[14px] leading-[1.2] font-medium text-white md:text-lg">
+                    {item.title}
+                  </h2>
+                  <p className="mt-2.5 font-swiss text-sm text-white/50">
+                    {item.price}
+                  </p>
+                </div>
+              </button>
+            </article>
+          ))}
+        </div>
+      )}
     </section>
   );
 }

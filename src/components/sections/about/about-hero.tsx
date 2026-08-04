@@ -72,8 +72,8 @@ export function AboutHero() {
         // handoff instead of switching from instant to smoothed tracking.
         scrub: 0.6,
         invalidateOnRefresh: true,
-        // Skip the reverse horizontal scrub — jump to the top of the pin and
-        // land there in the same callback, before the frame paints.
+        // Once the hero is out of view, re-entering from below snaps back to
+        // its initial state instead of replaying the horizontal scrub backward.
         onEnterBack: (self) => {
           scrollToPinStart(self.start);
           rewindTitle(self);

@@ -6,7 +6,7 @@ import { ContactWireframes } from "@/components/sections/contact-page";
 export const metadata: Metadata = {
   title: "Contact Us",
   description:
-    "Contact Childance Factory — get in touch about classes, enrollment, and studio visits.",
+    "Contact Childrens Dance Factory — get in touch about classes, enrollment, and studio visits.",
 };
 
 export default function Page() {

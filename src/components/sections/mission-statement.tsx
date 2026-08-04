@@ -112,9 +112,10 @@ export function MissionStatement() {
             }}
           >
             <Image
-              src="/images/mission-dancer.jpg"
+              src="/images/filler.svg"
               alt="Dancer in a dynamic leap"
               fill
+              unoptimized
               sizes="(max-width: 768px) 28vw, 24vw"
               className="object-cover object-[38.34%_100%]"
             />

@@ -97,7 +97,7 @@ export function AboutMilestones({
     >
       {/* Section header */}
       <div className="mb-16 md:mb-[5vw]">
-        <p className="mb-3 font-swiss text-xs font-medium tracking-[0.28em] text-white/30 uppercase md:text-sm">
+        <p className="type-eyebrow mb-3 text-xs font-medium text-white/30 md:text-sm">
           {eyebrow}
         </p>
         <SplitReveal
@@ -146,7 +146,7 @@ export function AboutMilestones({
                 {/* Year label */}
                 <span
                   aria-hidden="true"
-                  className="mb-5 block font-swiss-compressed text-[clamp(0.7rem,1.1vw,0.875rem)] font-black tracking-[0.25em] text-brand-red uppercase"
+                  className="type-eyebrow mb-5 block font-swiss-compressed text-[clamp(0.7rem,1.1vw,0.875rem)] font-black text-brand-red"
                 >
                   {item.year}
                 </span>
@@ -197,7 +197,7 @@ export function AboutMilestones({
             >
               {stat.value}
             </dd>
-            <dt className="order-2 font-swiss text-xs font-medium tracking-[0.24em] text-white/30 uppercase md:text-sm">
+            <dt className="type-eyebrow order-2 text-xs font-medium text-white/30 md:text-sm">
               {stat.label}
             </dt>
           </div>

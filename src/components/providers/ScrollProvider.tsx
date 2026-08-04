@@ -36,8 +36,9 @@ export function ScrollProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const isFirstPathEffect = useRef(true);
   const isLab = pathname.startsWith("/lab");
-  // Staff mounts LmlStudioPage (LabScrollProvider) — avoid double Lenis.
-  const ownsOwnScroll = isLab || pathname === "/staff";
+  // Staff / staff-2 mount LmlStudioPage (LabScrollProvider) — avoid double Lenis.
+  const ownsOwnScroll =
+    isLab || pathname === "/staff" || pathname === "/staff-2";
 
   useEffect(() => {
     // Lab / staff studio pages own their own Lenis instance.

@@ -105,7 +105,7 @@ const dictionaries: Record<Language, Dictionary> = {
     },
     home: {
       programs: {
-        headline: "Ages 3 - 18",
+        headline: "Ages 3 - 16",
         label: "Our Programs",
         body: "Competitive and recreational groups built for every stage of the journey. From first classes in the studio to the competition floor, dancers train with clarity, care, and a shared drive to grow — technique, confidence, and community in equal measure.",
         cta: "View classes →",
@@ -151,7 +151,7 @@ const dictionaries: Record<Language, Dictionary> = {
     },
     home: {
       programs: {
-        headline: "Возраст 3 - 18",
+        headline: "Возраст 3 - 16",
         label: "Наши программы",
         body: "Соревновательные и любительские группы для каждого этапа пути. От первых занятий в студии до соревновательного пола танцоры тренируются с ясностью, заботой и общим стремлением расти — техника, уверенность и сообщество в равной мере.",
         cta: "Смотреть классы →",
@@ -197,7 +197,7 @@ const dictionaries: Record<Language, Dictionary> = {
     },
     home: {
       programs: {
-        headline: "Вік 3 - 18",
+        headline: "Вік 3 - 16",
         label: "Наші програми",
         body: "Змагальні та аматорські групи для кожного етапу шляху. Від перших занять у студії до змагальної зали танцюристи тренуються з ясністю, турботою та спільним прагненням рости — техніка, впевненість і спільнота порівну.",
         cta: "Дивитися класи →",
@@ -243,7 +243,7 @@ const dictionaries: Record<Language, Dictionary> = {
     },
     home: {
       programs: {
-        headline: "対象年齢 3 - 18歳",
+        headline: "対象年齢 3 - 16歳",
         label: "プログラム",
         body: "競技グループとレクリエーショングループ — それぞれの段階に合わせて。スタジオでの最初のクラスから競技の舞台まで、ダンサーは明確さと丁寧さ、そして共に成長する意志をもって稽古します。技術・自信・コミュニティを、同じ重みで。",
         cta: "クラスを見る →",

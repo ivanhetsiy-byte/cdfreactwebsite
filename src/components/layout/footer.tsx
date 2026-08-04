@@ -5,12 +5,13 @@ import { usePathname, useRouter } from "next/navigation";
 import { useRef } from "react";
 
 import { SocialLinks } from "@/components/layout/social-links";
+import { StudioEmailText, STUDIO_EMAIL } from "@/components/ui/studio-email";
 import { requestRouteCover, ROUTE_COVER_MS } from "@/lib/route-cover";
 
 /**
  * Site-wide closing footer — large type CTA + sparse studio details.
- * Colors follow the site theme (light / dark), except Staff which stays black
- * to match the forced-dark page above it.
+ * Colors follow the site theme (light / dark), except Store/Bag which stay
+ * black to match their forced-dark pages.
  */
 export function Footer() {
   const pathname = usePathname();
@@ -18,7 +19,6 @@ export function Footer() {
   const navLockRef = useRef(false);
   const year = new Date().getFullYear();
   const forceDark =
-    pathname === "/staff" ||
     pathname === "/store" ||
     pathname.startsWith("/store/") ||
     pathname === "/bag";
@@ -75,17 +75,17 @@ export function Footer() {
           <p
             className={
               forceDark
-                ? "mb-3 font-swiss text-[0.7rem] tracking-[0.2em] text-white/40 uppercase"
-                : "mb-3 font-swiss text-[0.7rem] tracking-[0.2em] text-black/40 uppercase dark:text-white/40"
+                ? "type-eyebrow mb-3 text-[0.7rem] text-white/40"
+                : "type-eyebrow mb-3 text-[0.7rem] text-black/40 dark:text-white/40"
             }
           >
-            Child Dance Factory
+            Childrens Dance Factory
           </p>
           <a
-            href="mailto:info@cdf.studio"
-            className="block font-swiss text-[1.75rem] leading-none tracking-tight transition-opacity hover:opacity-70 md:text-[2.5rem]"
+            href={`mailto:${STUDIO_EMAIL}`}
+            className="block whitespace-nowrap font-swiss text-[1.75rem] leading-[1.15] tracking-tight transition-opacity hover:opacity-70 md:text-[2.5rem]"
           >
-            info@cdf.studio
+            <StudioEmailText />
           </a>
           <p
             className={

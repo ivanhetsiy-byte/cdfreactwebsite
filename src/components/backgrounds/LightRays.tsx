@@ -70,24 +70,24 @@ const getAnchorAndDir = (
   w: number,
   h: number,
 ): { anchor: Vec2; dir: Vec2 } => {
-  const outside = 0.2;
+  const outside = 0.2 * Math.min(w, h);
   switch (origin) {
     case "top-left":
-      return { anchor: [0, -outside * h], dir: [0, 1] };
+      return { anchor: [0, -outside], dir: [0, 1] };
     case "top-right":
-      return { anchor: [w, -outside * h], dir: [0, 1] };
+      return { anchor: [w, -outside], dir: [0, 1] };
     case "left":
-      return { anchor: [-outside * w, 0.5 * h], dir: [1, 0] };
+      return { anchor: [-outside, 0.5 * h], dir: [1, 0] };
     case "right":
-      return { anchor: [(1 + outside) * w, 0.5 * h], dir: [-1, 0] };
+      return { anchor: [w + outside, 0.5 * h], dir: [-1, 0] };
     case "bottom-left":
-      return { anchor: [0, (1 + outside) * h], dir: [0, -1] };
+      return { anchor: [0, h + outside], dir: [0, -1] };
     case "bottom-center":
-      return { anchor: [0.5 * w, (1 + outside) * h], dir: [0, -1] };
+      return { anchor: [0.5 * w, h + outside], dir: [0, -1] };
     case "bottom-right":
-      return { anchor: [w, (1 + outside) * h], dir: [0, -1] };
+      return { anchor: [w, h + outside], dir: [0, -1] };
     default:
-      return { anchor: [0.5 * w, -outside * h], dir: [0, 1] };
+      return { anchor: [0.5 * w, -outside], dir: [0, 1] };
   }
 };
 
@@ -134,10 +134,13 @@ float rayStrength(vec2 raySource, vec2 rayRefDirection, vec2 coord,
   float spreadFactor = pow(max(distortedAngle, 0.0), 1.0 / max(lightSpread, 0.001));
 
   float distance = length(sourceToCoord);
-  float maxDistance = iResolution.x * rayLength;
+  // Width-only scaling makes rays too short in portrait viewports.
+  float distanceScale = max(iResolution.x, iResolution.y);
+  float maxDistance = distanceScale * rayLength;
   float lengthFalloff = clamp((maxDistance - distance) / maxDistance, 0.0, 1.0);
 
-  float fadeFalloff = clamp((iResolution.x * fadeDistance - distance) / (iResolution.x * fadeDistance), 0.5, 1.0);
+  float fadeRange = distanceScale * fadeDistance;
+  float fadeFalloff = clamp((fadeRange - distance) / fadeRange, 0.5, 1.0);
   float pulse = pulsating > 0.5 ? (0.8 + 0.2 * sin(iTime * speed * 3.0)) : 1.0;
 
   float baseStrength = clamp(

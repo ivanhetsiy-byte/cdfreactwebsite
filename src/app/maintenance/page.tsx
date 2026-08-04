@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { LightRays } from "@/components/backgrounds/LightRays";
+import { Beams } from "@/components/backgrounds/Beams";
 
 const INSTAGRAM =
   process.env.NEXT_PUBLIC_INSTAGRAM_URL ??
-  "https://www.instagram.com/childancefactory";
+  "https://www.instagram.com/cdf_dance_school/";
 
 export const metadata: Metadata = {
   title: "Under Maintenance",
@@ -18,22 +18,14 @@ export default function MaintenancePage() {
   return (
     <div className="relative flex min-h-[calc(100dvh-11rem)] w-full flex-col overflow-hidden bg-black text-white md:min-h-[calc(100dvh-13rem)]">
       <div className="absolute inset-0">
-        <LightRays
-          raysOrigin="bottom-center"
-          raysColor="#ffffff"
-          raysSpeed={0.55}
-          lightSpread={0.9}
-          fadeDistance={0.85}
-          saturation={1.35}
-          followMouse={false}
-        />
+        <Beams beamWidth={2.4} lightColor="#ffffff" />
       </div>
 
       <main
         id="main-content"
         className="relative z-10 flex flex-1 flex-col justify-center px-6 py-16 md:px-10"
       >
-        <p className="font-swiss text-xs font-medium tracking-[0.28em] text-white/45 uppercase">
+        <p className="type-eyebrow text-xs font-medium text-white/45">
           Philadelphia
         </p>
         <h1 className="mt-5 max-w-[12ch] font-swiss text-[clamp(2.75rem,11vw,7.5rem)] font-bold leading-[0.88] tracking-tighter">

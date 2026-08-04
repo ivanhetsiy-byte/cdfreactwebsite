@@ -60,7 +60,7 @@ export function PinnedChapter({
 
       {/* Eyebrow — desktop only */}
       {eyebrow && (
-        <p className="mb-8 hidden font-swiss text-xs font-medium tracking-[0.28em] text-white/30 uppercase md:block md:text-sm">
+        <p className="type-eyebrow mb-8 hidden text-xs font-medium text-white/30 md:block md:text-sm">
           {eyebrow}
         </p>
       )}

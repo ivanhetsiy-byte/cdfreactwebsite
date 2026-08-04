@@ -76,7 +76,7 @@ export function StoreProductDetail({ product }: StoreProductDetailProps) {
           </p>
 
           <fieldset className="mt-10 border-0 p-0">
-            <legend className="font-swiss text-xs font-medium tracking-[0.24em] text-white/40 uppercase">
+            <legend className="type-eyebrow text-xs font-medium text-white/40">
               Size
             </legend>
             <div className="mt-4 flex flex-wrap gap-2">
@@ -110,7 +110,7 @@ export function StoreProductDetail({ product }: StoreProductDetailProps) {
           </button>
 
           <div className="mt-14 border-t border-white/15 pt-8 md:mt-16">
-            <h2 className="font-swiss text-xs font-medium tracking-[0.24em] text-white/40 uppercase">
+            <h2 className="type-eyebrow text-xs font-medium text-white/40">
               Specifications
             </h2>
             <dl className="mt-5 space-y-0">

@@ -10,7 +10,7 @@ export const ABOUT_NAME = "Mykhaylo Hetsiy";
  * Length matched to LML (~176) so the float rhythm stays the same.
  */
 export const ABOUT_BLURB =
-  "(Михайло) Child Dance Factory (CDF)™ merges craft with stage art, using world-trained technique to craft unique dance experiences that give students a lasting stage impact.";
+  "(Михайло) Childrens Dance Factory (CDF)™ merges craft with stage art, using world-trained technique to craft unique dance experiences that give students a lasting stage impact.";
 
 /** Three lines — lengths matched to LML tagline (20 / 20 / 22). */
 export const TAGLINE_LINES = [
@@ -19,14 +19,14 @@ export const TAGLINE_LINES = [
   "but also a   Visionary",
 ] as const;
 
-export const BIO = `I'm Mykhaylo Hetsiy (Михайло, founder of Child Dance Factory), a lead teacher and principal choreographer with a passion shaped across continents—from Guangzhou studios to Broadway in Turkey. Dance is an emotional language of body and rhythm; choreography is a deliberate craft of form and timing. I combine a teacher's care with an artist's bold voice, working across the full process—from cultural traditions and rehearsal to stage direction and original works—to ensure that every detail precisely conveys the spirit of the dance.
+export const BIO = `Mykhaylo Hetsiy is the founder and artistic director of CDF Dance Studio, a professional ballet dancer, choreographer, and teacher with over 40 years of experience in dance. He graduated from the renowned Pavlo Virsky Choreographic School with a diploma as a ballet artist and holds a master’s degree in choreography and dance education, qualifying him as a ballet master, choreographer, and teacher.
 
-I believe that outstanding work comes from the ability to build end to end—an approach that goes beyond technique, rooted in a way of thinking that integrates tradition and invention. At the intersection of cultures and movement, I continue to explore dances that are clear, bold, and sustainable.
+Throughout a 15-year professional performing career, he danced in theaters across Ukraine and China, performed with the world-famous National Honored Academic Dance Ensemble of Ukraine named after Pavlo Virsky, took part in international productions and television and film projects, and shared the stage with Russian and Ukrainian stars. For over 15 years, he has taught jazz, classical ballet, and acrobatics. His students have become winners at regional, national, and world championships.
 
-I look forward to collaborating with you to create a world woven together by dance and aesthetics.`;
+His mission is not only to train strong dancers, but to help each student unlock their potential, build discipline, confidence, and a lifelong love for the art of dance.`;
 
 /** Shared stand-in — same as founder LML portrait until teacher art is locked. */
-const TEACHER_PORTRAIT = "/images/staff/owner.png";
+const TEACHER_PORTRAIT = "/images/filler.svg";
 
 /** Secondary teachers — Yuliia (left), then Tatiana (mirrored right). */
 export const TEAM = [

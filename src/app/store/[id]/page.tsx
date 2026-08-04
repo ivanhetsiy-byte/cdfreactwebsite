@@ -3,34 +3,40 @@ import { notFound } from "next/navigation";
 
 import { StoreProductDetail } from "@/components/sections/store-product-detail";
 import {
-  getStoreProduct,
-  getStoreProductIds,
-} from "@/lib/store-products";
+  loadStoreProduct,
+  loadStoreProductIds,
+} from "@/lib/store-catalog.server";
 
 type PageProps = {
   params: Promise<{ id: string }>;
 };
 
+/** Re-read local catalog on each request during development. */
+export const dynamic = "force-dynamic";
+
 export function generateStaticParams() {
-  return getStoreProductIds().map((id) => ({ id }));
+  return loadStoreProductIds().map((id) => ({ id }));
 }
 
 export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
   const { id } = await params;
-  const product = getStoreProduct(id);
+  const product = loadStoreProduct(id);
   if (!product) return { title: "Store" };
   return { title: product.title };
 }
 
 export default async function Page({ params }: PageProps) {
   const { id } = await params;
-  const product = getStoreProduct(id);
+  const product = loadStoreProduct(id);
   if (!product) notFound();
 
   return (
-    <main id="main-content" className="relative w-full min-h-screen bg-black text-white">
+    <main
+      id="main-content"
+      className="relative w-full min-h-screen bg-black text-white"
+    >
       <StoreProductDetail product={product} />
     </main>
   );

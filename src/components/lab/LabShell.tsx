@@ -24,12 +24,11 @@ export function LabShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const isLab = pathname.startsWith("/lab");
   const isMaintenance = pathname === "/maintenance";
-  const isStaff = pathname === "/staff";
   const isStore =
     pathname === "/store" ||
     pathname.startsWith("/store/") ||
     pathname === "/bag";
-  const forceDark = isStaff || isStore;
+  const forceDark = isStore;
 
   // Maintenance keeps site navbar (logo) but skips footer/status chrome.
   if (isLab) {

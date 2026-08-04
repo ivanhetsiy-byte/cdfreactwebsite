@@ -19,7 +19,7 @@ export function CompetitionWireframe({ competition }: CompetitionWireframeProps)
       </Link>
 
       <header className="flex flex-col gap-3">
-        <p className="font-swiss text-xs tracking-[0.2em] text-white/50 uppercase">
+        <p className="type-eyebrow text-xs text-white/50">
           Competition
         </p>
         <h1 className="font-swiss text-[clamp(2.5rem,8vw,5.5rem)] leading-none tracking-tight text-white">

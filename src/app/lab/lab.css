@@ -7,9 +7,20 @@
   overflow-x: hidden;
 }
 
-html:has(.lml-lab),
-body:has(.lml-lab) {
+html:has(.lml-lab):not(:has(.lml-lab-light)),
+body:has(.lml-lab):not(:has(.lml-lab-light)) {
   background: #000 !important;
+}
+
+.lml-lab.lml-lab-light {
+  --lml-muted: rgba(0, 0, 0, 0.45);
+  color: #000;
+  background: #fff !important;
+}
+
+html:has(.lml-lab-light),
+body:has(.lml-lab-light) {
+  background: #fff !important;
 }
 
 .lml-lab * {
@@ -39,6 +50,11 @@ body:has(.lml-lab) {
   mix-blend-mode: soft-light;
   opacity: 0.35;
   image-rendering: pixelated;
+}
+
+.lml-lab-light .noise-overlay {
+  mix-blend-mode: multiply;
+  opacity: 0.04;
 }
 
 .lml-lab .glitch-text {
@@ -121,4 +137,9 @@ body:has(.lml-lab) {
   width: 100%;
   background: #fff;
   opacity: 0.35;
+}
+
+.lml-lab-light .custom-scrollbar-thumb {
+  background: #000;
+  opacity: 0.3;
 }

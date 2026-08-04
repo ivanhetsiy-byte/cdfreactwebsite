@@ -6,7 +6,7 @@ import { PageShell } from "@/components/layout/page-shell";
 export const metadata: Metadata = {
   title: "Classes",
   description:
-    "Ballet, jazz, gymnastics, and acrobatics classes at Childance Factory.",
+    "Ballet, jazz, gymnastics, and acrobatics classes at Childrens Dance Factory.",
 };
 
 const ClassesWireframes = dynamic(

@@ -51,11 +51,11 @@ export default function RootLayout({
     description: siteDescription,
     sameAs: [
       process.env.NEXT_PUBLIC_INSTAGRAM_URL ??
-        "https://www.instagram.com/childancefactory",
+        "https://www.instagram.com/cdf_dance_school/",
       process.env.NEXT_PUBLIC_TIKTOK_URL ??
         "https://www.tiktok.com/@childancefactory",
       process.env.NEXT_PUBLIC_FACEBOOK_URL ??
-        "https://www.facebook.com/childancefactory",
+        "https://www.facebook.com/CDF.danceschool",
       process.env.NEXT_PUBLIC_YOUTUBE_URL ??
         "https://www.youtube.com/@childancefactory",
     ],

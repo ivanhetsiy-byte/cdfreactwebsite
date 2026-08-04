@@ -1,5 +1,7 @@
 "use client";
 
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Image from "next/image";
 import {
   useCallback,
@@ -16,6 +18,8 @@ import { ScrollSlide } from "@/components/motion/ScrollSlide";
 import { ProgramsGuidePath } from "@/components/motion/ProgramsGuidePath";
 import { GuidePhoto } from "@/components/motion/GuidePhoto";
 
+gsap.registerPlugin(ScrollTrigger);
+
 type GalleryItem = {
   id: string;
   src: string;
@@ -24,12 +28,12 @@ type GalleryItem = {
 };
 
 const GALLERY_PLACEHOLDERS = [
-  "/images/gallery/placeholder-01.svg",
-  "/images/gallery/placeholder-02.svg",
-  "/images/gallery/placeholder-03.svg",
-  "/images/gallery/placeholder-04.svg",
-  "/images/gallery/placeholder-05.svg",
-  "/images/gallery/placeholder-06.svg",
+  "/images/filler.svg",
+  "/images/filler.svg",
+  "/images/filler.svg",
+  "/images/filler.svg",
+  "/images/filler.svg",
+  "/images/filler.svg",
 ] as const;
 
 const GALLERY_CAPTIONS = [
@@ -242,21 +246,58 @@ function GalleryStrip() {
 export function HomeWireframes() {
   const { t } = useLanguage();
   const mottoSectionRef = useRef<HTMLElement>(null);
+  const mottoWipeRef = useRef<HTMLDivElement>(null);
 
   const mottoLine1 = HOME_LOCKED_MOTTO.line1.replace(/[.,]$/, "");
   const mottoLine2 = HOME_LOCKED_MOTTO.line2.replace(/[.,]$/, "");
 
+  // Left→right black wipe; white text + mix-blend-difference inverts over it.
+  useEffect(() => {
+    const section = mottoSectionRef.current;
+    const wipe = mottoWipeRef.current;
+    if (!section || !wipe) return;
+
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduced) return;
+
+    const ctx = gsap.context(() => {
+      gsap.fromTo(
+        wipe,
+        { clipPath: "inset(0 100% 0 0)" },
+        {
+          clipPath: "inset(0 0% 0 0)",
+          ease: "none",
+          scrollTrigger: {
+            trigger: section,
+            start: "top 75%",
+            end: "center 45%",
+            scrub: true,
+          },
+        },
+      );
+    }, section);
+
+    requestAnimationFrame(() => ScrollTrigger.refresh());
+    return () => ctx.revert();
+  }, []);
+
   return (
     <div className="relative z-[1] w-full text-black dark:text-white">
-      {/* ── Motto — opposite-side slides; play on enter, reverse on scroll-up ── */}
+      {/* ── Motto — opposite-side slides + L→R black wipe that inverts the type ── */}
       <section
         ref={mottoSectionRef}
         aria-labelledby="home-motto-heading"
-        className="relative flex min-h-dvh w-full items-center overflow-x-clip pt-28 pb-40 md:block md:min-h-0 md:pt-[20vw] md:pb-[24vw]"
+        className="relative isolate -mx-6 flex min-h-dvh w-[calc(100%+3rem)] items-center overflow-hidden bg-white px-6 pt-28 pb-40 md:-mx-10 md:block md:min-h-0 md:w-[calc(100%+5rem)] md:px-10 md:pt-[20vw] md:pb-[24vw]"
       >
+        <div
+          ref={mottoWipeRef}
+          aria-hidden
+          className="pointer-events-none absolute inset-0 z-0 bg-black"
+          style={{ clipPath: "inset(0 100% 0 0)" }}
+        />
         <h2
           id="home-motto-heading"
-          className="font-swiss text-[clamp(1.85rem,8vw,3rem)] font-bold uppercase leading-[0.8] tracking-tighter md:text-[8.55vw]"
+          className="relative z-10 font-swiss text-[clamp(1.85rem,8vw,3rem)] font-bold uppercase leading-[0.8] tracking-tighter text-white mix-blend-difference md:text-[8.55vw]"
         >
           <ScrollSlide
             from="left"
@@ -291,7 +332,7 @@ export function HomeWireframes() {
         {/* ── Programs — Ages headline, winding line, Competitive → Recreational ── */}
         <section
           aria-labelledby="home-programs-ages"
-          className="relative w-full"
+          className="relative w-full pt-24 md:pt-[12vw]"
         >
           <h2
             id="home-programs-ages"
@@ -307,12 +348,12 @@ export function HomeWireframes() {
             <div className="relative z-10 pt-32">
               <div className="relative aspect-[3/4] w-[28vw] overflow-hidden">
                 <Image
-                  src="/images/classes/ballet.jpg"
+                  src="/images/filler.svg"
                   alt="Ballet class in the studio"
                   fill
+                  unoptimized
                   sizes="28vw"
                   className="object-cover"
-                  quality={80}
                 />
               </div>
             </div>
@@ -343,12 +384,12 @@ export function HomeWireframes() {
             <div className="relative z-10 mt-36 flex justify-end">
               <div className="relative aspect-[3/4] w-[28vw] overflow-hidden">
                 <Image
-                  src="/images/classes/acrobatics.jpg"
+                  src="/images/filler.svg"
                   alt="Acrobatics class in the studio"
                   fill
+                  unoptimized
                   sizes="28vw"
                   className="object-cover"
-                  quality={80}
                 />
               </div>
             </div>
@@ -379,12 +420,12 @@ export function HomeWireframes() {
             <div className="relative z-10 mt-32">
               <div className="relative aspect-[3/4] w-[28vw] overflow-hidden">
                 <Image
-                  src="/images/mission-dancer.jpg"
+                  src="/images/filler.svg"
                   alt="Dancer mid-movement"
                   fill
+                  unoptimized
                   sizes="28vw"
                   className="object-cover"
-                  quality={80}
                 />
               </div>
             </div>
@@ -396,27 +437,27 @@ export function HomeWireframes() {
 
             {/* Photos at the rectangle positions along the line */}
             <GuidePhoto
-              src="/images/classes/ballet.jpg"
+              src="/images/filler.svg"
               alt="Ballet class in the studio"
               className="md:absolute md:left-[37.3%] md:top-[6.3%] md:h-[6.7%] md:w-[6.6%]"
             />
             <GuidePhoto
-              src="/images/classes/jazz.jpg"
+              src="/images/filler.svg"
               alt="Jazz class in the studio"
               className="md:absolute md:left-[32.2%] md:top-[30.8%] md:h-[6.7%] md:w-[6.6%]"
             />
             <GuidePhoto
-              src="/images/classes/acrobatics.jpg"
+              src="/images/filler.svg"
               alt="Acrobatics class in the studio"
               className="md:absolute md:left-[63.6%] md:top-[44.8%] md:h-[6.7%] md:w-[6.6%]"
             />
             <GuidePhoto
-              src="/images/classes/gymnastics.jpg"
+              src="/images/filler.svg"
               alt="Gymnastics class in the studio"
               className="md:absolute md:left-[7.5%] md:top-[58.7%] md:h-[10.6%] md:w-[14.9%]"
             />
             <GuidePhoto
-              src="/images/mission-dancer.jpg"
+              src="/images/filler.svg"
               alt="Dancer mid-movement"
               className="md:absolute md:left-[79%] md:top-[71.4%] md:h-[12.2%] md:w-[11.6%]"
             />

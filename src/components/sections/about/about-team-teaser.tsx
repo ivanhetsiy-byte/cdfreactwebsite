@@ -130,7 +130,7 @@ export function AboutTeamTeaser({
         <div>
           <p
             ref={eyebrowRef}
-            className="mb-3 font-swiss text-xs font-medium tracking-[0.28em] text-white/30 uppercase md:text-sm"
+            className="type-eyebrow mb-3 text-xs font-medium text-white/30 md:text-sm"
           >
             {eyebrow}
           </p>
@@ -189,7 +189,7 @@ export function AboutTeamTeaser({
                 <p className="font-swiss text-[clamp(1.1rem,1.9vw,1.4rem)] font-bold uppercase leading-[1.1] tracking-tight text-white">
                   {member.name}
                 </p>
-                <p className="font-swiss text-xs font-medium tracking-[0.22em] text-white/30 uppercase">
+                <p className="type-eyebrow text-xs font-medium text-white/30">
                   {member.role}
                 </p>
               </div>

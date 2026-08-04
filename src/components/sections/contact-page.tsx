@@ -11,6 +11,7 @@ import {
 } from "react";
 
 import { SocialLinks } from "@/components/layout/social-links";
+import { StudioEmailText, STUDIO_EMAIL } from "@/components/ui/studio-email";
 import { requestRouteCover, ROUTE_COVER_MS } from "@/lib/route-cover";
 
 /** Contact page copy — hardcoded English for now; translations can follow later. */
@@ -41,7 +42,7 @@ const COPY = {
   },
   details: {
     heading: "The Studio",
-    email: { label: "Email", value: "info@cdf.studio" },
+    email: { label: "Email", value: STUDIO_EMAIL },
     phone: { label: "Phone", value: "929-248-8120" },
     address: {
       label: "Address",
@@ -52,7 +53,7 @@ const COPY = {
 } as const;
 
 const labelClass =
-  "font-swiss text-xs font-medium tracking-[0.24em] text-[#666666] uppercase md:text-sm";
+  "type-eyebrow text-xs font-medium text-[#666666] md:text-sm";
 
 const inputClass =
   "w-full select-text border-0 border-b border-black/30 bg-transparent py-3 font-alt text-[clamp(1rem,1.3vw,1.25rem)] leading-[1.4] tracking-tight text-black placeholder:text-[#9a9a9a] focus:border-black focus:outline-none focus-visible:outline-none focus-visible:border-brand-red dark:border-white/30 dark:text-white dark:placeholder:text-[#666666] dark:focus:border-white dark:focus-visible:border-brand-red";
@@ -419,9 +420,9 @@ export function ContactWireframes() {
               <div className="flex items-center gap-2">
                 <a
                   href={`mailto:${COPY.details.email.value}`}
-                  className="w-fit font-swiss text-[clamp(1.125rem,1.6vw,1.5rem)] font-bold tracking-tight text-black transition-colors duration-150 hover:text-[#666666] dark:text-white dark:hover:text-[#999999]"
+                  className="w-fit whitespace-nowrap font-swiss text-[clamp(1.125rem,1.6vw,1.5rem)] font-bold leading-[1.15] tracking-tight text-black transition-colors duration-150 hover:text-[#666666] dark:text-white dark:hover:text-[#999999]"
                 >
-                  {COPY.details.email.value}
+                  <StudioEmailText />
                 </a>
                 <CopyButton
                   value={COPY.details.email.value}

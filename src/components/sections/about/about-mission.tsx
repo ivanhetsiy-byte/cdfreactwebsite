@@ -132,7 +132,7 @@ export function AboutMission({ lead, p1, p2 }: AboutMissionProps) {
         {/* Eyebrow */}
         <p
           ref={eyebrowRef}
-          className="font-swiss text-xs font-medium tracking-[0.28em] text-white/30 uppercase md:text-sm"
+          className="type-eyebrow text-xs font-medium text-white/30 md:text-sm"
         >
           Our Story
         </p>

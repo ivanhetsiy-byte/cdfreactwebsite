@@ -11,8 +11,6 @@ import {
   type Variants,
 } from "motion/react";
 import Image from "next/image";
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
 import {
   forwardRef,
   useEffect,
@@ -23,8 +21,6 @@ import {
   type RefObject,
 } from "react";
 
-import { requestRouteCover, ROUTE_COVER_MS } from "@/lib/route-cover";
-
 /** Classes page copy — hardcoded English for now; translations can follow later. */
 const COPY = {
   headline: "Our Classes",
@@ -34,7 +30,7 @@ const COPY = {
       focus: "Ages 3–16 · Performance",
       line: "Sharp musicality, style, and stage presence. Dancers drill clean isolations, sustained lines, and dynamic footwork, then push it all into full-out performance energy. Every combination is built to be felt from the back row — precise, expressive, and unmistakably CDF.",
       image: {
-        src: "/images/classes/jazz.jpg",
+        src: "/images/filler.svg",
         alt: "Dancer performing jazz on stage",
       },
     },
@@ -43,7 +39,7 @@ const COPY = {
       focus: "Ages 3–16 · Technique",
       line: "The technical foundation beneath every other discipline. We train posture, turnout, and clean lines with patience and exacting standards, moving from the barre to center work as dancers grow. The control and grace built here carry into jazz, acro, and every stage a dancer steps onto.",
       image: {
-        src: "/images/classes/ballet.jpg",
+        src: "/images/filler.svg",
         alt: "Dancer in a ballet pose",
       },
     },
@@ -52,7 +48,7 @@ const COPY = {
       focus: "Ages 3–16 · Tumbling",
       line: "Dynamic tumbling and partner skills built on a solid technical base. Dancers progress through rolls, walkovers, and aerials in a spotted, safety-first environment, earning each new trick step by step. Strength and body awareness grow together so every skill lands with confidence.",
       image: {
-        src: "/images/classes/acrobatics.jpg",
+        src: "/images/filler.svg",
         alt: "Dancer in an acrobatic pose",
       },
     },
@@ -61,15 +57,11 @@ const COPY = {
       focus: "Ages 3–16 · Conditioning",
       line: "Flexibility, strength, and control that power every routine. Conditioning, active mobility, and core work are trained from the ground up, building the range and stability that advanced choreography demands. It is the engine room of the studio — quiet work that makes the big moments possible.",
       image: {
-        src: "/images/classes/gymnastics.jpg",
+        src: "/images/filler.svg",
         alt: "Dancer training gymnastics",
       },
     },
   ],
-  cta: {
-    line: "Ready to enroll?",
-    button: "Contact us →",
-  },
 } as const;
 
 type ClassName = (typeof COPY.classes)[number]["name"];
@@ -470,9 +462,9 @@ function MaskedPhoto({
         src={src}
         alt=""
         fill
+        unoptimized
         sizes={sizes}
         className="object-cover"
-        quality={80}
         priority={priority}
       />
       {knockout}
@@ -512,9 +504,9 @@ function ClassMask({
                 src={image.src}
                 alt=""
                 fill
+                unoptimized
                 sizes={sizes}
                 className={`object-cover ${crop}`}
-                quality={80}
                 priority={i === 0}
               />
             </div>
@@ -748,7 +740,7 @@ function ClassStackCard({
           : "md:-mr-[10%]"
       }`}
     >
-      <p className="relative z-20 mb-4 font-swiss text-xs font-medium tracking-[0.24em] text-[#666666] uppercase md:mb-[1vw] md:text-sm">
+      <p className="type-eyebrow relative z-20 mb-4 text-xs font-medium text-[#666666] md:mb-[1vw] md:text-sm">
         {item.focus}
       </p>
 
@@ -809,29 +801,6 @@ function ClassStackCard({
 }
 
 export function ClassesWireframes() {
-  const pathname = usePathname();
-  const router = useRouter();
-  const navLockRef = useRef(false);
-
-  const handleDelayedNavigation = (targetPath: string) => {
-    if (typeof window === "undefined") return;
-    if (targetPath === pathname) return;
-    if (navLockRef.current) return;
-
-    navLockRef.current = true;
-
-    if (targetPath === "/") {
-      sessionStorage.setItem("fromSubpage", "true");
-    }
-
-    requestRouteCover();
-
-    setTimeout(() => {
-      router.push(targetPath);
-      navLockRef.current = false;
-    }, ROUTE_COVER_MS);
-  };
-
   return (
     <div className="relative w-full bg-white text-black dark:bg-black dark:text-white">
       <section className="relative w-full pb-16 md:pb-[6vw]">
@@ -841,31 +810,6 @@ export function ClassesWireframes() {
       </section>
 
       <ClassStack />
-
-      <section
-        aria-labelledby="classes-cta-heading"
-        className="relative w-full pt-28 pb-10 md:pt-[10vw] md:pb-[4vw]"
-      >
-        <h2
-          id="classes-cta-heading"
-          className="font-swiss text-[clamp(1.85rem,8vw,3rem)] font-bold uppercase leading-[0.95] tracking-tighter md:text-[5.8vw]"
-        >
-          {COPY.cta.line}
-        </h2>
-
-        <div>
-          <Link
-            href="/contact"
-            onClick={(e) => {
-              e.preventDefault();
-              handleDelayedNavigation("/contact");
-            }}
-            className="mt-8 inline-flex w-fit border-2 border-black bg-black px-10 py-4 font-swiss text-base font-bold uppercase tracking-widest text-white transition-colors duration-150 hover:bg-white hover:text-black dark:border-white dark:bg-white dark:text-black dark:hover:bg-black dark:hover:text-white md:mt-[2vw] md:text-lg"
-          >
-            {COPY.cta.button}
-          </Link>
-        </div>
-      </section>
     </div>
   );
 }

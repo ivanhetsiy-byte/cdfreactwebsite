@@ -6,7 +6,7 @@ import { AboutWireframes } from "@/components/sections/about-page";
 export const metadata: Metadata = {
   title: "About Us",
   description:
-    "Learn about Childance Factory — our mission, programs, and studio community.",
+    "Learn about Childrens Dance Factory — our mission, programs, and studio community.",
 };
 
 export default function Page() {

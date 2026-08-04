@@ -16,7 +16,7 @@ type Phase = "idle" | "covering" | "holding" | "exiting";
 
 /** Brand red — same family as LML’s wipe accent. */
 const WIPE_RED = "var(--brand-red)";
-const WIPE_DARK = "#121212";
+const WIPE_DARK = "#000000";
 
 const COVER_RED_S = 0.42;
 const COVER_DARK_S = 0.48;

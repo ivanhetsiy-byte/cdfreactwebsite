@@ -41,11 +41,24 @@ function offsetTopSum(el: HTMLElement) {
   return top;
 }
 
-function StudioContent({ ready }: { ready: boolean }) {
+function StudioContent({
+  ready,
+  theme = "dark",
+}: {
+  ready: boolean;
+  theme?: "dark" | "light";
+}) {
   const titleRef = useRef<HTMLHeadingElement>(null);
   const portraitRef = useRef<HTMLDivElement>(null);
   const taglineRef = useRef<HTMLDivElement>(null);
   const bioRef = useRef<HTMLSpanElement>(null);
+  const isLight = theme === "light";
+  const surface = isLight ? "bg-white text-black" : "bg-black text-white";
+  const portraitWell = isLight ? "bg-neutral-100" : "bg-black";
+  const aboutPill = isLight
+    ? "border-black/40 text-black/60"
+    : "border-white/50 text-white/70";
+  const teamInk = isLight ? "text-black" : "text-white";
 
   useEffect(() => {
     if (!ready) return;
@@ -197,11 +210,13 @@ function StudioContent({ ready }: { ready: boolean }) {
   return (
     <main
       id="main-content"
-      className="studio-page relative z-10 bg-black"
+      className={`studio-page relative z-10 ${surface}`}
       data-studio-root
     >
       {/* Hero */}
-      <section className="pointer-events-none relative z-10 flex min-h-screen w-full flex-col items-start overflow-visible bg-black px-5 pt-[120px] md:px-6.5">
+      <section
+        className={`pointer-events-none relative z-10 flex min-h-screen w-full flex-col items-start overflow-visible px-5 pt-[120px] md:px-6.5 ${surface}`}
+      >
         <div className="relative flex w-full flex-col items-start justify-between overflow-visible md:flex-row">
           <div className="relative mb-20 flex flex-col">
             <h1
@@ -217,15 +232,17 @@ function StudioContent({ ready }: { ready: boolean }) {
 
           <div
             ref={portraitRef}
-            className="lml-portrait relative z-[5] w-full bg-black will-change-transform select-none md:w-[40%]"
+            className={`lml-portrait relative z-[5] w-full will-change-transform select-none md:w-[40%] ${portraitWell}`}
           >
-            <PortraitCanvas />
+            <PortraitCanvas theme={theme} />
           </div>
         </div>
 
         <div className="pointer-events-auto relative z-20 mt-[150px] w-full">
           {/* md:absolute — sits on the text block origin like LML, not above it in flow */}
-          <span className="lml-about-pill mb-3 mt-3 block w-fit rounded-full border border-white/50 px-6.5 py-1 text-xs text-white/70 md:absolute md:top-0 md:left-0 md:z-[1] md:mt-3 md:mb-0 md:flex md:items-center md:justify-center md:text-sm">
+          <span
+            className={`lml-about-pill mb-3 mt-3 block w-fit rounded-full border px-6.5 py-1 text-xs md:absolute md:top-0 md:left-0 md:z-[1] md:mt-3 md:mb-0 md:flex md:items-center md:justify-center md:text-sm ${aboutPill}`}
+          >
             About
           </span>
           <div className="scroll-float">
@@ -290,7 +307,7 @@ function StudioContent({ ready }: { ready: boolean }) {
             return (
               <article
                 key={person.name}
-                className={`team-chapter relative w-full font-swiss text-white md:w-[min(55.2%,calc(85svh*1405/1495))] ${
+                className={`team-chapter relative w-full font-swiss md:w-[min(55.2%,calc(85svh*1405/1495))] ${teamInk} ${
                   mirror ? "md:ml-auto md:mr-[18.6%]" : "md:ml-[18.6%]"
                 }`}
               >
@@ -305,6 +322,7 @@ function StudioContent({ ready }: { ready: boolean }) {
                       src={person.photo}
                       alt={person.name}
                       fill
+                      unoptimized
                       draggable={false}
                       sizes="40vw"
                       className={`object-contain object-top select-none swiss-no-select ${
@@ -388,6 +406,7 @@ function StudioContent({ ready }: { ready: boolean }) {
                       src={person.photo}
                       alt={person.name}
                       fill
+                      unoptimized
                       draggable={false}
                       sizes="90vw"
                       className="object-contain object-top select-none swiss-no-select"
@@ -412,12 +431,18 @@ type LmlStudioPageProps = {
    * `site` — no lab header; global Navbar owns CDF + Contact / Menu chrome.
    */
   chrome?: "lab" | "site";
+  /** Dark = production staff; light = Staff-2 experiment. */
+  theme?: "dark" | "light";
 };
 
-export function LmlStudioPage({ chrome = "lab" }: LmlStudioPageProps) {
+export function LmlStudioPage({
+  chrome = "lab",
+  theme = "dark",
+}: LmlStudioPageProps) {
   const [loaderDone, setLoaderDone] = useState(!ENABLE_STUDIO_LOADER);
   const [contentReady, setContentReady] = useState(!ENABLE_STUDIO_LOADER);
   const useSiteChrome = chrome === "site";
+  const isLight = theme === "light";
 
   const handleLoaderDone = useCallback(() => {
     setLoaderDone(true);
@@ -426,8 +451,22 @@ export function LmlStudioPage({ chrome = "lab" }: LmlStudioPageProps) {
   }, []);
 
   useEffect(() => {
-    // Keep lab visually dark even if root ThemeProvider is light.
     const root = document.documentElement;
+    if (isLight) {
+      const hadDark = root.classList.contains("dark");
+      if (hadDark) root.classList.remove("dark");
+      root.style.colorScheme = "light";
+      root.style.backgroundColor = "#fff";
+      document.body.style.backgroundColor = "#fff";
+      return () => {
+        if (hadDark) root.classList.add("dark");
+        root.style.colorScheme = "";
+        root.style.backgroundColor = "";
+        document.body.style.backgroundColor = "";
+      };
+    }
+
+    // Keep lab visually dark even if root ThemeProvider is light.
     const addedDark = !root.classList.contains("dark");
     if (addedDark) root.classList.add("dark");
     root.style.colorScheme = "dark";
@@ -439,7 +478,7 @@ export function LmlStudioPage({ chrome = "lab" }: LmlStudioPageProps) {
       root.style.backgroundColor = "";
       document.body.style.backgroundColor = "";
     };
-  }, []);
+  }, [isLight]);
 
   useEffect(() => {
     if (!ENABLE_STUDIO_LOADER) return;
@@ -458,7 +497,11 @@ export function LmlStudioPage({ chrome = "lab" }: LmlStudioPageProps) {
 
   return (
     <LabScrollProvider>
-      <div className="relative min-h-screen bg-black text-white">
+      <div
+        className={`relative min-h-screen ${
+          isLight ? "bg-white text-black" : "bg-black text-white"
+        }`}
+      >
         {ENABLE_STUDIO_LOADER && !loaderDone ? (
           <StudioLoader onDone={handleLoaderDone} />
         ) : null}
@@ -468,7 +511,7 @@ export function LmlStudioPage({ chrome = "lab" }: LmlStudioPageProps) {
         >
           {useSiteChrome ? null : <StudioHeader />}
           <div className="fixed top-0 right-0 left-0 z-[1000] h-[100px] md:h-[120px]" />
-          <StudioContent ready={contentReady} />
+          <StudioContent ready={contentReady} theme={theme} />
           {/* Site chrome: sticky meta is global via LabShell SiteStatusBar */}
           <StudioFooterBar
             showContactCta={!useSiteChrome}

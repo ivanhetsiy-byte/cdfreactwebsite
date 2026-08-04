@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 export const metadata: Metadata = {
   title: "Staff",
   description:
-    "Meet the Childance Factory teaching staff and studio leadership.",
+    "Meet the Childrens Dance Factory teaching staff and studio leadership.",
 };
 
 const LmlStudioPage = dynamic(
@@ -16,14 +16,14 @@ const LmlStudioPage = dynamic(
     loading: () => (
       <main
         id="main-content"
-        className="min-h-screen bg-black text-white"
+        className="min-h-screen bg-white text-black"
         aria-busy
       />
     ),
   },
 );
 
-/** Production staff route — lab studio; global Navbar owns Contact / Menu. */
+/** Production staff route — light studio; global Navbar owns Contact / Menu. */
 export default function Page() {
-  return <LmlStudioPage chrome="site" />;
+  return <LmlStudioPage chrome="site" theme="light" />;
 }

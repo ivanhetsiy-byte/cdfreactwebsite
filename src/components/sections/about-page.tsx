@@ -1,15 +1,16 @@
 import { AboutFounded } from "./about/about-founded";
 import { AboutHero } from "./about/about-hero";
+import { AboutWhereLocated } from "./about/about-where-located";
 import { AboutWhereWeveBeen } from "./about/about-where-weve-been";
 
-/** About page — white canvas; spacer reserved for sections still to come. */
+/** About page — white canvas composed of sequential section wireframes. */
 export function AboutWireframes() {
   return (
     <div className="relative w-full bg-white">
       <AboutHero />
       <AboutFounded />
       <AboutWhereWeveBeen />
-      <div className="min-h-[100vh]" aria-hidden />
+      <AboutWhereLocated />
     </div>
   );
 }

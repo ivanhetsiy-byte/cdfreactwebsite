@@ -299,6 +299,28 @@ html.cdf-red-selection ::-moz-selection,
     clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
   }
 
+  /**
+   * Tracked uppercase eyebrow over larger value text.
+   * Optical nudge aligns the first glyph with tracking-tight body/display below;
+   * trailing negative margin cancels letter-spacing so the block doesn’t look shifted.
+   * Font face inherits (Swiss body) or is set by the caller (e.g. compressed).
+   */
+  .type-eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+    margin-inline-start: -0.04em;
+    margin-inline-end: -0.22em;
+  }
+
+  /**
+   * Helvetica `@` rides near cap-height; a slight drop seats it with the
+   * surrounding x-height so large emails don’t read as a mid-string step.
+   */
+  .type-email-at {
+    display: inline-block;
+    transform: translateY(0.06em);
+  }
+
   .selection-pulse {
     animation: selection-pulse 1.8s ease-in-out infinite;
   }

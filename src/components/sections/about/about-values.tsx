@@ -183,7 +183,7 @@ export function AboutValues({ eyebrow, heading, items }: AboutValuesProps) {
       >
         {/* Mobile visible label (decorative — sr-only heading above is a11y anchor) */}
         <div aria-hidden="true" className="mb-10 flex flex-col gap-3 md:hidden">
-          <p className="font-swiss text-xs font-medium tracking-[0.28em] text-white/30 uppercase">
+          <p className="type-eyebrow text-xs font-medium text-white/30">
             {eyebrow}
           </p>
           <p className="font-swiss text-[clamp(2.25rem,7vw,5.5rem)] font-black uppercase leading-[0.9] tracking-tighter text-white">

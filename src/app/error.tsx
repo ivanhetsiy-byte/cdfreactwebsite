@@ -19,7 +19,7 @@ export default function Error({
       id="main-content"
       className="relative flex min-h-screen w-full flex-col items-start justify-center bg-background px-6 pb-24 pt-32 font-swiss text-foreground md:p-10 md:pt-44"
     >
-      <p className="text-xs font-medium tracking-[0.24em] uppercase text-muted-foreground">
+      <p className="type-eyebrow text-xs font-medium text-muted-foreground">
         Error
       </p>
       <h1 className="mt-4 text-[clamp(2.5rem,8vw,4.5rem)] font-bold leading-none tracking-tighter uppercase">

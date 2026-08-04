@@ -1,6 +1,6 @@
-# Childance Factory (CDF) Website
+# Childrens Dance Factory (CDF) Website
 
-Marketing site for Childance Factory — a dance studio offering competitive and recreational programs.
+Marketing site for Childrens Dance Factory — a dance studio offering competitive and recreational programs.
 
 ## Stack
 

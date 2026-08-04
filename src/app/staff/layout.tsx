@@ -5,5 +5,5 @@ export default function StaffLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <LmlChromeLayout>{children}</LmlChromeLayout>;
+  return <LmlChromeLayout theme="light">{children}</LmlChromeLayout>;
 }

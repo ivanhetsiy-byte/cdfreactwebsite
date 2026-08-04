@@ -98,7 +98,7 @@ const SOCIAL_META = [
     label: "Instagram",
     href:
       process.env.NEXT_PUBLIC_INSTAGRAM_URL ??
-      "https://www.instagram.com/childancefactory",
+      "https://www.instagram.com/cdf_dance_school/",
     kind: "instagram" as const,
     className:
       "group/instagram text-[#666666] dark:text-[#888888] transition-colors duration-200 cursor-pointer",
@@ -116,7 +116,7 @@ const SOCIAL_META = [
     label: "Facebook",
     href:
       process.env.NEXT_PUBLIC_FACEBOOK_URL ??
-      "https://www.facebook.com/childancefactory",
+      "https://www.facebook.com/CDF.danceschool",
     kind: "facebook" as const,
     className:
       "text-[#666666] dark:text-[#888888] hover:text-[#1877F2] dark:hover:text-[#1877F2] transition-colors duration-200 cursor-pointer",

@@ -2,16 +2,25 @@
 
 import Image from "next/image";
 
-/** Temporary portrait stand-in until final art is locked. */
-const PORTRAIT_SRC = "/images/staff/owner.png";
+const PORTRAIT_SRC = "/images/staff/mykhaylo.jpg";
 
-export function PortraitCanvas() {
+type PortraitCanvasProps = {
+  /** Light staff-2 uses a soft well instead of a black crop box. */
+  theme?: "dark" | "light";
+};
+
+export function PortraitCanvas({ theme = "dark" }: PortraitCanvasProps) {
   return (
-    <div className="pointer-events-auto relative z-[5] aspect-square w-full max-w-full overflow-hidden bg-black select-none">
+    <div
+      className={`pointer-events-auto relative z-[5] aspect-square w-full max-w-full overflow-hidden select-none ${
+        theme === "light" ? "bg-neutral-100" : "bg-black"
+      }`}
+    >
       <Image
         src={PORTRAIT_SRC}
         alt="Mykhaylo Hetsiy"
         fill
+        unoptimized
         priority
         draggable={false}
         sizes="(max-width: 768px) 100vw, 40vw"

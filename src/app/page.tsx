@@ -296,7 +296,10 @@ export default function Home() {
         />
       ) : null}
 
-      <Hero />
+      {/* Full-bleed: cancels the main padding so the hero owns the first screen. */}
+      <div className="-mx-6 -mt-32 md:-mx-10 md:-mt-44">
+        <Hero />
+      </div>
       <MissionStatement />
       <HomeWireframes />
     </main>

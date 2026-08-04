@@ -89,6 +89,8 @@ export function Shuffle({
     let trigger: ScrollTrigger | null = null;
     let playing = false;
     let hoverHandler: (() => void) | null = null;
+    let builtFontSize = "";
+    let resizeFrame = 0;
 
     const isVertical = shuffleDirection === "up" || shuffleDirection === "down";
 
@@ -99,9 +101,8 @@ export function Shuffle({
       }
     };
 
-    const teardown = () => {
-      tl?.kill();
-      tl = null;
+    /** Drop the measured strips so the element goes back to plain, reflowable text. */
+    const unwrap = () => {
       // Put the real characters back where their wrappers were
       wrappers.forEach((wrap) => {
         const original = wrap.firstElementChild?.querySelector('[data-orig="1"]');
@@ -112,6 +113,12 @@ export function Shuffle({
       wrappers = [];
       split?.revert();
       split = null;
+    };
+
+    const teardown = () => {
+      tl?.kill();
+      tl = null;
+      unwrap();
       playing = false;
     };
 
@@ -120,6 +127,8 @@ export function Shuffle({
 
     const build = () => {
       teardown();
+
+      builtFontSize = getComputedStyle(el).fontSize;
 
       split = new SplitText(el, {
         type: "chars",
@@ -216,15 +225,28 @@ export function Shuffle({
         .map((wrap) => wrap.firstElementChild as HTMLElement | null)
         .filter((strip): strip is HTMLElement => Boolean(strip));
 
-    /** Collapse each strip back to just its real character once settled. */
+    /**
+     * The strips are sized in pixels measured at build time, so keeping them
+     * around would clip the glyphs the moment anything resizes — a phone
+     * address bar collapsing is enough. Once the reveal lands, hand the plain
+     * text back to the browser.
+     */
     const settle = () => {
-      wrappers.forEach((wrap) => {
-        const strip = wrap.firstElementChild as HTMLElement | null;
-        const real = strip?.querySelector('[data-orig="1"]');
-        if (!strip || !real) return;
-        strip.replaceChildren(real);
-        strip.style.transform = "none";
-        strip.style.willChange = "auto";
+      unwrap();
+      el.style.visibility = "visible";
+    };
+
+    /** A font-size change invalidates the measured strips, so land the text early. */
+    const handleResize = () => {
+      if (!wrappers.length) return;
+      cancelAnimationFrame(resizeFrame);
+      resizeFrame = requestAnimationFrame(() => {
+        if (!wrappers.length) return;
+        if (getComputedStyle(el).fontSize === builtFontSize) return;
+        tl?.kill();
+        tl = null;
+        playing = false;
+        settle();
       });
     };
 
@@ -306,14 +328,17 @@ export function Shuffle({
     };
 
     // Strip widths come from measured glyphs, so wait for the real font
-    const fontsReady =
-      "fonts" in document && document.fonts.status !== "loaded"
-        ? document.fonts.ready
-        : Promise.resolve();
+    const fontsReady = "fonts" in document ? document.fonts.ready : Promise.resolve();
     void fontsReady.then(init);
+
+    window.addEventListener("resize", handleResize);
+    window.addEventListener("orientationchange", handleResize);
 
     return () => {
       cancelled = true;
+      cancelAnimationFrame(resizeFrame);
+      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("orientationchange", handleResize);
       trigger?.kill();
       removeHover();
       teardown();

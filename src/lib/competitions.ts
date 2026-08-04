@@ -8,7 +8,7 @@ export const COMPETITIONS = [
   { name: "SHOWSTOPPER", achievement: "NATIONAL CHAMPS", slug: "showstopper" },
   { name: "STARPOWER", achievement: "TODO", slug: "starpower" },
   { name: "STARBOUND", achievement: "TODO", slug: "starbound" },
-  { name: "NEXUS", achievement: "TODO", slug: "nexus" },
+  { name: "NEXSTAR", achievement: "TODO", slug: "nexstar" },
   { name: "FLY", achievement: "TODO", slug: "fly" },
 ] as const satisfies readonly Competition[];
 
