@@ -38,10 +38,6 @@ export function StudioHeader({ variant = "lab" }: StudioHeaderProps) {
 
     navLockRef.current = true;
 
-    if (targetPath === "/") {
-      sessionStorage.setItem("fromSubpage", "true");
-    }
-
     requestRouteCover();
 
     setTimeout(() => {
@@ -67,7 +63,7 @@ export function StudioHeader({ variant = "lab" }: StudioHeaderProps) {
               <Logo className={LOGO_IMG_CLASS} blend />
             </Link>
           ) : (
-            <Link href="/lab/lml-studio" className="text-white" aria-label="LML">
+            <Link href="/staff" className="text-white" aria-label="LML">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 467 179"

@@ -18,20 +18,22 @@ const SelectionHighlight = dynamic(
 );
 
 /**
- * Isolates `/lab/*` from production chrome so sandbox pages own their UI/scroll.
+ * Site chrome wrapper. Isolates `/admin` (local-only) from production chrome.
  */
 export function LabShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const isLab = pathname.startsWith("/lab");
+  const isAdmin = pathname === "/admin" || pathname.startsWith("/admin/");
   const isMaintenance = pathname === "/maintenance";
   const isStore =
     pathname === "/store" ||
     pathname.startsWith("/store/") ||
     pathname === "/bag";
+  const showBag =
+    pathname === "/store" || pathname.startsWith("/store/");
   const forceDark = isStore;
 
   // Maintenance keeps site navbar (logo) but skips footer/status chrome.
-  if (isLab) {
+  if (isAdmin) {
     return <>{children}</>;
   }
 
@@ -44,10 +46,13 @@ export function LabShell({ children }: { children: ReactNode }) {
     );
   }
 
+  // Status bar is fixed; reserve bottom space only where it shows (md+, or store bag on mobile).
+  const statusBarPad = showBag ? "pb-28" : "max-md:pb-0 md:pb-28";
+
   return (
     <PageTransition>
       <div
-        className={`relative w-full min-h-screen pb-28 ${
+        className={`relative w-full min-h-screen ${statusBarPad} ${
           forceDark
             ? "dark bg-black text-white"
             : "bg-white text-black dark:bg-black dark:text-white"

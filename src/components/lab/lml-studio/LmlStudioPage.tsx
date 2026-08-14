@@ -3,7 +3,7 @@
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Image from "next/image";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import SplitType from "split-type";
 
 import {
@@ -22,11 +22,6 @@ import { PortraitCanvas } from "./PortraitCanvas";
 import { ScrollFloat } from "./ScrollFloat";
 import { StudioFooterBar } from "./StudioFooterBar";
 import { StudioHeader } from "./StudioHeader";
-// StudioLoader kept for a future intro polish — flip ENABLE_STUDIO_LOADER to restore.
-import { StudioLoader } from "./StudioLoader";
-
-/** Set true to bring back the staff/lab studio intro loader. */
-const ENABLE_STUDIO_LOADER = false;
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -322,7 +317,7 @@ function StudioContent({
                       src={person.photo}
                       alt={person.name}
                       fill
-                      unoptimized
+                      unoptimized={person.photo.endsWith(".svg")}
                       draggable={false}
                       sizes="40vw"
                       className={`object-contain object-top select-none swiss-no-select ${
@@ -406,7 +401,7 @@ function StudioContent({
                       src={person.photo}
                       alt={person.name}
                       fill
-                      unoptimized
+                      unoptimized={person.photo.endsWith(".svg")}
                       draggable={false}
                       sizes="90vw"
                       className="object-contain object-top select-none swiss-no-select"
@@ -439,16 +434,8 @@ export function LmlStudioPage({
   chrome = "lab",
   theme = "dark",
 }: LmlStudioPageProps) {
-  const [loaderDone, setLoaderDone] = useState(!ENABLE_STUDIO_LOADER);
-  const [contentReady, setContentReady] = useState(!ENABLE_STUDIO_LOADER);
   const useSiteChrome = chrome === "site";
   const isLight = theme === "light";
-
-  const handleLoaderDone = useCallback(() => {
-    setLoaderDone(true);
-    // Allow one frame for content to paint before kicking entrance GSAP.
-    requestAnimationFrame(() => setContentReady(true));
-  }, []);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -480,21 +467,6 @@ export function LmlStudioPage({
     };
   }, [isLight]);
 
-  useEffect(() => {
-    if (!ENABLE_STUDIO_LOADER) return;
-    if (loaderDone) {
-      document.documentElement.classList.remove("overflow-hidden");
-      document.body.classList.remove("overflow-hidden");
-      return;
-    }
-    document.documentElement.classList.add("overflow-hidden");
-    document.body.classList.add("overflow-hidden");
-    return () => {
-      document.documentElement.classList.remove("overflow-hidden");
-      document.body.classList.remove("overflow-hidden");
-    };
-  }, [loaderDone]);
-
   return (
     <LabScrollProvider>
       <div
@@ -502,24 +474,16 @@ export function LmlStudioPage({
           isLight ? "bg-white text-black" : "bg-black text-white"
         }`}
       >
-        {ENABLE_STUDIO_LOADER && !loaderDone ? (
-          <StudioLoader onDone={handleLoaderDone} />
-        ) : null}
-        <div
-          className={loaderDone ? "opacity-100" : "opacity-0"}
-          style={{ visibility: loaderDone ? "visible" : "hidden" }}
-        >
-          {useSiteChrome ? null : <StudioHeader />}
-          <div className="fixed top-0 right-0 left-0 z-[1000] h-[100px] md:h-[120px]" />
-          <StudioContent ready={contentReady} theme={theme} />
-          {/* Site chrome: sticky meta is global via LabShell SiteStatusBar */}
-          <StudioFooterBar
-            showContactCta={!useSiteChrome}
-            showStatusBar={!useSiteChrome}
-          />
-          <NoiseOverlay />
-          <CustomScrollbar />
-        </div>
+        {useSiteChrome ? null : <StudioHeader />}
+        <div className="fixed top-0 right-0 left-0 z-[1000] h-[100px] md:h-[120px]" />
+        <StudioContent ready theme={theme} />
+        {/* Site chrome: sticky meta is global via LabShell SiteStatusBar */}
+        <StudioFooterBar
+          showContactCta={!useSiteChrome}
+          showStatusBar={!useSiteChrome}
+        />
+        <NoiseOverlay />
+        <CustomScrollbar />
       </div>
     </LabScrollProvider>
   );

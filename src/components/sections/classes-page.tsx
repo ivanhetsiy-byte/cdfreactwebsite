@@ -5,21 +5,20 @@ import {
   useAnimationControls,
   useInView,
   useReducedMotion,
-  useScroll,
-  useTransform,
-  type MotionValue,
   type Variants,
 } from "motion/react";
-import Image from "next/image";
 import {
   forwardRef,
   useEffect,
-  useLayoutEffect,
   useRef,
-  type ReactNode,
   type Ref,
-  type RefObject,
 } from "react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+import { getLenis } from "@/lib/lenis";
+
+gsap.registerPlugin(ScrollTrigger);
 
 /** Classes page copy — hardcoded English for now; translations can follow later. */
 const COPY = {
@@ -27,49 +26,40 @@ const COPY = {
   classes: [
     {
       name: "Jazz",
-      focus: "Ages 3–16 · Performance",
+      layout: "title-left",
       line: "Sharp musicality, style, and stage presence. Dancers drill clean isolations, sustained lines, and dynamic footwork, then push it all into full-out performance energy. Every combination is built to be felt from the back row — precise, expressive, and unmistakably CDF.",
-      image: {
-        src: "/images/filler.svg",
-        alt: "Dancer performing jazz on stage",
-      },
     },
     {
       name: "Ballet",
-      focus: "Ages 3–16 · Technique",
+      layout: "title-right",
       line: "The technical foundation beneath every other discipline. We train posture, turnout, and clean lines with patience and exacting standards, moving from the barre to center work as dancers grow. The control and grace built here carry into jazz, acro, and every stage a dancer steps onto.",
-      image: {
-        src: "/images/filler.svg",
-        alt: "Dancer in a ballet pose",
-      },
     },
     {
       name: "Acrobatics",
-      focus: "Ages 3–16 · Tumbling",
+      layout: "stack-right-body",
       line: "Dynamic tumbling and partner skills built on a solid technical base. Dancers progress through rolls, walkovers, and aerials in a spotted, safety-first environment, earning each new trick step by step. Strength and body awareness grow together so every skill lands with confidence.",
-      image: {
-        src: "/images/filler.svg",
-        alt: "Dancer in an acrobatic pose",
-      },
     },
     {
       name: "Gymnastics",
-      focus: "Ages 3–16 · Conditioning",
+      layout: "stack-inset",
       line: "Flexibility, strength, and control that power every routine. Conditioning, active mobility, and core work are trained from the ground up, building the range and stability that advanced choreography demands. It is the engine room of the studio — quiet work that makes the big moments possible.",
-      image: {
-        src: "/images/filler.svg",
-        alt: "Dancer training gymnastics",
-      },
     },
   ],
 } as const;
 
-type ClassName = (typeof COPY.classes)[number]["name"];
+type ClassLayout = (typeof COPY.classes)[number]["layout"];
 type ClassItem = (typeof COPY.classes)[number];
+type ClassName = ClassItem["name"];
 
-/** Sized to keep long names (Acrobatics / Gymnastics) on one line on mobile. */
+/** leading-none + slight padding keeps bold Swiss caps inside the line box. */
+const HERO_CLASS =
+  "font-swiss font-bold uppercase leading-none tracking-tighter text-black dark:text-white text-[clamp(3.25rem,12.8vw,18rem)] pt-[0.06em] pb-[0.04em]";
+
 const TITLE_CLASS =
-  "relative font-swiss text-[clamp(1.85rem,8.4vw,7.5rem)] font-bold uppercase leading-[0.88] tracking-tighter whitespace-nowrap text-black dark:text-white md:text-[11vw] lg:text-[13vw]";
+  "relative font-swiss font-bold uppercase leading-none tracking-tighter text-black dark:text-white text-[clamp(2.75rem,11vw,16rem)] md:whitespace-nowrap pt-[0.06em] pb-[0.04em]";
+
+const BODY_CLASS =
+  "font-swiss font-normal leading-[1.35] tracking-tight text-black dark:text-white text-[clamp(1.05rem,1.7vw,2.5rem)]";
 
 /** Indices in "ACROBATICS" that tumble (R, B, T) — avoid end letters (fixes skew snap). */
 const ACRO_FLIP_INDICES = new Set([2, 4, 6]);
@@ -150,11 +140,11 @@ const TITLE_MOTION = {
       },
     },
     letter: {
-      hidden: { opacity: 0, y: 28, filter: "blur(6px)" },
+      // Transform/opacity only — filter:blur on letter nodes thrash paint on scroll.
+      hidden: { opacity: 0, y: 28 },
       visible: {
         opacity: 1,
         y: 0,
-        filter: "blur(0px)",
         transition: { duration: 0.85, ease: [0.22, 1, 0.36, 1] as const },
       },
       // Stronger plié breathe
@@ -170,13 +160,11 @@ const TITLE_MOTION = {
       exitUp: {
         opacity: 0,
         y: 36,
-        filter: "blur(8px)",
         transition: { duration: 0.75, ease: [0.4, 0, 0.2, 1] as const },
       },
       exitDown: {
         opacity: 0,
         y: -10,
-        filter: "blur(4px)",
         transition: { duration: 0.35, ease: [0.4, 0, 1, 1] as const },
       },
     },
@@ -330,229 +318,88 @@ function assignRef<T>(ref: Ref<T> | undefined, value: T) {
 
 function getScrollY() {
   if (typeof window === "undefined") return 0;
-  const lenis = (window as Window & { lenis?: { scroll?: number } }).lenis;
-  if (lenis && typeof lenis.scroll === "number") return lenis.scroll;
+  const lenis = getLenis();
+  if (lenis && typeof (lenis as { animatedScroll?: number }).animatedScroll === "number") {
+    return (lenis as { animatedScroll: number }).animatedScroll;
+  }
+  const winLenis = (window as Window & { lenis?: { scroll?: number } }).lenis;
+  if (typeof winLenis?.scroll === "number") return winLenis.scroll;
   return window.scrollY;
 }
 
-/**
- * White + mix-blend-difference copy of the title, clipped by its parent mask.
- * Only the letter fragments that sit over the photo are visible — those subtract.
- * Position is locked to the visible letter row (not the h2 line-box) so edges match.
- */
-function KnockoutGlyph({
-  name,
-  titleRef,
-}: {
-  name: ClassName;
-  titleRef: RefObject<HTMLElement | null>;
-}) {
-  const glyphRef = useRef<HTMLSpanElement>(null);
+function onLenisScroll(callback: () => void): () => void {
+  const lenis = getLenis();
+  if (lenis) return lenis.on("scroll", callback);
 
-  useLayoutEffect(() => {
-    const sync = () => {
-      const glyph = glyphRef.current;
-      const title = titleRef.current;
-      const clip = glyph?.parentElement;
-      if (!glyph || !title || !clip) return;
+  let unsub: (() => void) | undefined;
+  let raf = 0;
+  let tries = 0;
+  let usedNative = false;
 
-      // Prefer the real letter row — h2 line-box / sr-only skews getBoundingClientRect.
-      const source =
-        (title.querySelector("[data-title-visual]") as HTMLElement | null) ??
-        title;
+  const attach = () => {
+    const ready = getLenis();
+    if (ready) {
+      unsub = ready.on("scroll", callback);
+      return;
+    }
+    if (tries++ < 60) {
+      raf = requestAnimationFrame(attach);
+      return;
+    }
+    usedNative = true;
+    window.addEventListener("scroll", callback, { passive: true });
+  };
+  attach();
 
-      const t = source.getBoundingClientRect();
-      const c = clip.getBoundingClientRect();
-      const style = getComputedStyle(source);
-
-      // Sticky cards apply a CSS scale on the article. getBoundingClientRect is in
-      // screen px, but absolute left/top inside the clip are in local (unscaled) px.
-      const scaleX = clip.offsetWidth ? c.width / clip.offsetWidth : 1;
-      const scaleY = clip.offsetHeight ? c.height / clip.offsetHeight : 1;
-
-      glyph.style.left = `${(t.left - c.left) / scaleX}px`;
-      glyph.style.top = `${(t.top - c.top) / scaleY}px`;
-      glyph.style.fontSize = style.fontSize;
-      glyph.style.letterSpacing = style.letterSpacing;
-      glyph.style.lineHeight = style.lineHeight;
-      glyph.style.fontWeight = style.fontWeight;
-      glyph.style.fontFamily = style.fontFamily;
-
-      // Mirror each title letter's live transform (stretch / flip / idle) into the subtract
-      const sourceLetters = source.querySelectorAll<HTMLElement>(":scope > *");
-      const glyphLetters = glyph.querySelectorAll<HTMLElement>(":scope > span");
-      sourceLetters.forEach((srcLetter, i) => {
-        const dst = glyphLetters[i];
-        if (!dst) return;
-        const ls = getComputedStyle(srcLetter);
-        dst.style.transform = ls.transform === "none" ? "" : ls.transform;
-        dst.style.transformOrigin = ls.transformOrigin;
-        dst.style.opacity = ls.opacity;
-        dst.style.filter = ls.filter === "none" ? "" : ls.filter;
-      });
-    };
-
-    sync();
-    const ro = new ResizeObserver(sync);
-    if (titleRef.current) ro.observe(titleRef.current);
-    const visual = titleRef.current?.querySelector("[data-title-visual]");
-    if (visual) ro.observe(visual);
-
-    window.addEventListener("resize", sync);
-    window.addEventListener("scroll", sync, { passive: true });
-    void document.fonts?.ready.then(sync);
-
-    // Keep locked through enter/exit/idle and sticky scale changes
-    let raf = 0;
-    let running = true;
-    const tick = () => {
-      if (!running) return;
-      sync();
-      raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-
-    return () => {
-      running = false;
-      ro.disconnect();
-      window.removeEventListener("resize", sync);
-      window.removeEventListener("scroll", sync);
-      cancelAnimationFrame(raf);
-    };
-  }, [titleRef, name]);
-
-  return (
-    <span
-      ref={glyphRef}
-      aria-hidden="true"
-      data-selection-ignore
-      className="pointer-events-none absolute top-0 left-0 z-10 inline-flex flex-nowrap origin-top-left whitespace-nowrap font-swiss text-white uppercase leading-[0.88] tracking-tighter mix-blend-difference"
-    >
-      {name.split("").map((letter, i) => (
-        <span
-          key={`${name}-ko-${i}`}
-          className="inline-block origin-bottom"
-          style={{ transformStyle: "preserve-3d" }}
-        >
-          {letter}
-        </span>
-      ))}
-    </span>
-  );
-}
-
-function MaskedPhoto({
-  src,
-  className,
-  sizes,
-  knockout,
-  priority = false,
-}: {
-  src: string;
-  className?: string;
-  sizes: string;
-  knockout?: ReactNode;
-  priority?: boolean;
-}) {
-  return (
-    <div
-      className={`relative isolate overflow-hidden bg-black ${className ?? ""}`}
-    >
-      <Image
-        src={src}
-        alt=""
-        fill
-        unoptimized
-        sizes={sizes}
-        className="object-cover"
-        priority={priority}
-      />
-      {knockout}
-    </div>
-  );
+  return () => {
+    cancelAnimationFrame(raf);
+    unsub?.();
+    if (usedNative) window.removeEventListener("scroll", callback);
+  };
 }
 
 /**
- * Discipline-specific geometric photo mask.
- * Each clipped region hosts a knockout title duplicate so only overlapping
- * letter fragments subtract against the photo.
+ * Figma alignment (2544 artboard):
+ * - Jazz / Ballet: body vertically centered on the title band; body left-aligned;
+ *   title is intrinsic width with a tight gutter.
+ * - Ballet: title right; body left block (~48% width).
+ * - Acrobatics: title full-bleed left; body below, indented ~38.5%.
+ * - Gymnastics: title + body share ~14% left inset; body under the G.
  */
-function ClassMask({
-  item,
-  titleRef,
-}: {
-  item: ClassItem;
-  titleRef: RefObject<HTMLElement | null>;
-}) {
-  const { name, image } = item;
-  const sizes = "(max-width: 768px) 90vw, 48vw";
-  const knockout = <KnockoutGlyph name={name} titleRef={titleRef} />;
-
-  if (name === "Jazz") {
-    const strip =
-      "relative isolate h-full w-[32%] shrink-0 overflow-hidden [clip-path:polygon(18%_0%,100%_0%,82%_100%,0%_100%)]";
-    const crops = ["object-left", "object-center", "object-right"] as const;
-    return (
-      <div
-        aria-hidden="true"
-        className="flex h-[min(42vw,16rem)] w-full max-w-[min(92vw,22rem)] items-stretch justify-center gap-1.5 sm:h-[min(48vw,20rem)] sm:max-w-[28rem] md:h-[min(52vh,34rem)] md:max-w-[min(48vw,38rem)] md:gap-2.5"
-      >
-        {crops.map((crop, i) => (
-          <div key={i} className={strip}>
-            <div className="absolute inset-0 bg-black">
-              <Image
-                src={image.src}
-                alt=""
-                fill
-                unoptimized
-                sizes={sizes}
-                className={`object-cover ${crop}`}
-                priority={i === 0}
-              />
-            </div>
-            <KnockoutGlyph name={name} titleRef={titleRef} />
-          </div>
-        ))}
-      </div>
-    );
+function layoutClasses(layout: ClassLayout) {
+  switch (layout) {
+    case "title-left":
+      return {
+        article:
+          "flex flex-col gap-6 md:flex-row md:items-center md:gap-x-[clamp(0.75rem,1.2vw,1.5rem)]",
+        title: "shrink-0",
+        body: "min-w-0 w-full md:w-auto md:flex-1 md:max-w-[min(52ch,50.5%)]",
+        alignRight: false,
+      };
+    case "title-right":
+      return {
+        article:
+          "flex flex-col gap-6 md:flex-row md:items-center md:justify-between md:gap-x-[clamp(0.75rem,1.2vw,1.5rem)]",
+        title: "shrink-0 md:order-2",
+        body: "min-w-0 w-full md:order-1 md:max-w-[min(52ch,48%)]",
+        alignRight: true,
+      };
+    case "stack-right-body":
+      return {
+        article: "flex flex-col gap-8 md:gap-[clamp(1.5rem,2.5vw,2.75rem)]",
+        title: "",
+        body: "md:ml-[38.5%] md:max-w-[min(52ch,48%)]",
+        alignRight: false,
+      };
+    case "stack-inset":
+      return {
+        article:
+          "flex flex-col gap-8 md:gap-[clamp(1.5rem,2.5vw,2.75rem)] md:pl-[14%]",
+        title: "",
+        body: "md:max-w-[min(52ch,48%)]",
+        alignRight: false,
+      };
   }
-
-  if (name === "Ballet") {
-    return (
-      <div aria-hidden="true" className="flex justify-center">
-        <MaskedPhoto
-          src={image.src}
-          sizes={sizes}
-          className="aspect-square w-[min(58vw,16rem)] rounded-full sm:w-[min(48vw,20rem)] md:w-[min(42vw,34rem)]"
-          knockout={knockout}
-        />
-      </div>
-    );
-  }
-
-  if (name === "Acrobatics") {
-    return (
-      <div aria-hidden="true" className="flex justify-center">
-        <MaskedPhoto
-          src={image.src}
-          sizes={sizes}
-          className="swiss-diamond aspect-square w-[min(58vw,16rem)] sm:w-[min(48vw,20rem)] md:w-[min(42vw,34rem)]"
-          knockout={knockout}
-        />
-      </div>
-    );
-  }
-
-  return (
-    <div aria-hidden="true" className="flex justify-center">
-      <MaskedPhoto
-        src={image.src}
-        sizes={sizes}
-        className="aspect-[5/3] w-[min(78vw,20rem)] [clip-path:polygon(12%_0%,88%_0%,100%_50%,88%_100%,12%_100%,0%_50%)] sm:w-[min(60vw,26rem)] md:w-[min(48vw,40rem)]"
-        knockout={knockout}
-      />
-    </div>
-  );
 }
 
 const ClassNameTitle = forwardRef<
@@ -561,8 +408,9 @@ const ClassNameTitle = forwardRef<
     name: ClassName;
     id: string;
     alignRight: boolean;
+    className?: string;
   }
->(function ClassNameTitle({ name, id, alignRight }, ref) {
+>(function ClassNameTitle({ name, id, alignRight, className = "" }, ref) {
   const reduceMotion = useReducedMotion();
   const motionConfig = TITLE_MOTION[name];
   const letters = name.split("");
@@ -573,7 +421,6 @@ const ClassNameTitle = forwardRef<
   const inView = useInView(localRef, {
     amount: 0.2,
     once: false,
-    // Fire enter/exit before the title is fully centered
     margin: "140px 0px 140px 0px",
   });
   inViewRef.current = inView;
@@ -591,8 +438,7 @@ const ClassNameTitle = forwardRef<
       else if (y < lastY - 0.5) directionRef.current = "up";
       lastY = y;
     };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    return onLenisScroll(onScroll);
   }, []);
 
   useEffect(() => {
@@ -620,13 +466,11 @@ const ClassNameTitle = forwardRef<
     };
   }, [inView, controls, reduceMotion]);
 
+  const headingClass = `${TITLE_CLASS} ${alignRight ? "md:text-right" : ""} ${className}`.trim();
+
   if (reduceMotion) {
     return (
-      <h2
-        ref={setRefs}
-        id={id}
-        className={`relative z-10 ${TITLE_CLASS} ${alignRight ? "md:text-right" : ""}`}
-      >
+      <h2 ref={setRefs} id={id} className={headingClass}>
         <span data-title-visual>{name}</span>
       </h2>
     );
@@ -636,7 +480,7 @@ const ClassNameTitle = forwardRef<
     <motion.h2
       ref={setRefs}
       id={id}
-      className={`relative z-10 ${TITLE_CLASS} ${alignRight ? "md:text-right" : ""}`}
+      className={headingClass}
       initial="hidden"
       animate={controls}
       variants={{
@@ -659,10 +503,13 @@ const ClassNameTitle = forwardRef<
             key={`${name}-${i}`}
             custom={i}
             variants={motionConfig.letter as Variants}
-            className={`inline-block will-change-transform ${
+            className={`inline-block ${
               name === "Acrobatics" ? "origin-center" : "origin-bottom"
             }`}
-            style={{ transformStyle: "preserve-3d" }}
+            style={{
+              transformStyle: "preserve-3d",
+              willChange: inView ? "transform" : "auto",
+            }}
           >
             {letter}
           </motion.span>
@@ -672,144 +519,145 @@ const ClassNameTitle = forwardRef<
   );
 });
 
-/**
- * All class cards share one tall container so each sticky card pins in place
- * while the next (opaque) card scrolls up and covers it — the classic pile-up.
- * A single scroll progress drives every card's cover animation.
- */
-function ClassStack() {
-  const stackRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: stackRef,
-    offset: ["start start", "end end"],
-  });
-
-  return (
-    <div ref={stackRef} className="relative w-full pb-[10vh]">
-      {COPY.classes.map((item, i) => (
-        <ClassStackCard
-          key={item.name}
-          item={item}
-          index={i}
-          total={COPY.classes.length}
-          progress={scrollYProgress}
-        />
-      ))}
-    </div>
-  );
-}
-
-/**
- * One class rendered as a sticky card. Each successive card pins slightly lower
- * so the cards beneath peek out. As the next card covers this one, the pinned
- * panel scales down and dims for depth.
- *
- * Title sits under the mask layer; a clipped knockout duplicate inside each
- * photo shape subtracts only where letters overlap the image.
- */
-function ClassStackCard({
+function ClassSection({
   item,
   index,
-  total,
-  progress,
 }: {
   item: ClassItem;
   index: number;
-  total: number;
-  progress: MotionValue<number>;
 }) {
-  const reduceMotion = useReducedMotion();
-  const titleRef = useRef<HTMLHeadingElement>(null);
-  const alignRight = index % 2 === 1;
-  const isLast = index === total - 1;
-
-  const start = index / total;
-  const end = (index + 1) / total;
-  const scale = useTransform(progress, [start, end], [1, 0.92]);
-  const scrimOpacity = useTransform(progress, [start, end], [0, 0.4]);
-
-  const topOffset = `calc(2.5rem + ${index * 2.75}rem)`;
+  const { article, title, body, alignRight } = layoutClasses(item.layout);
   const headingId = `class-chapter-${index}`;
-  const staticState = reduceMotion || isLast;
 
-  const textBlock = (
-    <div
-      className={`relative z-10 flex min-w-0 flex-1 flex-col justify-center overflow-visible ${
-        alignRight
-          ? "md:items-end md:text-right md:-ml-[10%]"
-          : "md:-mr-[10%]"
-      }`}
+  return (
+    <article
+      aria-labelledby={headingId}
+      data-class-section
+      className={`relative w-full py-[clamp(4rem,12vh,9rem)] ${article}`}
     >
-      <p className="type-eyebrow relative z-20 mb-4 text-xs font-medium text-[#666666] md:mb-[1vw] md:text-sm">
-        {item.focus}
-      </p>
-
       <ClassNameTitle
-        ref={titleRef}
         name={item.name}
         id={headingId}
         alignRight={alignRight}
+        className={title}
       />
-
       <p
-        className={`relative z-20 mt-6 max-w-[42rem] font-alt text-[clamp(1rem,1.4vw,1.3125rem)] leading-[1.55] tracking-tight text-[#6b6b6b] md:mt-[2vw] ${
-          alignRight ? "md:ml-auto" : ""
-        }`}
+        data-class-body
+        className={`${BODY_CLASS} ${body} opacity-0 will-change-transform motion-reduce:translate-y-0 motion-reduce:opacity-100`}
       >
         {item.line}
       </p>
-    </div>
-  );
-
-  const maskBlock = (
-    <div
-      className={`relative z-20 flex shrink-0 justify-center md:w-[48%] lg:w-[50%] ${
-        alignRight ? "md:justify-start" : "md:justify-end"
-      }`}
-    >
-      <ClassMask item={item} titleRef={titleRef} />
-    </div>
-  );
-
-  return (
-    <motion.article
-      aria-labelledby={headingId}
-      style={{
-        top: topOffset,
-        scale: staticState ? 1 : scale,
-      }}
-      className="sticky flex min-h-[52vh] flex-col justify-center overflow-hidden border border-black bg-white px-4 py-12 dark:border-white dark:bg-black md:min-h-[74vh] md:px-[6vw] md:py-[7vw]"
-    >
-      <div
-        className={`flex flex-col gap-8 md:items-center md:gap-10 ${
-          alignRight ? "md:flex-row" : "md:flex-row-reverse"
-        }`}
-      >
-        {maskBlock}
-        {textBlock}
-      </div>
-
-      {!staticState ? (
-        <motion.div
-          aria-hidden="true"
-          style={{ opacity: scrimOpacity }}
-          className="pointer-events-none absolute inset-0 z-30 bg-neutral-500"
-        />
-      ) : null}
-    </motion.article>
+    </article>
   );
 }
 
+/**
+ * Editorial type-led Classes page — oversized titles, asymmetric copy blocks,
+ * per-discipline letter Motions, GSAP scrub on hero + body.
+ */
 export function ClassesWireframes() {
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      root
+        .querySelectorAll<HTMLElement>(
+          "[data-class-body], [data-classes-hero]",
+        )
+        .forEach((el) => {
+          el.style.opacity = "1";
+          el.style.transform = "none";
+        });
+      return;
+    }
+
+    const ctx = gsap.context(() => {
+      const mm = gsap.matchMedia();
+
+      mm.add(
+        {
+          isDesktop: "(min-width: 768px)",
+          isMobile: "(max-width: 767px)",
+        },
+        (context) => {
+          const { isDesktop } = context.conditions as {
+            isDesktop: boolean;
+            isMobile: boolean;
+          };
+
+          const scrub = isDesktop ? 0.5 : 0.35;
+          const hero = root.querySelector<HTMLElement>("[data-classes-hero]");
+
+          if (hero) {
+            gsap.fromTo(
+              hero,
+              { y: isDesktop ? 48 : 28, opacity: 0 },
+              {
+                y: 0,
+                opacity: 1,
+                ease: "none",
+                scrollTrigger: {
+                  trigger: hero,
+                  start: "top 92%",
+                  end: "top 55%",
+                  scrub,
+                  invalidateOnRefresh: true,
+                },
+              },
+            );
+          }
+
+          root
+            .querySelectorAll<HTMLElement>("[data-class-body]")
+            .forEach((body) => {
+              gsap.fromTo(
+                body,
+                { y: isDesktop ? 40 : 24, opacity: 0 },
+                {
+                  y: 0,
+                  opacity: 1,
+                  ease: "none",
+                  scrollTrigger: {
+                    trigger: body,
+                    start: "top 92%",
+                    end: "top 55%",
+                    scrub,
+                    invalidateOnRefresh: true,
+                  },
+                },
+              );
+            });
+        },
+      );
+    }, root);
+
+    requestAnimationFrame(() => ScrollTrigger.refresh());
+
+    return () => ctx.revert();
+  }, []);
+
   return (
-    <div className="relative w-full bg-white text-black dark:bg-black dark:text-white">
-      <section className="relative w-full pb-16 md:pb-[6vw]">
-        <h1 className="font-swiss text-[clamp(2.5rem,10vw,4.5rem)] font-bold uppercase leading-[0.92] tracking-tighter md:text-[11.5vw]">
+    <div
+      ref={rootRef}
+      className="relative w-full bg-white text-black dark:bg-black dark:text-white"
+    >
+      <header className="relative w-full overflow-visible pb-[clamp(3rem,8vh,6rem)]">
+        <h1
+          data-classes-hero
+          className={`${HERO_CLASS} opacity-0 will-change-transform motion-reduce:translate-y-0 motion-reduce:opacity-100`}
+        >
           {COPY.headline}
         </h1>
-      </section>
+      </header>
 
-      <ClassStack />
+      <div className="relative w-full pb-[clamp(3rem,8vh,6rem)]">
+        {COPY.classes.map((item, index) => (
+          <ClassSection key={item.name} item={item} index={index} />
+        ))}
+      </div>
     </div>
   );
 }

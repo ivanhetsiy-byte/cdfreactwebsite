@@ -15,7 +15,6 @@ function useDelayedNav() {
   return (targetPath: string) => {
     if (targetPath === pathname || lockRef.current) return;
     lockRef.current = true;
-    if (targetPath === "/") sessionStorage.setItem("fromSubpage", "true");
     requestRouteCover();
     setTimeout(() => {
       router.push(targetPath);

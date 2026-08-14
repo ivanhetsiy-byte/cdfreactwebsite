@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { Beams } from "@/components/backgrounds/Beams";
+import { Beams } from "@/components/backgrounds/BeamsLazy";
+import { PreviewUnlock } from "@/components/maintenance/PreviewUnlock";
 
 const INSTAGRAM =
   process.env.NEXT_PUBLIC_INSTAGRAM_URL ??
@@ -50,6 +51,8 @@ export default function MaintenancePage() {
             Instagram
           </Link>
         </div>
+
+        <PreviewUnlock />
       </main>
     </div>
   );

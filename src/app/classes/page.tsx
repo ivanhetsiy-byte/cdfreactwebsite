@@ -23,7 +23,7 @@ const ClassesWireframes = dynamic(
 
 export default function Page() {
   return (
-    <PageShell>
+    <PageShell className="!pb-0">
       <ClassesWireframes />
     </PageShell>
   );

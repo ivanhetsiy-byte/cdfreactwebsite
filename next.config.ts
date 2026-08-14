@@ -11,11 +11,17 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: projectRoot,
   },
+  compiler: {
+    removeConsole: {
+      exclude: ["error", "warn"],
+    },
+  },
   images: {
     formats: ["image/avif", "image/webp"],
+    minimumCacheTTL: 60 * 60 * 24 * 30,
   },
   experimental: {
-    optimizePackageImports: ["lucide-react", "gsap", "motion"],
+    optimizePackageImports: ["gsap", "motion"],
   },
 };
 

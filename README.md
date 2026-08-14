@@ -42,6 +42,8 @@ See [`.env.example`](.env.example):
 | `CONTACT_TO_EMAIL` | Inbox for form/order emails |
 | `CONTACT_FROM_EMAIL` | From address |
 | `CHECKOUT_LAST_NAMES` | Comma-separated last names allowed to checkout |
+| `MAINTENANCE_MODE` | Production is gated by default; `false` launches the site; `true` gates even in `next dev` |
+| `MAINTENANCE_PREVIEW_CODE` | Server-only code that unlocks the live site from `/maintenance` |
 
 ## Project layout
 
@@ -57,5 +59,5 @@ public/            # Static images and icons
 ## Notes
 
 - `/staff` is the production staff experience (LML studio UI with site chrome).
-- `/lab/*` remains a temporary sandbox (`robots: noindex`) for isolated experiments; prefer evolving `/staff` rather than shipping lab routes.
+- `/admin` is a local-development store catalog editor (`robots: noindex`; 404s in production).
 - Bag checkout is roster-gated and emailed via Resend — not a payment gateway.

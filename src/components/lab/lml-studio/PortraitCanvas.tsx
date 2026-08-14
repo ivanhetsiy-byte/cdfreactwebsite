@@ -5,7 +5,7 @@ import Image from "next/image";
 const PORTRAIT_SRC = "/images/staff/mykhaylo.jpg";
 
 type PortraitCanvasProps = {
-  /** Light staff-2 uses a soft well instead of a black crop box. */
+  /** Soft well option instead of a black crop box. */
   theme?: "dark" | "light";
 };
 
@@ -20,7 +20,6 @@ export function PortraitCanvas({ theme = "dark" }: PortraitCanvasProps) {
         src={PORTRAIT_SRC}
         alt="Mykhaylo Hetsiy"
         fill
-        unoptimized
         priority
         draggable={false}
         sizes="(max-width: 768px) 100vw, 40vw"

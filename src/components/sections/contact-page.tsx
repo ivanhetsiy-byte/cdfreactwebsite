@@ -1,6 +1,5 @@
 "use client";
 
-import { Check, Copy } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -73,6 +72,43 @@ function phoneDigitCount(formatted: string) {
   return formatted.replace(/\D/g, "").length;
 }
 
+const iconClass = "size-3.5";
+
+function CheckIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2.25}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={iconClass}
+      aria-hidden="true"
+    >
+      <path d="M20 6 9 17l-5-5" />
+    </svg>
+  );
+}
+
+function CopyIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2.25}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={iconClass}
+      aria-hidden="true"
+    >
+      <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+      <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+    </svg>
+  );
+}
+
 function CopyButton({ value, label }: { value: string; label: string }) {
   const [copied, setCopied] = useState(false);
   const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -102,11 +138,7 @@ function CopyButton({ value, label }: { value: string; label: string }) {
       title={copied ? "Copied" : `Copy ${label}`}
       className="inline-flex shrink-0 cursor-pointer items-center justify-center rounded-sm p-1.5 text-[#999999] transition-colors duration-150 hover:text-black focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black dark:text-[#666666] dark:hover:text-white dark:focus-visible:outline-white"
     >
-      {copied ? (
-        <Check className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
-      ) : (
-        <Copy className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
-      )}
+      {copied ? <CheckIcon /> : <CopyIcon />}
     </button>
   );
 }
@@ -133,10 +165,6 @@ export function ContactWireframes() {
     if (navLockRef.current) return;
 
     navLockRef.current = true;
-
-    if (targetPath === "/") {
-      sessionStorage.setItem("fromSubpage", "true");
-    }
 
     requestRouteCover();
 

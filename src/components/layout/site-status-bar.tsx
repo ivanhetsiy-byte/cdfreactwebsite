@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { useBag } from "@/context/BagContext";
 import { useLanguage, type Language } from "@/context/LanguageContext";
+import { getLenis } from "@/lib/lenis";
 import { requestRouteCover, ROUTE_COVER_MS } from "@/lib/route-cover";
 import { SITE_MENU_STATE_EVENT } from "@/lib/site-menu";
 
@@ -17,6 +18,9 @@ const LANG_OPTIONS: { code: Language; label: string }[] = [
 
 const BAG_RED = "var(--brand-red)";
 
+/** Reveal after leaving ~the first screen (hero / initial viewport). */
+const VIEWPORT_REVEAL_RATIO = 0.92;
+
 function formatEstTime(date: Date): string {
   return new Intl.DateTimeFormat("en-US", {
     timeZone: "America/New_York",
@@ -25,6 +29,17 @@ function formatEstTime(date: Date): string {
     second: "2-digit",
     hour12: true,
   }).format(date);
+}
+
+function readScrollY(): number {
+  if (typeof window === "undefined") return 0;
+  const lenis = getLenis();
+  if (lenis && typeof lenis.animatedScroll === "number") {
+    return lenis.animatedScroll;
+  }
+  const winLenis = (window as unknown as { lenis?: { scroll?: number } }).lenis;
+  if (typeof winLenis?.scroll === "number") return winLenis.scroll;
+  return window.scrollY || document.documentElement.scrollTop || 0;
 }
 
 function BagIcon({ className }: { className?: string }) {
@@ -61,6 +76,7 @@ function isStorePath(pathname: string) {
  * Contrast flip must live on the fixed blended layer itself (same as navbar).
  * Bag icon only appears on store routes; red hover + badge sit in a separate
  * non-blended overlay so brand red stays true.
+ * Hidden on the first viewport; fades in after scroll past ~one screen.
  */
 export function SiteStatusBar() {
   const router = useRouter();
@@ -70,9 +86,11 @@ export function SiteStatusBar() {
   const [time, setTime] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [bagHovered, setBagHovered] = useState(false);
+  const [pastFirstViewport, setPastFirstViewport] = useState(false);
   const navLockRef = useRef(false);
 
   const showBag = isStorePath(pathname);
+  const barVisible = pastFirstViewport && !menuOpen;
 
   useEffect(() => {
     const tick = () => setTime(formatEstTime(new Date()));
@@ -94,6 +112,55 @@ export function SiteStatusBar() {
     if (!showBag) setBagHovered(false);
   }, [showBag]);
 
+  // Reveal only after scrolling off the initial viewport (Lenis-aware).
+  useEffect(() => {
+    let unsub: (() => void) | undefined;
+    let rafId = 0;
+    let attempts = 0;
+    let usedWindowScroll = false;
+
+    const update = () => {
+      const threshold = window.innerHeight * VIEWPORT_REVEAL_RATIO;
+      setPastFirstViewport(readScrollY() >= threshold);
+    };
+
+    const attachLenis = () => {
+      update();
+      const lenis = getLenis();
+      if (lenis) {
+        unsub = lenis.on("scroll", update);
+        return true;
+      }
+      return false;
+    };
+
+    if (!attachLenis()) {
+      usedWindowScroll = true;
+      window.addEventListener("scroll", update, { passive: true });
+      const wait = () => {
+        if (attachLenis()) {
+          if (usedWindowScroll) {
+            window.removeEventListener("scroll", update);
+            usedWindowScroll = false;
+          }
+          return;
+        }
+        if (attempts++ > 120) return;
+        rafId = requestAnimationFrame(wait);
+      };
+      rafId = requestAnimationFrame(wait);
+    }
+
+    window.addEventListener("resize", update, { passive: true });
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      unsub?.();
+      if (usedWindowScroll) window.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+    };
+  }, [pathname]);
+
   const goBag = () => {
     if (pathname === "/bag" || navLockRef.current) return;
     navLockRef.current = true;
@@ -105,7 +172,11 @@ export function SiteStatusBar() {
   };
 
   const badgeLabel = count > 99 ? "99+" : String(count);
-  const showBadge = showBag && count > 0 && !bagHovered;
+  const showBadge = showBag && count > 0 && !bagHovered && barVisible;
+
+  const visibilityClass = barVisible
+    ? "opacity-100"
+    : "pointer-events-none opacity-0";
 
   return (
     <>
@@ -113,9 +184,11 @@ export function SiteStatusBar() {
       <div
         role="contentinfo"
         aria-label="Site status"
-        aria-hidden={menuOpen}
+        aria-hidden={!barVisible}
         data-site-status-bar
-        className="pointer-events-none fixed inset-x-0 bottom-0 z-[10050] mix-blend-difference font-swiss text-white transition-opacity duration-300"
+        className={`pointer-events-none fixed inset-x-0 bottom-0 z-[10050] mix-blend-difference font-swiss text-white transition-opacity duration-300 ${visibilityClass} ${
+          showBag ? "" : "max-md:hidden"
+        }`}
       >
         <div className={`pointer-events-auto ${CHROME_PAD}`}>
           <div className="flex w-full items-center justify-between gap-3 text-[0.7rem] md:text-[0.95rem]">
@@ -133,7 +206,7 @@ export function SiteStatusBar() {
                 )}
               </div>
             ) : (
-              <p className="pointer-events-none shrink-0 tracking-tight text-white/80">
+              <p className="pointer-events-none hidden shrink-0 tracking-tight text-white/80 md:block">
                 © CDF, LLC
                 <span className="ml-2 hidden text-white/40 sm:inline">
                   Est. for the stage
@@ -155,7 +228,7 @@ export function SiteStatusBar() {
             </p>
 
             <div
-              className="flex shrink-0 items-center gap-1 md:min-w-[10rem] md:justify-end md:gap-1"
+              className="hidden shrink-0 items-center gap-1 md:flex md:min-w-[10rem] md:justify-end md:gap-1"
               role="group"
               aria-label="Language"
             >
@@ -163,6 +236,7 @@ export function SiteStatusBar() {
                 <button
                   key={code}
                   type="button"
+                  tabIndex={barVisible ? 0 : -1}
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
@@ -184,17 +258,18 @@ export function SiteStatusBar() {
           </div>
         </div>
       </div>
-
       {/* Non-blended overlay — hit target, red hover, count badge (store only) */}
       {showBag ? (
         <div
           data-site-status-bar
-          className="pointer-events-none fixed inset-x-0 bottom-0 z-[10051] font-swiss transition-opacity duration-300"
+          aria-hidden={!barVisible}
+          className={`pointer-events-none fixed inset-x-0 bottom-0 z-[10051] font-swiss transition-opacity duration-300 ${visibilityClass}`}
         >
           <div className={CHROME_PAD}>
             <div className={BAG_SLOT_CLASS}>
               <button
                 type="button"
+                tabIndex={barVisible ? 0 : -1}
                 aria-label={count > 0 ? `Bag, ${count} items` : "Bag"}
                 onClick={goBag}
                 onMouseEnter={() => setBagHovered(true)}

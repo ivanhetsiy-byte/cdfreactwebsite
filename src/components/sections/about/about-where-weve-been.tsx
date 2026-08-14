@@ -1,18 +1,24 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import SplitType from "split-type";
 
-import { LightRays } from "@/components/backgrounds/LightRays";
 import {
   ABOUT_WHERE_HASH,
   COMPETITIONS,
   competitionHref,
 } from "@/lib/competitions";
 import { getLenis } from "@/lib/lenis";
+
+const LightRays = dynamic(
+  () =>
+    import("@/components/backgrounds/LightRays").then((m) => m.LightRays),
+  { ssr: false },
+);
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -374,6 +380,7 @@ export function AboutWhereWeveBeen() {
           <div
             ref={curtainRef}
             aria-hidden
+            data-nav-page-surface="dark"
             className="pointer-events-none absolute inset-0 z-0 bg-black"
             style={{ clipPath: "inset(100% 0 0 0)" }}
           />

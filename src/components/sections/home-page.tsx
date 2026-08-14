@@ -15,8 +15,6 @@ import {
   useLanguage,
 } from "@/context/LanguageContext";
 import { ScrollSlide } from "@/components/motion/ScrollSlide";
-import { ProgramsGuidePath } from "@/components/motion/ProgramsGuidePath";
-import { GuidePhoto } from "@/components/motion/GuidePhoto";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -27,50 +25,42 @@ type GalleryItem = {
   caption: string;
 };
 
-const GALLERY_PLACEHOLDERS = [
-  "/images/filler.svg",
-  "/images/filler.svg",
-  "/images/filler.svg",
-  "/images/filler.svg",
-  "/images/filler.svg",
-  "/images/filler.svg",
-] as const;
-
-const GALLERY_CAPTIONS = [
-  "Nationals — Stage A",
-  "Studio — Rehearsal Week",
-  "Regionals — Finals",
-  "Convention — Showcase",
-  "Season 12 — Team",
-  "Awards — Closing Night",
-  "Open — Contemporary",
-  "Jazz — Ensemble",
-  "Ballet — Variations",
-  "Acro — Elite",
-  "Workshop — Guest Artist",
-  "Tour — City Night",
-  "Backstage — Warmup",
-  "Competition — Day Two",
-  "Finale — Curtain Call",
-] as const;
-
-const GALLERY_ITEMS: GalleryItem[] = GALLERY_CAPTIONS.map((caption, i) => ({
-  id: String(i + 1).padStart(2, "0"),
-  src: GALLERY_PLACEHOLDERS[i % GALLERY_PLACEHOLDERS.length]!,
-  alt: `${caption} placeholder`,
-  caption,
-}));
+const GALLERY_ITEMS: GalleryItem[] = [
+  {
+    id: "01",
+    src: "/images/gallery/wdc-2026-leap.jpg",
+    alt: "CDF dancers at WDC 2026 performing Venom Grace",
+    caption: "WDC 2026 — Venom Grace",
+  },
+  {
+    id: "02",
+    src: "/images/gallery/wdc-2026-ensemble.jpg",
+    alt: "CDF dancers at WDC 2026 performing Venom Grace",
+    caption: "WDC 2026 — Venom Grace",
+  },
+  {
+    id: "03",
+    src: "/images/gallery/nexstar-2026.jpg",
+    alt: "CDF dancers at Nexstar 2026 performing Hey!",
+    caption: "NEXSTAR 2026 — Hey!",
+  },
+];
 
 function GalleryFigure({ item }: { item: GalleryItem }) {
   return (
-    <figure className="group relative h-full w-full overflow-hidden bg-black">
+    <figure
+      data-gallery-figure
+      className="relative h-full w-full overflow-hidden bg-black"
+    >
       <Image
+        data-gallery-image
         src={item.src}
         alt={item.alt}
         fill
-        unoptimized
+        unoptimized={item.src.endsWith(".svg")}
         sizes="(max-width: 768px) 100vw, 42vw"
-        className="object-cover grayscale group-hover:grayscale-0"
+        className="object-cover will-change-[filter] motion-reduce:grayscale-0"
+        style={{ filter: "grayscale(1) brightness(0.88)" }}
       />
       <figcaption className="pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/70 to-transparent px-4 py-5 opacity-100 md:px-5 md:py-6">
         <p className="font-swiss text-xs font-medium tracking-[0.2em] text-white uppercase md:text-sm">
@@ -217,6 +207,50 @@ function GalleryStrip() {
 
   useEffect(() => () => stopMomentum(), [stopMomentum]);
 
+  // Grayscale → color as each slide enters view (page scroll or horizontal drag).
+  useEffect(() => {
+    const scroller = scrollerRef.current;
+    if (!scroller) return;
+
+    const figures = scroller.querySelectorAll<HTMLElement>("[data-gallery-figure]");
+    if (!figures.length) return;
+
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduced) {
+      scroller.querySelectorAll<HTMLElement>("[data-gallery-image]").forEach((img) => {
+        gsap.set(img, { filter: "grayscale(0) brightness(1)" });
+      });
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          const img = entry.target.querySelector<HTMLElement>("[data-gallery-image]");
+          if (!img) continue;
+
+          const amount = Math.min(1, Math.max(0, entry.intersectionRatio));
+          // Ease the last stretch so color "glows" in once mostly visible.
+          const t = amount * amount * (3 - 2 * amount); // smoothstep
+          gsap.to(img, {
+            filter: `grayscale(${1 - t}) brightness(${0.88 + 0.12 * t})`,
+            duration: 0.55,
+            ease: "power2.out",
+            overwrite: "auto",
+          });
+        }
+      },
+      {
+        threshold: [0, 0.15, 0.3, 0.45, 0.6, 0.75, 0.9, 1],
+        rootMargin: "0px -6% 0px -6%",
+      },
+    );
+
+    figures.forEach((figure) => observer.observe(figure));
+
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <div
       ref={scrollerRef}
@@ -292,6 +326,7 @@ export function HomeWireframes() {
         <div
           ref={mottoWipeRef}
           aria-hidden
+          data-nav-page-surface="dark"
           className="pointer-events-none absolute inset-0 z-0 bg-black"
           style={{ clipPath: "inset(0 100% 0 0)" }}
         />
@@ -329,7 +364,7 @@ export function HomeWireframes() {
 
       {/* Programs + Gallery */}
       <div className="relative w-full">
-        {/* ── Programs — Ages headline, winding line, Competitive → Recreational ── */}
+        {/* ── Programs — Ages headline, Competitive → Recreational ── */}
         <section
           aria-labelledby="home-programs-ages"
           className="relative w-full pt-24 md:pt-[12vw]"
@@ -341,26 +376,11 @@ export function HomeWireframes() {
             {t.home.programs.headline}
           </h2>
 
-          {/* Mobile layout — stacked photos, guide line, and program copy */}
-          <div className="relative mt-10 w-full pt-20 pb-36 md:hidden">
-            <ProgramsGuidePath showOnMobile />
-
-            <div className="relative z-10 pt-32">
-              <div className="relative aspect-[3/4] w-[28vw] overflow-hidden">
-                <Image
-                  src="/images/filler.svg"
-                  alt="Ballet class in the studio"
-                  fill
-                  unoptimized
-                  sizes="28vw"
-                  className="object-cover"
-                />
-              </div>
-            </div>
-
+          {/* Mobile layout — stacked program copy */}
+          <div className="relative mt-10 w-full pb-36 md:hidden">
             <article
               aria-labelledby="home-program-competitive-mobile"
-              className="relative z-10 mt-28 w-full"
+              className="relative z-10 mt-16 w-full"
             >
               <ScrollSlide
                 from="up"
@@ -380,19 +400,6 @@ export function HomeWireframes() {
                 </p>
               </ScrollSlide>
             </article>
-
-            <div className="relative z-10 mt-36 flex justify-end">
-              <div className="relative aspect-[3/4] w-[28vw] overflow-hidden">
-                <Image
-                  src="/images/filler.svg"
-                  alt="Acrobatics class in the studio"
-                  fill
-                  unoptimized
-                  sizes="28vw"
-                  className="object-cover"
-                />
-              </div>
-            </div>
 
             <article
               aria-labelledby="home-program-recreational-mobile"
@@ -416,53 +423,10 @@ export function HomeWireframes() {
                 </p>
               </ScrollSlide>
             </article>
-
-            <div className="relative z-10 mt-32">
-              <div className="relative aspect-[3/4] w-[28vw] overflow-hidden">
-                <Image
-                  src="/images/filler.svg"
-                  alt="Dancer mid-movement"
-                  fill
-                  unoptimized
-                  sizes="28vw"
-                  className="object-cover"
-                />
-              </div>
-            </div>
           </div>
 
-          {/* Desktop canvas — coordinates below map to the 2448×3456 design region */}
+          {/* Desktop — Competitive / Recreational copy */}
           <div className="relative mt-6 hidden w-full md:mt-0 md:block md:aspect-[2448/3456]">
-            <ProgramsGuidePath />
-
-            {/* Photos at the rectangle positions along the line */}
-            <GuidePhoto
-              src="/images/filler.svg"
-              alt="Ballet class in the studio"
-              className="md:absolute md:left-[37.3%] md:top-[6.3%] md:h-[6.7%] md:w-[6.6%]"
-            />
-            <GuidePhoto
-              src="/images/filler.svg"
-              alt="Jazz class in the studio"
-              className="md:absolute md:left-[32.2%] md:top-[30.8%] md:h-[6.7%] md:w-[6.6%]"
-            />
-            <GuidePhoto
-              src="/images/filler.svg"
-              alt="Acrobatics class in the studio"
-              className="md:absolute md:left-[63.6%] md:top-[44.8%] md:h-[6.7%] md:w-[6.6%]"
-            />
-            <GuidePhoto
-              src="/images/filler.svg"
-              alt="Gymnastics class in the studio"
-              className="md:absolute md:left-[7.5%] md:top-[58.7%] md:h-[10.6%] md:w-[14.9%]"
-            />
-            <GuidePhoto
-              src="/images/filler.svg"
-              alt="Dancer mid-movement"
-              className="md:absolute md:left-[79%] md:top-[71.4%] md:h-[12.2%] md:w-[11.6%]"
-            />
-
-            {/* Competitive — left of the line */}
             <article
               aria-labelledby="home-program-competitive"
               className="relative z-10 mt-10 w-full md:absolute md:top-[19.8%] md:left-[2.65%] md:mt-0"
@@ -486,7 +450,6 @@ export function HomeWireframes() {
               </ScrollSlide>
             </article>
 
-            {/* Recreational — right of the line, flush right */}
             <article
               aria-labelledby="home-program-recreational"
               className="relative z-10 mt-10 w-full md:absolute md:top-[52%] md:right-0 md:mt-0 md:text-right"

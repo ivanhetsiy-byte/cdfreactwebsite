@@ -16,7 +16,7 @@ import type { StoreProduct } from "@/lib/store-products";
 
 /**
  * Store catalog — layout/motion mirrored from lml.cc/en/journal masonry:
- * absolute packed columns, blur→focus entrance from bottom, hover scale + radius.
+ * absolute packed columns, transform/opacity entrance from bottom, hover scale + radius.
  * White placeholders stand in for product images for now.
  */
 
@@ -157,28 +157,31 @@ export function StoreWireframes({
 
     layout.forEach((item, index) => {
       const sel = `[data-key="${item.id}"]`;
+      // Size via CSS layout (style.width/height) — never tween width/height/filter.
+      gsap.set(sel, { width: item.w, height: item.h });
 
       if (enteredRef.current) {
         if (layoutChanged) {
           gsap.to(sel, {
             x: item.x,
             y: item.y,
-            width: item.w,
-            height: item.h,
             opacity: 1,
-            filter: "blur(0px)",
             duration: 0.6,
             ease: "power3.out",
             delay: 0.05 * index,
+            onStart: () => {
+              gsap.set(sel, { willChange: "transform, opacity" });
+            },
+            onComplete: () => {
+              gsap.set(sel, { clearProps: "willChange" });
+            },
           });
         } else {
           gsap.set(sel, {
             x: item.x,
             y: item.y,
-            width: item.w,
-            height: item.h,
             opacity: 1,
-            filter: "blur(0px)",
+            clearProps: "willChange",
           });
         }
       } else {
@@ -188,20 +191,20 @@ export function StoreWireframes({
             x: item.x,
             y: window.innerHeight + 200,
             opacity: 0,
-            filter: "blur(10px)",
-            width: item.w,
-            height: item.h,
           },
           {
             x: item.x,
             y: item.y,
-            width: item.w,
-            height: item.h,
             opacity: 1,
-            filter: "blur(0px)",
             duration: 0.8,
             ease: "power3.out",
             delay: index * 0.05,
+            onStart: () => {
+              gsap.set(sel, { willChange: "transform, opacity" });
+            },
+            onComplete: () => {
+              gsap.set(sel, { clearProps: "willChange" });
+            },
           },
         );
       }
@@ -262,7 +265,7 @@ export function StoreWireframes({
             <article
               key={item.id}
               data-key={item.id}
-              className="store-masonry-item absolute cursor-pointer p-0 will-change-[transform,width,height,opacity]"
+              className="store-masonry-item absolute cursor-pointer p-0"
               style={{ width: item.w, height: item.h, opacity: 0 }}
               onMouseEnter={() => onEnter(item.id)}
               onMouseLeave={() => onLeave(item.id)}

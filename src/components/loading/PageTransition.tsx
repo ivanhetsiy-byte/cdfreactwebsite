@@ -14,33 +14,23 @@ import { ROUTE_COVER_EVENT } from "@/lib/route-cover";
 
 type Phase = "idle" | "covering" | "holding" | "exiting";
 
-/** Brand red — same family as LML’s wipe accent. */
-const WIPE_RED = "var(--brand-red)";
-const WIPE_DARK = "#000000";
-
-const COVER_RED_S = 0.42;
-const COVER_DARK_S = 0.48;
-const COVER_DARK_DELAY_S = 0.12;
-const HOLD_S = 0.55;
-const EXIT_DARK_S = 0.48;
-const EXIT_RED_S = 0.42;
-const EXIT_RED_DELAY_S = 0.1;
+const FADE_IN_S = 0.4;
+const FADE_OUT_S = 0.4;
+const HOLD_S = 0.15;
 
 /**
- * LML page transition (not the initial ENTERING loader):
- * red curtain wipes up → dark panel with centered logo follows →
- * brief hold → dark lifts, red trails.
+ * White fade page transition:
+ * overlay fades in → route swaps under full white → brief hold → fade out.
  */
 export function PageTransition({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const isLab = pathname.startsWith("/lab");
+  const isAdmin = pathname === "/admin" || pathname.startsWith("/admin/");
 
   const [phase, setPhase] = useState<Phase>("holding");
 
   const phaseRef = useRef<Phase>("holding");
   const pathnameRef = useRef(pathname);
-  const redRef = useRef<HTMLDivElement>(null);
-  const darkRef = useRef<HTMLDivElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
   const timelineRef = useRef<gsap.core.Timeline | null>(null);
   const isFirstPath = useRef(true);
   const reducedMotionRef = useRef(false);
@@ -56,38 +46,35 @@ export function PageTransition({ children }: { children: ReactNode }) {
     timelineRef.current = null;
   }, []);
 
-  const parkBelow = useCallback(() => {
-    const red = redRef.current;
-    const dark = darkRef.current;
-    if (!red || !dark) return;
-    gsap.set([red, dark], { yPercent: 100 });
+  const parkTransparent = useCallback(() => {
+    const overlay = overlayRef.current;
+    if (!overlay) return;
+    gsap.set(overlay, { opacity: 0 });
   }, []);
 
   const coverInstant = useCallback(() => {
-    const red = redRef.current;
-    const dark = darkRef.current;
-    if (!red || !dark) return;
-    gsap.set([red, dark], { yPercent: 0 });
+    const overlay = overlayRef.current;
+    if (!overlay) return;
+    gsap.set(overlay, { opacity: 1 });
   }, []);
 
   const playExit = useCallback(() => {
-    const red = redRef.current;
-    const dark = darkRef.current;
-    if (!red || !dark) return;
+    const overlay = overlayRef.current;
+    if (!overlay) return;
 
     killTimeline();
     setPhaseBoth("holding");
-    gsap.set([red, dark], { yPercent: 0 });
+    gsap.set(overlay, { opacity: 1 });
 
     if (reducedMotionRef.current) {
-      parkBelow();
+      parkTransparent();
       setPhaseBoth("idle");
       return;
     }
 
     const tl = gsap.timeline({
       onComplete: () => {
-        parkBelow();
+        parkTransparent();
         setPhaseBoth("idle");
       },
     });
@@ -95,57 +82,38 @@ export function PageTransition({ children }: { children: ReactNode }) {
 
     tl.to({}, { duration: HOLD_S });
     tl.add(() => setPhaseBoth("exiting"));
-
-    // Dark leads the exit upward; red trails.
-    tl.to(dark, {
-      yPercent: -100,
-      duration: EXIT_DARK_S,
-      ease: "power3.inOut",
+    tl.to(overlay, {
+      opacity: 0,
+      duration: FADE_OUT_S,
+      ease: "power2.inOut",
     });
-    tl.to(
-      red,
-      {
-        yPercent: -100,
-        duration: EXIT_RED_S,
-        ease: "power3.inOut",
-      },
-      `<${EXIT_RED_DELAY_S}`,
-    );
-  }, [killTimeline, parkBelow, setPhaseBoth]);
+  }, [killTimeline, parkTransparent, setPhaseBoth]);
 
   const playCover = useCallback(() => {
-    const red = redRef.current;
-    const dark = darkRef.current;
-    if (!red || !dark) return;
+    const overlay = overlayRef.current;
+    if (!overlay) return;
 
     killTimeline();
     setPhaseBoth("covering");
 
     if (reducedMotionRef.current) {
       coverInstant();
+      setPhaseBoth("holding");
       return;
     }
 
-    gsap.set([red, dark], { yPercent: 100 });
+    gsap.set(overlay, { opacity: 0 });
 
-    const tl = gsap.timeline();
+    const tl = gsap.timeline({
+      onComplete: () => setPhaseBoth("holding"),
+    });
     timelineRef.current = tl;
 
-    tl.to(red, {
-      yPercent: 0,
-      duration: COVER_RED_S,
-      ease: "power3.inOut",
+    tl.to(overlay, {
+      opacity: 1,
+      duration: FADE_IN_S,
+      ease: "power2.inOut",
     });
-    tl.to(
-      dark,
-      {
-        yPercent: 0,
-        duration: COVER_DARK_S,
-        ease: "power3.inOut",
-      },
-      COVER_DARK_DELAY_S,
-    );
-    tl.add(() => setPhaseBoth("holding"));
   }, [coverInstant, killTimeline, setPhaseBoth]);
 
   useEffect(() => {
@@ -154,20 +122,20 @@ export function PageTransition({ children }: { children: ReactNode }) {
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   }, []);
 
-  // First paint: already covered with logo, then wipe out.
+  // First paint: start covered, then fade out.
   useEffect(() => {
-    if (isLab || bootedRef.current) return;
+    if (isAdmin || bootedRef.current) return;
     bootedRef.current = true;
     pathnameRef.current = pathname;
     isFirstPath.current = false;
     coverInstant();
     playExit();
-  }, [isLab, pathname, coverInstant, playExit]);
+  }, [isAdmin, pathname, coverInstant, playExit]);
 
   useEffect(() => {
-    if (isLab) {
+    if (isAdmin) {
       killTimeline();
-      parkBelow();
+      parkTransparent();
       setPhaseBoth("idle");
       return;
     }
@@ -175,20 +143,23 @@ export function PageTransition({ children }: { children: ReactNode }) {
     if (isFirstPath.current) return;
     if (pathnameRef.current === pathname) return;
     pathnameRef.current = pathname;
-    playExit();
-  }, [pathname, isLab, playExit, setPhaseBoth, killTimeline, parkBelow]);
+    // Only fade out if a cover was requested — skip soft navigations (e.g. mobile menu)
+    if (phaseRef.current === "covering" || phaseRef.current === "holding") {
+      playExit();
+    }
+  }, [pathname, isAdmin, playExit, setPhaseBoth, killTimeline, parkTransparent]);
 
   useEffect(() => {
-    if (isLab) return;
+    if (isAdmin) return;
 
     const onCover = () => playCover();
     window.addEventListener(ROUTE_COVER_EVENT, onCover);
     return () => window.removeEventListener(ROUTE_COVER_EVENT, onCover);
-  }, [isLab, playCover]);
+  }, [isAdmin, playCover]);
 
   useEffect(() => () => killTimeline(), [killTimeline]);
 
-  if (isLab) {
+  if (isAdmin) {
     return <>{children}</>;
   }
 
@@ -196,41 +167,13 @@ export function PageTransition({ children }: { children: ReactNode }) {
     <>
       {children}
       <div
+        ref={overlayRef}
         role="status"
         aria-busy={phase === "covering" || phase === "holding"}
         aria-label="Loading page"
         aria-hidden={phase === "idle"}
-        className="pointer-events-none fixed inset-0 z-[10100] overflow-hidden transform-gpu"
-      >
-        <div
-          ref={redRef}
-          className="absolute inset-0 will-change-transform"
-          style={{
-            backgroundColor: WIPE_RED,
-            transform: "translate3d(0, 0%, 0)",
-          }}
-          aria-hidden
-        />
-        <div
-          ref={darkRef}
-          className="absolute inset-0 flex items-center justify-center will-change-transform"
-          style={{
-            backgroundColor: WIPE_DARK,
-            transform: "translate3d(0, 0%, 0)",
-          }}
-        >
-          {/* Centered mark — matches LML page-transition face */}
-          {/* eslint-disable-next-line @next/next/no-img-element -- crisp SVG brand vector */}
-          <img
-            src="/icons/cdf-white.svg"
-            alt="cdf"
-            width={104}
-            height={77}
-            draggable={false}
-            className="h-auto w-[40vw] max-w-[280px] object-contain select-none swiss-no-select md:w-[20vw] md:max-w-[220px]"
-          />
-        </div>
-      </div>
+        className="pointer-events-none fixed inset-0 z-[10100] bg-white will-change-[opacity] transform-gpu"
+      />
       <span className="sr-only" aria-live="polite">
         {phase === "covering" || phase === "holding"
           ? "Loading"

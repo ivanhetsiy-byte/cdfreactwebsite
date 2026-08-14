@@ -1,22 +1,14 @@
-import { Syne } from "next/font/google";
 import type { ReactNode } from "react";
 
-import "@/app/lab/lab.css";
-
-const syne = Syne({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-lml-display",
-  display: "swap",
-});
+import "@/components/lab/lab.css";
 
 type LmlChromeLayoutProps = {
   children: ReactNode;
-  /** Dark matches production staff/lab; light is Staff-2 experiment. */
+  /** Dark matches production staff; light is an alternate theme. */
   theme?: "dark" | "light";
 };
 
-/** Shared Syne chrome for `/lab`, `/staff`, and `/staff-2`. */
+/** Shared Helvetica chrome for `/staff`. */
 export function LmlChromeLayout({
   children,
   theme = "dark",
@@ -25,14 +17,13 @@ export function LmlChromeLayout({
 
   return (
     <div
-      className={`${syne.variable} lml-lab antialiased ${
+      className={`lml-lab font-swiss antialiased ${
         isLight
           ? "lml-lab-light bg-white text-black"
           : "dark bg-black text-white"
       }`}
       data-theme={isLight ? "light" : "dark"}
       style={{
-        fontFamily: "var(--font-lml-display), Helvetica Neue, Arial, sans-serif",
         colorScheme: isLight ? "light" : "dark",
       }}
     >

@@ -1,5 +1,6 @@
 "use client";
 
+import { helveticaCompressed } from "@/app/fonts";
 import { useLanguage } from "@/context/LanguageContext";
 import { useDelayedNavigation } from "@/hooks/useDelayedNavigation";
 
@@ -10,7 +11,7 @@ export default function NotFound() {
   return (
     <main
       id="main-content"
-      className="relative min-h-screen w-full bg-background px-6 pb-24 pt-32 font-swiss-compressed text-foreground md:p-10 md:pt-44"
+      className={`${helveticaCompressed.variable} relative min-h-screen w-full bg-background px-6 pb-24 pt-32 font-swiss-compressed text-foreground md:p-10 md:pt-44`}
     >
       {/* Geometric grid — absolute-locked Swiss canvas */}
       <div

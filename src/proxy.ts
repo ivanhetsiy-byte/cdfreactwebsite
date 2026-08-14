@@ -1,12 +1,18 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { isMaintenanceMode } from "@/lib/maintenance";
+import {
+  hasValidPreviewCookie,
+  isMaintenanceMode,
+  PREVIEW_COOKIE,
+} from "@/lib/maintenance";
 
 /**
- * Site-wide maintenance gate (production only by default).
- * Local `next dev` skips this. Set MAINTENANCE_MODE=false to disable in production.
+ * Site-wide maintenance gate (production on by default).
+ * Local `next dev` skips this unless MAINTENANCE_MODE=true.
+ * Set MAINTENANCE_MODE=false to disable in production.
+ * A valid `cdf-preview` cookie (set via the maintenance secret code) bypasses the gate.
  */
-export function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   if (!isMaintenanceMode()) {
     return NextResponse.next();
   }
@@ -14,6 +20,11 @@ export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (pathname === "/maintenance") {
+    return NextResponse.next();
+  }
+
+  const preview = request.cookies.get(PREVIEW_COOKIE)?.value;
+  if (await hasValidPreviewCookie(preview)) {
     return NextResponse.next();
   }
 

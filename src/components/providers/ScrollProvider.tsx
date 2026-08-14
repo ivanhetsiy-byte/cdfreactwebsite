@@ -35,13 +35,12 @@ function resetScrollToTop() {
 export function ScrollProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const isFirstPathEffect = useRef(true);
-  const isLab = pathname.startsWith("/lab");
-  // Staff / staff-2 mount LmlStudioPage (LabScrollProvider) — avoid double Lenis.
-  const ownsOwnScroll =
-    isLab || pathname === "/staff" || pathname === "/staff-2";
+  const isAdmin = pathname === "/admin" || pathname.startsWith("/admin/");
+  // Staff mounts LmlStudioPage (LabScrollProvider) — avoid double Lenis.
+  const ownsOwnScroll = isAdmin || pathname === "/staff";
 
   useEffect(() => {
-    // Lab / staff studio pages own their own Lenis instance.
+    // Admin / staff studio pages own their own Lenis instance.
     if (ownsOwnScroll) return;
 
     window.history.scrollRestoration = "manual";
@@ -91,13 +90,6 @@ export function ScrollProvider({ children }: { children: ReactNode }) {
     if (isFirstPathEffect.current) {
       isFirstPathEffect.current = false;
       return;
-    }
-
-    // Home owns scroll when returning from a subpage (bottom → top entrance).
-    try {
-      if (sessionStorage.getItem("fromSubpage") === "true") return;
-    } catch {
-      // sessionStorage unavailable
     }
 
     // Deep links (e.g. /about#where-weve-been) own their own landing scroll.

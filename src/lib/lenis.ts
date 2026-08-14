@@ -39,11 +39,3 @@ export const quinticEase = (t: number) =>
 /** Bell-curve velocity — slow → fast → slow (half-sine). */
 export const sineEaseInOut = (t: number) =>
   -(Math.cos(Math.PI * t) - 1) / 2;
-
-/** Exponential build-up then negative-exponential slowdown. */
-export const expoEaseInOut = (t: number) => {
-  if (t === 0) return 0;
-  if (t === 1) return 1;
-  if (t < 0.5) return Math.pow(2, 20 * t - 10) / 2;
-  return (2 - Math.pow(2, -20 * t + 10)) / 2;
-};

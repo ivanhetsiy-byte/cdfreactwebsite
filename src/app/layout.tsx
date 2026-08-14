@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 
-import { helvetica, helveticaCompressed, montserrat } from "./fonts";
+import { helvetica, montserrat } from "./fonts";
 import { LabShell } from "@/components/lab/LabShell";
 import { ScrollProvider } from "@/components/providers/ScrollProvider";
 import { LanguageProvider } from "@/context/LanguageContext";
@@ -65,7 +65,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${helvetica.variable} ${helveticaCompressed.variable} ${montserrat.variable} no-scrollbar`}
+      className={`${helvetica.variable} ${montserrat.variable} no-scrollbar`}
     >
       <body className="min-h-screen no-scrollbar">
         <script

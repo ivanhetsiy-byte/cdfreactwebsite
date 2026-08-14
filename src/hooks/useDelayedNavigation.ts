@@ -6,7 +6,7 @@ import { useCallback, useRef } from "react";
 import { requestRouteCover, ROUTE_COVER_MS } from "@/lib/route-cover";
 
 /**
- * Shared delayed navigation that waits for the route-cover wipe.
+ * Shared delayed navigation that waits for the white fade cover.
  */
 export function useDelayedNavigation() {
   const router = useRouter();
@@ -19,10 +19,6 @@ export function useDelayedNavigation() {
       if (targetPath === pathname || navLockRef.current) return;
 
       navLockRef.current = true;
-
-      if (targetPath === "/") {
-        sessionStorage.setItem("fromSubpage", "true");
-      }
 
       requestRouteCover();
 
