@@ -9,6 +9,8 @@ import {
   type RefObject,
 } from "react";
 
+import { isDesktopFinePointer } from "@/lib/motion-env";
+
 gsap.registerPlugin(ScrollTrigger);
 
 type ScrollSlideProps = {
@@ -77,7 +79,10 @@ export function ScrollSlide({
 
     const trigger = triggerRef?.current ?? el;
 
-    const tween = scrub
+    // Touch / coarse: always one-shot — scrubbed transforms feel stepped.
+    const useScrub = scrub && isDesktopFinePointer();
+
+    const tween = useScrub
       ? gsap.fromTo(el, fromVars, {
           ...toVars,
           ease: "none",

@@ -10,7 +10,11 @@ import { NavProgressiveBlur } from "@/components/layout/NavProgressiveBlur";
 import { useLanguage, type Language } from "@/context/LanguageContext";
 import { useCompactNavMeasure } from "@/hooks/useCompactNav";
 import { getLenis } from "@/lib/lenis";
-import { shouldSkipSmoothScroll } from "@/lib/motion-env";
+import {
+  isDesktopFinePointer,
+  MOTION_MQ,
+  shouldSkipSmoothScroll,
+} from "@/lib/motion-env";
 import { requestRouteCover, ROUTE_COVER_MS } from "@/lib/route-cover";
 import {
   OPEN_SITE_MENU_EVENT,
@@ -407,6 +411,7 @@ export function Navbar() {
   const activeIndicatorRef = useRef(pathname);
   const [menuOpen, setMenuOpen] = useState(false);
   const blurRootRef = useRef<HTMLDivElement>(null);
+  const [desktopFine, setDesktopFine] = useState(false);
   const navLabels = NAV_HREFS.map((link) => t.nav[link.key]);
   const { compact: useCompactNav, compactRef } = useCompactNavMeasure(
     headerRowRef,
@@ -509,6 +514,14 @@ export function Navbar() {
     activeIndicatorRef.current = pathname;
   }, [pathname]);
 
+  useEffect(() => {
+    const mq = window.matchMedia(MOTION_MQ.desktopFine);
+    const sync = () => setDesktopFine(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
   // Position the true-black bookmark outside mix-blend-difference chrome.
   useLayoutEffect(() => {
     if (bookmarkLeaving) return;
@@ -583,7 +596,10 @@ export function Navbar() {
   }, [bookmarkLeaving]);
 
   // Invert bookmark only over solid black page surfaces (not black glyphs).
+  // Desktop fine-pointer only — elementsFromPoint on every scroll is too costly on touch.
   useEffect(() => {
+    if (!isDesktopFinePointer()) return;
+
     const centerX = bookmarkLayout?.centerX;
     const linksVisible = linksReveal > 0;
     const visible =
@@ -591,42 +607,52 @@ export function Navbar() {
       (bookmarkLeaving || (menuOpen && !useCompactNav && linksVisible));
     if (!visible || centerX == null) return;
 
+    let sampleRaf = 0;
     const sample = () => {
       if (bookmarkLeavingRef.current) return;
       const next = pageSurfaceIsBlackAt(centerX, BOOKMARK_HEIGHT / 2);
       setBookmarkOnBlackBg((prev) => (prev === next ? prev : next));
     };
 
+    const scheduleSample = () => {
+      if (sampleRaf) return;
+      sampleRaf = requestAnimationFrame(() => {
+        sampleRaf = 0;
+        sample();
+      });
+    };
+
     sample();
 
     let unsub: (() => void) | undefined;
-    let raf = 0;
+    let attachRaf = 0;
     let tries = 0;
     let usedNativeFallback = false;
 
     const attach = () => {
       const lenis = getLenis();
       if (lenis) {
-        unsub = lenis.on("scroll", sample);
+        unsub = lenis.on("scroll", scheduleSample);
         return;
       }
-      if (tries++ < 60) {
-        raf = requestAnimationFrame(attach);
+      if (shouldSkipSmoothScroll() || tries++ >= 12) {
+        usedNativeFallback = true;
+        window.addEventListener("scroll", scheduleSample, { passive: true });
         return;
       }
-      usedNativeFallback = true;
-      window.addEventListener("scroll", sample, { passive: true });
+      attachRaf = requestAnimationFrame(attach);
     };
     attach();
-    window.addEventListener("resize", sample);
+    window.addEventListener("resize", scheduleSample);
 
     return () => {
-      cancelAnimationFrame(raf);
+      cancelAnimationFrame(sampleRaf);
+      cancelAnimationFrame(attachRaf);
       unsub?.();
       if (usedNativeFallback) {
-        window.removeEventListener("scroll", sample);
+        window.removeEventListener("scroll", scheduleSample);
       }
-      window.removeEventListener("resize", sample);
+      window.removeEventListener("resize", scheduleSample);
     };
   }, [
     bookmarkLayout?.centerX,
@@ -1496,7 +1522,13 @@ export function Navbar() {
       </div>
 
       {/* Persistent chrome — only interactive children capture clicks */}
-      <header className="pointer-events-none fixed top-0 right-0 left-0 z-[1004] mix-blend-difference text-white">
+      <header
+        className={
+          desktopFine
+            ? "pointer-events-none fixed top-0 right-0 left-0 z-[1004] mix-blend-difference text-white"
+            : "pointer-events-none fixed top-0 right-0 left-0 z-[1004] text-black dark:text-white"
+        }
+      >
         <div
           className={`relative z-20 flex w-full items-center justify-between ${CHROME_PAD_X} ${CHROME_PAD_Y}`}
         >

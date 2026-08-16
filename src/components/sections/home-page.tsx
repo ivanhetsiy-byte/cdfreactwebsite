@@ -15,6 +15,7 @@ import {
   useLanguage,
 } from "@/context/LanguageContext";
 import { ScrollSlide } from "@/components/motion/ScrollSlide";
+import { MOTION_MQ } from "@/lib/motion-env";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -307,30 +308,52 @@ export function HomeWireframes() {
   const mottoLine1 = HOME_LOCKED_MOTTO.line1.replace(/[.,]$/, "");
   const mottoLine2 = HOME_LOCKED_MOTTO.line2.replace(/[.,]$/, "");
 
-  // Left→right black wipe; white text + mix-blend-difference inverts over it.
+  // Left→right black wipe. Desktop: clip-path scrub + blend. Mobile: scaleX one-shot.
   useEffect(() => {
     const section = mottoSectionRef.current;
     const wipe = mottoWipeRef.current;
     if (!section || !wipe) return;
 
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const reduced = window.matchMedia(MOTION_MQ.reduced).matches;
     if (reduced) return;
 
+    const desktopFine = window.matchMedia(MOTION_MQ.desktopFine).matches;
+
     const ctx = gsap.context(() => {
-      gsap.fromTo(
-        wipe,
-        { clipPath: "inset(0 100% 0 0)" },
-        {
-          clipPath: "inset(0 0% 0 0)",
-          ease: "none",
-          scrollTrigger: {
-            trigger: section,
-            start: "top 75%",
-            end: "center 45%",
-            scrub: true,
+      if (desktopFine) {
+        gsap.fromTo(
+          wipe,
+          { clipPath: "inset(0 100% 0 0)" },
+          {
+            clipPath: "inset(0 0% 0 0)",
+            ease: "none",
+            scrollTrigger: {
+              trigger: section,
+              start: "top 75%",
+              end: "center 45%",
+              scrub: true,
+            },
           },
+        );
+        return;
+      }
+
+      // Transform wipe — no clip-path paint thrash on touch scroll.
+      gsap.set(wipe, {
+        clearProps: "clipPath",
+        scaleX: 0,
+        transformOrigin: "left center",
+      });
+      gsap.to(wipe, {
+        scaleX: 1,
+        duration: 0.9,
+        ease: "power3.inOut",
+        scrollTrigger: {
+          trigger: section,
+          start: "top 78%",
+          toggleActions: "play none none reverse",
         },
-      );
+      });
     }, section);
 
     requestAnimationFrame(() => ScrollTrigger.refresh());

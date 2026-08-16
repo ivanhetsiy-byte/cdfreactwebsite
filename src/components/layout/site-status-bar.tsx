@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { useBag } from "@/context/BagContext";
 import { useLanguage, type Language } from "@/context/LanguageContext";
 import { getLenis } from "@/lib/lenis";
-import { shouldSkipSmoothScroll } from "@/lib/motion-env";
+import { MOTION_MQ, shouldSkipSmoothScroll } from "@/lib/motion-env";
 import { requestRouteCover, ROUTE_COVER_MS } from "@/lib/route-cover";
 import { SITE_MENU_STATE_EVENT } from "@/lib/site-menu";
 
@@ -88,10 +88,19 @@ export function SiteStatusBar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [bagHovered, setBagHovered] = useState(false);
   const [pastFirstViewport, setPastFirstViewport] = useState(false);
+  const [desktopFine, setDesktopFine] = useState(false);
   const navLockRef = useRef(false);
 
   const showBag = isStorePath(pathname);
   const barVisible = pastFirstViewport && !menuOpen;
+
+  useEffect(() => {
+    const mq = window.matchMedia(MOTION_MQ.desktopFine);
+    const sync = () => setDesktopFine(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
 
   useEffect(() => {
     const tick = () => setTime(formatEstTime(new Date()));
@@ -184,15 +193,18 @@ export function SiteStatusBar() {
 
   return (
     <>
-      {/* Blended chrome — difference on this fixed layer, like the navbar */}
+      {/* Blended chrome on desktop fine-pointer only — live mix-blend on fixed
+          layers re-composites every scroll frame and feels stepped on touch. */}
       <div
         role="contentinfo"
         aria-label="Site status"
         aria-hidden={!barVisible}
         data-site-status-bar
-        className={`pointer-events-none fixed inset-x-0 bottom-0 z-[10050] mix-blend-difference font-swiss text-white transition-opacity duration-300 ${visibilityClass} ${
-          showBag ? "" : "max-md:hidden"
-        }`}
+        className={`pointer-events-none fixed inset-x-0 bottom-0 z-[10050] font-swiss transition-opacity duration-300 ${
+          desktopFine
+            ? "mix-blend-difference text-white"
+            : "text-black dark:text-white"
+        } ${visibilityClass} ${showBag ? "" : "max-md:hidden"}`}
       >
         <div className={`pointer-events-auto ${CHROME_PAD}`}>
           <div className="flex w-full items-center justify-between gap-3 text-[0.7rem] md:text-[0.95rem]">
