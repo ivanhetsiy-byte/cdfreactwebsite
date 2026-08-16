@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import gsap from "gsap";
@@ -13,6 +13,7 @@ import {
   competitionHref,
 } from "@/lib/competitions";
 import { getLenis } from "@/lib/lenis";
+import { MOTION_MQ } from "@/lib/motion-env";
 
 const LightRays = dynamic(
   () =>
@@ -45,6 +46,8 @@ export function AboutWhereWeveBeen() {
   const rowRefs = useRef<(HTMLLIElement | null)[]>([]);
   /** Scrubbed black-stage timeline — hash land forces complete if scrub hasn't caught up. */
   const scrubRef = useRef<gsap.core.Timeline | null>(null);
+  /** Defer WebGL / CSS rays until the scrub starts revealing them. */
+  const [mountRays, setMountRays] = useState(false);
 
   useEffect(() => {
     const section = sectionRef.current;
@@ -69,14 +72,15 @@ export function AboutWhereWeveBeen() {
     }
 
     const rows = rowRefs.current.filter(Boolean) as HTMLLIElement[];
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const reduced = window.matchMedia(MOTION_MQ.reduced).matches;
 
     if (reduced) {
-      gsap.set(curtain, { clipPath: "inset(0% 0 0 0)" });
+      gsap.set(curtain, { clearProps: "clipPath", opacity: 1, yPercent: 0 });
       gsap.set(rays, { opacity: 1 });
       gsap.set(heading, { color: "#ffffff" });
       gsap.set(headingWrap, { clearProps: "transform" });
       gsap.set(list, { opacity: 1 });
+      setMountRays(true);
       rows.forEach((row) => {
         const band = row.querySelector<HTMLElement>("[data-band]");
         const name = row.querySelector<HTMLElement>("[data-name]");
@@ -160,14 +164,25 @@ export function AboutWhereWeveBeen() {
      * White intro heading, then a scrubbed runway that plays the same curtain /
      * heading / rays / rows choreography as scroll progress — continuous rather
      * than a binary snap.
+     *
+     * Mobile avoids clip-path (expensive paint invalidation) and uses
+     * opacity / y instead.
      */
-    const buildScrub = () => {
+    const buildScrub = (mobile: boolean) => {
       gsap.set(chars, {
         opacity: 0,
         yPercent: 110,
         willChange: "opacity, transform",
       });
-      gsap.set(curtain, { clipPath: "inset(100% 0 0 0)" });
+      if (mobile) {
+        gsap.set(curtain, {
+          clearProps: "clipPath",
+          opacity: 0,
+          yPercent: 10,
+        });
+      } else {
+        gsap.set(curtain, { clipPath: "inset(100% 0 0 0)", opacity: 1, yPercent: 0 });
+      }
       gsap.set(rays, { opacity: 0 });
       gsap.set(heading, { color: "#000000" });
       gsap.set(rows, {
@@ -209,14 +224,31 @@ export function AboutWhereWeveBeen() {
           trigger: runway,
           start: "top top",
           end: "bottom bottom",
-          scrub: 0.6,
+          scrub: mobile ? true : 0.6,
           invalidateOnRefresh: true,
         },
       });
 
-      scrub.to(curtain, { clipPath: "inset(0% 0 0 0)", duration: 0.55 }, 0);
+      if (mobile) {
+        scrub.to(
+          curtain,
+          { opacity: 1, yPercent: 0, duration: 0.55 },
+          0,
+        );
+      } else {
+        scrub.to(curtain, { clipPath: "inset(0% 0 0 0)", duration: 0.55 }, 0);
+      }
       scrub.to(heading, { color: "#ffffff", duration: 0.35 }, 0.1);
-      scrub.to(rays, { opacity: 1, duration: 0.6, ease: "power1.out" }, 0.2);
+      scrub.to(
+        rays,
+        {
+          opacity: 1,
+          duration: 0.6,
+          ease: "power1.out",
+          onStart: () => setMountRays(true),
+        },
+        0.2,
+      );
       scrub.fromTo(
         headingWrap,
         { y: () => centreOffset() },
@@ -238,6 +270,7 @@ export function AboutWhereWeveBeen() {
       // force the finished black stage to match the hash landing position.
       const st = scrub.scrollTrigger;
       if (st && st.scroll() >= st.start) {
+        setMountRays(true);
         scrub.progress(1);
       }
 
@@ -248,7 +281,7 @@ export function AboutWhereWeveBeen() {
 
     // ── Desktop: sticky stage, hover-driven rows ───────────────────────────
     mm.add("(min-width: 768px)", () => {
-      const scrub = buildScrub();
+      const scrub = buildScrub(false);
 
       const handlers: Array<{
         row: HTMLLIElement;
@@ -278,7 +311,7 @@ export function AboutWhereWeveBeen() {
 
     // ── Mobile: tap a row to open its hover state; tap again to close ──────
     mm.add("(max-width: 767px)", () => {
-      const scrub = buildScrub();
+      const scrub = buildScrub(true);
 
       const handlers: Array<{ row: HTMLLIElement; click: (e: Event) => void }> =
         [];
@@ -337,6 +370,7 @@ export function AboutWhereWeveBeen() {
       }
       ScrollTrigger.update();
       // Land on the finished black stage even if scrub lag hasn't caught up.
+      setMountRays(true);
       scrubRef.current?.progress(1);
     };
 
@@ -385,23 +419,25 @@ export function AboutWhereWeveBeen() {
             style={{ clipPath: "inset(100% 0 0 0)" }}
           />
 
-          {/* Light rays */}
+          {/* Light rays — mounted once scrub starts revealing them */}
           <div
             ref={raysRef}
             aria-hidden
             className="pointer-events-none absolute inset-0 z-[1] opacity-0"
           >
-            <LightRays
-              raysOrigin="top-center"
-              raysColor="#ffffff"
-              raysSpeed={1.1}
-              lightSpread={0.3}
-              rayLength={2}
-              fadeDistance={2}
-              saturation={0.9}
-              noiseAmount={0.12}
-              followMouse={false}
-            />
+            {mountRays ? (
+              <LightRays
+                raysOrigin="top-center"
+                raysColor="#ffffff"
+                raysSpeed={1.1}
+                lightSpread={0.3}
+                rayLength={2}
+                fadeDistance={2}
+                saturation={0.9}
+                noiseAmount={0.12}
+                followMouse={false}
+              />
+            ) : null}
           </div>
 
           {/* Content — normal flow so the heading and rows can never overlap.

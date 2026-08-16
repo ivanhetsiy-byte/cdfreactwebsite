@@ -6,6 +6,8 @@ import "lenis/dist/lenis.css";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
+import { shouldSkipSmoothScroll } from "@/lib/motion-env";
+
 gsap.registerPlugin(ScrollTrigger);
 
 type LenisWindow = Window & { lenis: Lenis };
@@ -13,6 +15,11 @@ type LenisWindow = Window & { lenis: Lenis };
 export function LabScrollProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     window.history.scrollRestoration = "manual";
+
+    if (shouldSkipSmoothScroll()) {
+      requestAnimationFrame(() => ScrollTrigger.refresh());
+      return;
+    }
 
     const instance = new Lenis({
       duration: 1.35,
@@ -30,7 +37,6 @@ export function LabScrollProvider({ children }: { children: ReactNode }) {
       instance.raf(time * 1000);
     };
     gsap.ticker.add(ticker);
-    gsap.ticker.lagSmoothing(0);
 
     document.documentElement.classList.add("lenis");
 

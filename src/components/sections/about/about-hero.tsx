@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
+import { MOTION_MQ } from "@/lib/motion-env";
+
 gsap.registerPlugin(ScrollTrigger);
 
 /**
@@ -19,6 +21,9 @@ gsap.registerPlugin(ScrollTrigger);
  *
  * Vertical centering uses flex so GSAP can own the `x` transform without
  * fighting a CSS `translateY`.
+ *
+ * On mobile, pin is disabled and the scrub distance is shorter so touch scroll
+ * does not fight a full-viewport pin.
  */
 export function AboutHero() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -30,7 +35,7 @@ export function AboutHero() {
     const text = textRef.current;
     if (!section || !text) return;
 
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const reduced = window.matchMedia(MOTION_MQ.reduced).matches;
     if (reduced) {
       setReducedMotion(true);
       return;
@@ -60,44 +65,66 @@ export function AboutHero() {
       }
     };
 
-    const tween = gsap.to(text, {
-      x: () => -getDistance(),
-      ease: "none",
-      scrollTrigger: {
-        trigger: section,
-        start: "top top",
-        end: () => `+=${getDistance()}`,
-        pin: true,
-        // Matches the section below so the scroll feel carries across the pin
-        // handoff instead of switching from instant to smoothed tracking.
-        scrub: 0.6,
-        invalidateOnRefresh: true,
-        // Once the hero is out of view, re-entering from below snaps back to
-        // its initial state instead of replaying the horizontal scrub backward.
-        onEnterBack: (self) => {
-          scrollToPinStart(self.start);
-          rewindTitle(self);
+    const mm = gsap.matchMedia();
+
+    mm.add("(min-width: 768px)", () => {
+      const tween = gsap.to(text, {
+        x: () => -getDistance(),
+        ease: "none",
+        scrollTrigger: {
+          trigger: section,
+          start: "top top",
+          end: () => `+=${getDistance()}`,
+          pin: true,
+          scrub: 0.6,
+          invalidateOnRefresh: true,
+          onEnterBack: (self) => {
+            scrollToPinStart(self.start);
+            rewindTitle(self);
+          },
         },
-      },
+      });
+
+      const exitObserver = new IntersectionObserver(
+        ([entry]) => {
+          if (!entry || entry.isIntersecting) return;
+          if (entry.boundingClientRect.bottom > 0) return;
+          rewindTitle(tween.scrollTrigger);
+        },
+        { threshold: 0 },
+      );
+      exitObserver.observe(section);
+
+      return () => {
+        exitObserver.disconnect();
+        tween.scrollTrigger?.kill();
+        tween.kill();
+      };
     });
 
-    // Rewind only once the hero is fully above the fold. Doing it at pin
-    // release would snap the title back while the section still fills the
-    // screen, which reads as a stutter handing off to the section below.
-    const exitObserver = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry || entry.isIntersecting) return;
-        if (entry.boundingClientRect.bottom > 0) return;
-        rewindTitle(tween.scrollTrigger);
-      },
-      { threshold: 0 },
-    );
-    exitObserver.observe(section);
+    mm.add("(max-width: 767px)", () => {
+      const tween = gsap.to(text, {
+        x: () => -getDistance(),
+        ease: "none",
+        scrollTrigger: {
+          trigger: section,
+          start: "top top",
+          end: () => `+=${Math.min(getDistance(), window.innerHeight * 0.85)}`,
+          pin: false,
+          scrub: true,
+          invalidateOnRefresh: true,
+        },
+      });
+
+      return () => {
+        tween.scrollTrigger?.kill();
+        tween.kill();
+        gsap.set(text, { clearProps: "transform" });
+      };
+    });
 
     return () => {
-      exitObserver.disconnect();
-      tween.scrollTrigger?.kill();
-      tween.kill();
+      mm.revert();
     };
   }, []);
 

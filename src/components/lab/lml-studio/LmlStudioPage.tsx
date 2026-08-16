@@ -22,6 +22,7 @@ import { PortraitCanvas } from "./PortraitCanvas";
 import { ScrollFloat } from "./ScrollFloat";
 import { StudioFooterBar } from "./StudioFooterBar";
 import { StudioHeader } from "./StudioHeader";
+import { prefersReducedMotion } from "@/lib/motion-env";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -57,6 +58,7 @@ function StudioContent({
 
   useEffect(() => {
     if (!ready) return;
+    if (prefersReducedMotion()) return;
 
     const ctx = gsap.context(() => {
       const splits: SplitType[] = [];
@@ -98,7 +100,7 @@ function StudioContent({
       /**
        * Portrait scroll travel — matches lml.cc studio page source:
        * y ends when portrait center == tagline center; scrub ends when
-       * tagline center hits viewport center. Desktop scrub 0.6 / touch 0.9.
+       * tagline center hits viewport center. Desktop scrub 0.6 / touch 0.3.
        */
       if (portraitRef.current && taglineRef.current) {
         const portrait = portraitRef.current;
@@ -109,7 +111,8 @@ function StudioContent({
             navigator.userAgent,
           ) ||
             window.innerWidth <= 1024);
-        const scrub = touch ? 0.9 : 0.6;
+        // Heavier scrub lag on touch used to amplify scroll jank — keep it tight.
+        const scrub = touch ? 0.3 : 0.6;
 
         const getTravelY = () => {
           const portraitCenter =

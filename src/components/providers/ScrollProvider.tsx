@@ -7,6 +7,8 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, type ReactNode } from "react";
 import "lenis/dist/lenis.css";
 
+import { shouldSkipSmoothScroll } from "@/lib/motion-env";
+
 gsap.registerPlugin(ScrollTrigger);
 
 type LenisWindow = Window & { lenis: Lenis };
@@ -31,6 +33,9 @@ function resetScrollToTop() {
  * Window-level Lenis — no nested scroll shell. Document scroll moves the page
  * canvas (and its absolute navbar overlay) off-screen; only fixed chrome
  * (e.g. back-to-top) stays pinned to the monitor viewport.
+ *
+ * On coarse/narrow viewports and prefers-reduced-motion, Lenis is skipped so
+ * native scroll + ScrollTrigger stay cheap on mobile Safari/Chrome.
  */
 export function ScrollProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -44,6 +49,14 @@ export function ScrollProvider({ children }: { children: ReactNode }) {
     if (ownsOwnScroll) return;
 
     window.history.scrollRestoration = "manual";
+
+    if (shouldSkipSmoothScroll()) {
+      if (!window.location.hash) {
+        window.scrollTo(0, 0);
+      }
+      requestAnimationFrame(() => ScrollTrigger.refresh());
+      return;
+    }
 
     const instance = new Lenis({
       duration: 1.4,
@@ -70,7 +83,6 @@ export function ScrollProvider({ children }: { children: ReactNode }) {
       instance.raf(time * 1000);
     };
     gsap.ticker.add(ticker);
-    gsap.ticker.lagSmoothing(0);
 
     requestAnimationFrame(() => ScrollTrigger.refresh());
 

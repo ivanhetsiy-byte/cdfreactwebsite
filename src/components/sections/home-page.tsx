@@ -59,8 +59,20 @@ function GalleryFigure({ item }: { item: GalleryItem }) {
         fill
         unoptimized={item.src.endsWith(".svg")}
         sizes="(max-width: 768px) 100vw, 42vw"
-        className="object-cover will-change-[filter] motion-reduce:grayscale-0"
-        style={{ filter: "grayscale(1) brightness(0.88)" }}
+        className="object-cover"
+      />
+      {/* Grayscale veil — opacity tween instead of CSS filter (cheaper on mobile GPUs). */}
+      <span
+        data-gallery-veil
+        aria-hidden
+        className="pointer-events-none absolute inset-0 z-[1] bg-[#808080] mix-blend-saturation motion-reduce:opacity-0"
+        style={{ opacity: 1 }}
+      />
+      <span
+        data-gallery-dim
+        aria-hidden
+        className="pointer-events-none absolute inset-0 z-[1] bg-black/12 motion-reduce:opacity-0"
+        style={{ opacity: 1 }}
       />
       <figcaption className="pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/70 to-transparent px-4 py-5 opacity-100 md:px-5 md:py-6">
         <p className="font-swiss text-xs font-medium tracking-[0.2em] text-white uppercase md:text-sm">
@@ -207,7 +219,7 @@ function GalleryStrip() {
 
   useEffect(() => () => stopMomentum(), [stopMomentum]);
 
-  // Grayscale → color as each slide enters view (page scroll or horizontal drag).
+  // Color reveal as each slide enters view — veil opacity, not CSS filter.
   useEffect(() => {
     const scroller = scrollerRef.current;
     if (!scroller) return;
@@ -217,8 +229,8 @@ function GalleryStrip() {
 
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (reduced) {
-      scroller.querySelectorAll<HTMLElement>("[data-gallery-image]").forEach((img) => {
-        gsap.set(img, { filter: "grayscale(0) brightness(1)" });
+      scroller.querySelectorAll<HTMLElement>("[data-gallery-veil], [data-gallery-dim]").forEach((el) => {
+        gsap.set(el, { opacity: 0 });
       });
       return;
     }
@@ -226,18 +238,28 @@ function GalleryStrip() {
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
-          const img = entry.target.querySelector<HTMLElement>("[data-gallery-image]");
-          if (!img) continue;
+          const veil = entry.target.querySelector<HTMLElement>("[data-gallery-veil]");
+          const dim = entry.target.querySelector<HTMLElement>("[data-gallery-dim]");
+          if (!veil) continue;
 
           const amount = Math.min(1, Math.max(0, entry.intersectionRatio));
           // Ease the last stretch so color "glows" in once mostly visible.
           const t = amount * amount * (3 - 2 * amount); // smoothstep
-          gsap.to(img, {
-            filter: `grayscale(${1 - t}) brightness(${0.88 + 0.12 * t})`,
+          const opacity = 1 - t;
+          gsap.to(veil, {
+            opacity,
             duration: 0.55,
             ease: "power2.out",
             overwrite: "auto",
           });
+          if (dim) {
+            gsap.to(dim, {
+              opacity,
+              duration: 0.55,
+              ease: "power2.out",
+              overwrite: "auto",
+            });
+          }
         }
       },
       {

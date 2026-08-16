@@ -33,7 +33,6 @@ body:has(.lml-lab-light) {
 .lml-lab .char {
   display: inline-block;
   position: relative;
-  will-change: transform, opacity;
 }
 
 .lml-lab .word {

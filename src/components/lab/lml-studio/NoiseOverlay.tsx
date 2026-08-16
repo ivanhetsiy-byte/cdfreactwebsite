@@ -1,12 +1,21 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
-/** Full-viewport film-grain overlay (2D canvas), matching LML's noise layer. */
+import { isCoarseOrNarrow, prefersReducedMotion } from "@/lib/motion-env";
+
+/** Full-viewport film-grain overlay (2D canvas), matching LML's noise layer.
+ *  Disabled on mobile / reduced-motion — continuous putImageData is too costly. */
 export function NoiseOverlay() {
   const ref = useRef<HTMLCanvasElement>(null);
+  const [enabled, setEnabled] = useState(false);
 
   useEffect(() => {
+    setEnabled(!prefersReducedMotion() && !isCoarseOrNarrow());
+  }, []);
+
+  useEffect(() => {
+    if (!enabled) return;
     const canvas = ref.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d", { alpha: true });
@@ -39,7 +48,9 @@ export function NoiseOverlay() {
 
     raf = requestAnimationFrame(draw);
     return () => cancelAnimationFrame(raf);
-  }, []);
+  }, [enabled]);
+
+  if (!enabled) return null;
 
   return (
     <canvas

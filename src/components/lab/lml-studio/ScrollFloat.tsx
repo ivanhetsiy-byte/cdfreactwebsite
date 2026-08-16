@@ -10,6 +10,8 @@ import {
 } from "react";
 import SplitType from "split-type";
 
+import { prefersReducedMotion } from "@/lib/motion-env";
+
 gsap.registerPlugin(ScrollTrigger);
 
 type ScrollFloatProps = {
@@ -45,6 +47,11 @@ export function ScrollFloat({
     if (!ready) return;
     const el = ref.current;
     if (!el) return;
+
+    if (prefersReducedMotion()) {
+      gsap.set(el, { clearProps: "all" });
+      return;
+    }
 
     const split = new SplitType(el, {
       types: "words,chars",

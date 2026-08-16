@@ -11,12 +11,14 @@ import {
   forwardRef,
   useEffect,
   useRef,
+  useState,
   type Ref,
 } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 import { getLenis } from "@/lib/lenis";
+import { isCoarseOrNarrow } from "@/lib/motion-env";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -412,6 +414,7 @@ const ClassNameTitle = forwardRef<
   }
 >(function ClassNameTitle({ name, id, alignRight, className = "" }, ref) {
   const reduceMotion = useReducedMotion();
+  const [liteMotion, setLiteMotion] = useState(false);
   const motionConfig = TITLE_MOTION[name];
   const letters = name.split("");
   const localRef = useRef<HTMLHeadingElement | null>(null);
@@ -425,12 +428,17 @@ const ClassNameTitle = forwardRef<
   });
   inViewRef.current = inView;
 
+  useEffect(() => {
+    setLiteMotion(isCoarseOrNarrow());
+  }, []);
+
   const setRefs = (node: HTMLHeadingElement | null) => {
     localRef.current = node;
     assignRef(ref, node);
   };
 
   useEffect(() => {
+    if (reduceMotion || liteMotion) return;
     let lastY = getScrollY();
     const onScroll = () => {
       const y = getScrollY();
@@ -439,10 +447,10 @@ const ClassNameTitle = forwardRef<
       lastY = y;
     };
     return onLenisScroll(onScroll);
-  }, []);
+  }, [reduceMotion, liteMotion]);
 
   useEffect(() => {
-    if (reduceMotion) return;
+    if (reduceMotion || liteMotion) return;
     let cancelled = false;
 
     const run = async () => {
@@ -464,11 +472,11 @@ const ClassNameTitle = forwardRef<
       cancelled = true;
       controls.stop();
     };
-  }, [inView, controls, reduceMotion]);
+  }, [inView, controls, reduceMotion, liteMotion]);
 
   const headingClass = `${TITLE_CLASS} ${alignRight ? "md:text-right" : ""} ${className}`.trim();
 
-  if (reduceMotion) {
+  if (reduceMotion || liteMotion) {
     return (
       <h2 ref={setRefs} id={id} className={headingClass}>
         <span data-title-visual>{name}</span>

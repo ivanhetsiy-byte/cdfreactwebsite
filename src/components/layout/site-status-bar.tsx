@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { useBag } from "@/context/BagContext";
 import { useLanguage, type Language } from "@/context/LanguageContext";
 import { getLenis } from "@/lib/lenis";
+import { shouldSkipSmoothScroll } from "@/lib/motion-env";
 import { requestRouteCover, ROUTE_COVER_MS } from "@/lib/route-cover";
 import { SITE_MENU_STATE_EVENT } from "@/lib/site-menu";
 
@@ -137,18 +138,21 @@ export function SiteStatusBar() {
     if (!attachLenis()) {
       usedWindowScroll = true;
       window.addEventListener("scroll", update, { passive: true });
-      const wait = () => {
-        if (attachLenis()) {
-          if (usedWindowScroll) {
-            window.removeEventListener("scroll", update);
-            usedWindowScroll = false;
+      // Don't poll for Lenis on mobile / PRM — it is intentionally skipped.
+      if (!shouldSkipSmoothScroll()) {
+        const wait = () => {
+          if (attachLenis()) {
+            if (usedWindowScroll) {
+              window.removeEventListener("scroll", update);
+              usedWindowScroll = false;
+            }
+            return;
           }
-          return;
-        }
-        if (attempts++ > 120) return;
+          if (attempts++ > 120) return;
+          rafId = requestAnimationFrame(wait);
+        };
         rafId = requestAnimationFrame(wait);
-      };
-      rafId = requestAnimationFrame(wait);
+      }
     }
 
     window.addEventListener("resize", update, { passive: true });

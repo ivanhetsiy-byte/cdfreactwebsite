@@ -3,6 +3,7 @@
 import { Mesh, Program, Renderer, Triangle } from "ogl";
 import { useEffect, useRef, useState } from "react";
 
+import { isCoarseOrNarrow, prefersReducedMotion } from "@/lib/motion-env";
 import { cn } from "@/lib/utils";
 
 export type RaysOrigin =
@@ -217,9 +218,16 @@ export function LightRays({
   const mouseRef = useRef({ x: 0.5, y: 0.5 });
   const smoothMouseRef = useRef({ x: 0.5, y: 0.5 });
   const [isVisible, setIsVisible] = useState(false);
+  const [useCssFallback, setUseCssFallback] = useState(false);
+
+  // Mobile / reduced-motion: CSS rays only — skip WebGL entirely.
+  useEffect(() => {
+    setUseCssFallback(prefersReducedMotion() || isCoarseOrNarrow());
+  }, []);
 
   // Only run the GL loop while the canvas is on screen.
   useEffect(() => {
+    if (useCssFallback) return;
     const el = containerRef.current;
     if (!el) return;
 
@@ -230,16 +238,16 @@ export function LightRays({
     observer.observe(el);
 
     return () => observer.disconnect();
-  }, []);
+  }, [useCssFallback]);
 
   useEffect(() => {
     const container = containerRef.current;
-    if (!isVisible || !container) return;
+    if (useCssFallback || !isVisible || !container) return;
 
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const maxDpr = isCoarseOrNarrow() ? 1 : Math.min(window.devicePixelRatio, 2);
 
     const renderer = new Renderer({
-      dpr: Math.min(window.devicePixelRatio, 2),
+      dpr: maxDpr,
       alpha: true,
     });
     rendererRef.current = renderer;
@@ -280,7 +288,7 @@ export function LightRays({
     meshRef.current = mesh;
 
     const updatePlacement = () => {
-      renderer.dpr = Math.min(window.devicePixelRatio, 2);
+      renderer.dpr = maxDpr;
 
       const { clientWidth, clientHeight } = container;
       renderer.setSize(clientWidth, clientHeight);
@@ -316,12 +324,7 @@ export function LightRays({
     const resizeObserver = new ResizeObserver(updatePlacement);
     resizeObserver.observe(container);
     updatePlacement();
-
-    if (reduced) {
-      renderer.render({ scene: mesh });
-    } else {
-      rafRef.current = requestAnimationFrame(loop);
-    }
+    rafRef.current = requestAnimationFrame(loop);
 
     return () => {
       if (rafRef.current !== null) {
@@ -339,6 +342,7 @@ export function LightRays({
       meshRef.current = null;
     };
   }, [
+    useCssFallback,
     isVisible,
     raysOrigin,
     raysColor,
@@ -355,7 +359,7 @@ export function LightRays({
   ]);
 
   useEffect(() => {
-    if (!followMouse) return;
+    if (useCssFallback || !followMouse) return;
 
     const handleMouseMove = (e: MouseEvent) => {
       const container = containerRef.current;
@@ -369,7 +373,22 @@ export function LightRays({
 
     window.addEventListener("mousemove", handleMouseMove);
     return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, [followMouse]);
+  }, [followMouse, useCssFallback]);
+
+  if (useCssFallback) {
+    return (
+      <div
+        className={cn(
+          "pointer-events-none relative h-full w-full overflow-hidden",
+          className,
+        )}
+        aria-hidden
+        style={{
+          background: `radial-gradient(ellipse 55% 80% at 50% -10%, ${raysColor}55 0%, transparent 62%)`,
+        }}
+      />
+    );
+  }
 
   return (
     <div

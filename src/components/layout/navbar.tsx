@@ -10,6 +10,7 @@ import { NavProgressiveBlur } from "@/components/layout/NavProgressiveBlur";
 import { useLanguage, type Language } from "@/context/LanguageContext";
 import { useCompactNavMeasure } from "@/hooks/useCompactNav";
 import { getLenis } from "@/lib/lenis";
+import { shouldSkipSmoothScroll } from "@/lib/motion-env";
 import { requestRouteCover, ROUTE_COVER_MS } from "@/lib/route-cover";
 import {
   OPEN_SITE_MENU_EVENT,
@@ -689,9 +690,16 @@ export function Navbar() {
   }, [menuOpen]);
 
   // Gradual frost — CSS var on blur root (avoids navbar re-renders on scroll).
-  // Prefer Lenis scroll only — dual native+Lenis listeners double work per frame.
+  // Prefer Lenis when present; otherwise native scroll. Coalesce to one write/frame.
   useEffect(() => {
-    const update = () => {
+    let writeRaf = 0;
+    let attachRaf = 0;
+    let unsub: (() => void) | undefined;
+    let usedNative = false;
+    let tries = 0;
+
+    const write = () => {
+      writeRaf = 0;
       const y = readScrollY();
       const p = Math.min(1, Math.max(0, y / BLUR_SCROLL_RANGE));
       blurRootRef.current?.style.setProperty(
@@ -700,33 +708,39 @@ export function Navbar() {
       );
     };
 
-    update();
+    const scheduleWrite = () => {
+      if (writeRaf) return;
+      writeRaf = requestAnimationFrame(write);
+    };
 
-    let unsub: (() => void) | undefined;
-    let raf = 0;
-    let tries = 0;
-    let usedNativeFallback = false;
+    write();
+
+    const attachNative = () => {
+      usedNative = true;
+      window.addEventListener("scroll", scheduleWrite, { passive: true });
+    };
 
     const attach = () => {
       const lenis = getLenis();
       if (lenis) {
-        unsub = lenis.on("scroll", update);
+        unsub = lenis.on("scroll", scheduleWrite);
         return;
       }
-      if (tries++ < 60) {
-        raf = requestAnimationFrame(attach);
+      // Mobile / PRM skip Lenis entirely — don't wait ~1s before attaching.
+      if (shouldSkipSmoothScroll() || tries++ >= 12) {
+        attachNative();
         return;
       }
-      usedNativeFallback = true;
-      window.addEventListener("scroll", update, { passive: true });
+      attachRaf = requestAnimationFrame(attach);
     };
     attach();
 
     return () => {
-      cancelAnimationFrame(raf);
+      cancelAnimationFrame(writeRaf);
+      cancelAnimationFrame(attachRaf);
       unsub?.();
-      if (usedNativeFallback) {
-        window.removeEventListener("scroll", update);
+      if (usedNative) {
+        window.removeEventListener("scroll", scheduleWrite);
       }
     };
   }, [pathname]);
