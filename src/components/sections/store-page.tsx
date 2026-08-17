@@ -1,7 +1,6 @@
 "use client";
 
 import gsap from "gsap";
-import { usePathname, useRouter } from "next/navigation";
 import {
   useCallback,
   useEffect,
@@ -11,7 +10,7 @@ import {
   useState,
 } from "react";
 
-import { requestRouteCover, ROUTE_COVER_MS } from "@/lib/route-cover";
+import { useDelayedNavigation } from "@/hooks/useDelayedNavigation";
 import type { StoreProduct } from "@/lib/store-products";
 
 /**
@@ -88,9 +87,7 @@ export function StoreWireframes({
 }: {
   products?: readonly StoreProduct[];
 }) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const navLockRef = useRef(false);
+  const go = useDelayedNavigation();
   const cols = useColumnCount();
   const [listRef, listWidth] = useElementWidth<HTMLDivElement>();
   const [canHover, setCanHover] = useState(false);
@@ -103,16 +100,9 @@ export function StoreWireframes({
 
   const goProduct = useCallback(
     (id: string) => {
-      const target = `/store/${id}`;
-      if (target === pathname || navLockRef.current) return;
-      navLockRef.current = true;
-      requestRouteCover();
-      setTimeout(() => {
-        router.push(target);
-        navLockRef.current = false;
-      }, ROUTE_COVER_MS);
+      go(`/store/${id}`);
     },
-    [pathname, router],
+    [go],
   );
 
   const layout = useMemo(() => {

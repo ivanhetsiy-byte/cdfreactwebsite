@@ -24,7 +24,12 @@ export async function generateMetadata({
   const { id } = await params;
   const product = loadStoreProduct(id);
   if (!product) return { title: "Store" };
-  return { title: product.title };
+  return {
+    title: product.title,
+    description:
+      product.description.trim() ||
+      `${product.title} — official Childrens Dance Factory store.`,
+  };
 }
 
 export default async function Page({ params }: PageProps) {

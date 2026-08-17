@@ -34,9 +34,8 @@ function resetScrollToTop() {
  * canvas (and its absolute navbar overlay) off-screen; only fixed chrome
  * (e.g. back-to-top) stays pinned to the monitor viewport.
  *
- * On anything other than desktop fine-pointer (and prefers-reduced-motion),
- * Lenis is skipped so native scroll stays in sync with touch — lag scrub
- * without Lenis reads as stepped frames on mobile Safari/Chrome.
+ * On coarse/narrow viewports and prefers-reduced-motion, Lenis is skipped so
+ * native scroll + ScrollTrigger stay cheap on mobile Safari/Chrome.
  */
 export function ScrollProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();

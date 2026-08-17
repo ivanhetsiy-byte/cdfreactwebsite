@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 
 /**
  * Route template — page body only.
- * Cover/reveal lives in PageTransition (LabShell) so the overlay
+ * Cover/reveal lives in PageTransition (SiteShell) so the overlay
  * survives template remounts across navigations.
  */
 export default function RouteTemplate({ children }: { children: ReactNode }) {

@@ -6,7 +6,6 @@ import {
   useEffect,
   useRef,
   type ReactNode,
-  type RefObject,
 } from "react";
 import SplitType from "split-type";
 
@@ -124,9 +123,10 @@ export function ScrollFloat({
   }, [ready, scrollStart, scrollEnd, stagger]);
 
   return (
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     <Tag
-      ref={ref as RefObject<any>}
+      ref={(node) => {
+        ref.current = node;
+      }}
       id={id}
       className={`scroll-float-text ${className}`}
     >

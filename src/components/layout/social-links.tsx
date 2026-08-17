@@ -2,6 +2,8 @@
 
 import { useId } from "react";
 
+import { SOCIAL_URLS } from "@/lib/site-links";
+
 const iconClassName =
   "w-[28px] h-[28px] md:w-[32px] md:h-[32px] block shrink-0";
 
@@ -97,36 +99,28 @@ function YouTubeIcon({ sizeClass }: { sizeClass: string }) {
 const SOCIAL_META = [
   {
     label: "Instagram",
-    href:
-      process.env.NEXT_PUBLIC_INSTAGRAM_URL ??
-      "https://www.instagram.com/cdf_dance_school/",
+    href: SOCIAL_URLS.instagram,
     kind: "instagram" as const,
     className:
       "group/instagram text-[#666666] dark:text-[#888888] transition-colors duration-200 cursor-pointer",
   },
   {
     label: "TikTok",
-    href:
-      process.env.NEXT_PUBLIC_TIKTOK_URL ??
-      "https://www.tiktok.com/@childancefactory",
+    href: SOCIAL_URLS.tiktok,
     kind: "tiktok" as const,
     className:
       "group/tiktok text-[#666666] dark:text-[#888888] transition-transform duration-200 cursor-pointer hover:[filter:drop-shadow(-1.5px_-1.5px_0_#FE0979)_drop-shadow(1.5px_1.5px_0_#00F2FE)]",
   },
   {
     label: "Facebook",
-    href:
-      process.env.NEXT_PUBLIC_FACEBOOK_URL ??
-      "https://www.facebook.com/CDF.danceschool",
+    href: SOCIAL_URLS.facebook,
     kind: "facebook" as const,
     className:
       "text-[#666666] dark:text-[#888888] hover:text-[#1877F2] dark:hover:text-[#1877F2] transition-colors duration-200 cursor-pointer",
   },
   {
     label: "YouTube",
-    href:
-      process.env.NEXT_PUBLIC_YOUTUBE_URL ??
-      "https://www.youtube.com/@childancefactory",
+    href: SOCIAL_URLS.youtube,
     kind: "youtube" as const,
     className:
       "text-[#666666] dark:text-[#888888] hover:text-[#FF0000] dark:hover:text-[#FF0000] transition-colors duration-200 cursor-pointer",

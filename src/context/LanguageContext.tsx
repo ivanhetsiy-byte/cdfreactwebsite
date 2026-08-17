@@ -12,23 +12,6 @@ import {
 
 export type Language = "en" | "ru" | "uk" | "ja";
 
-/** Cascading Mission Statement title — locked English Helvetica, never translated. */
-export const MISSION_LOCKED_TITLE = {
-  where: "Where",
-  talent: "Talent",
-  grows: "Grows",
-  full: "Where Talent Grows",
-} as const;
-
-/** Studio motto — locked English, never translated. */
-export const HOME_LOCKED_MOTTO = {
-  line1: "ALWAYS TO THE TOP,",
-  line2: "ALWAYS TOGETHER.",
-} as const;
-
-/** Current season mark — locked English. */
-export const HOME_LOCKED_SEASON = "SEASON 12";
-
 const STORAGE_KEY = "cdf-language-pref";
 
 type Dictionary = {
@@ -54,26 +37,6 @@ type Dictionary = {
   notFound: {
     backToHome: string;
   };
-  /** Descriptive Mission Statement blocks — title lines stay in MISSION_LOCKED_TITLE; danceForAllAges is locked English. */
-  mission: {
-    jazzBalletAcro: string;
-    professionalPedagogy: string;
-    /** Locked English — never translate across locales. */
-    danceForAllAges: string;
-  };
-  home: {
-    programs: {
-      headline: string;
-      label: string;
-      body: string;
-      cta: string;
-      competitive: { name: string; line: string };
-      recreational: { name: string; line: string };
-    };
-    gallery: {
-      label: string;
-    };
-  };
 };
 
 const dictionaries: Record<Language, Dictionary> = {
@@ -98,30 +61,6 @@ const dictionaries: Record<Language, Dictionary> = {
     notFound: {
       backToHome: "Back to Home",
     },
-    mission: {
-      jazzBalletAcro: "JAZZ, BALLET, ACRO...",
-      professionalPedagogy: "Professional Pedagogy",
-      danceForAllAges: "Dance for all",
-    },
-    home: {
-      programs: {
-        headline: "Ages 3 - 16",
-        label: "Our Programs",
-        body: "Competitive and recreational groups built for every stage of the journey. From first classes in the studio to the competition floor, dancers train with clarity, care, and a shared drive to grow — technique, confidence, and community in equal measure.",
-        cta: "View classes →",
-        competitive: {
-          name: "Competitive",
-          line: "Technique-driven training for dancers who want the stage. Structured classes build discipline, confidence, and teamwork while preparing students for competition and performance.",
-        },
-        recreational: {
-          name: "Recreational",
-          line: "Welcoming classes that build foundational technique, creativity, and confidence. Designed for dancers who love to move and grow—without the commitment of competition.",
-        },
-      },
-      gallery: {
-        label: "Gallery",
-      },
-    },
   },
   ru: {
     nav: {
@@ -143,30 +82,6 @@ const dictionaries: Record<Language, Dictionary> = {
     },
     notFound: {
       backToHome: "На главную",
-    },
-    mission: {
-      jazzBalletAcro: "ДЖАЗ, БАЛЕТ, АКРО...",
-      professionalPedagogy: "Профессиональная педагогика",
-      danceForAllAges: "Dance for all",
-    },
-    home: {
-      programs: {
-        headline: "Возраст 3 - 16",
-        label: "Наши программы",
-        body: "Соревновательные и любительские группы для каждого этапа пути. От первых занятий в студии до соревновательного пола танцоры тренируются с ясностью, заботой и общим стремлением расти — техника, уверенность и сообщество в равной мере.",
-        cta: "Смотреть классы →",
-        competitive: {
-          name: "Соревновательные",
-          line: "Тренировки с акцентом на технику для тех, кто хочет сцену. Структурированные занятия развивают дисциплину, уверенность и командный дух, готовя учеников к соревнованиям и выступлениям.",
-        },
-        recreational: {
-          name: "Любительские",
-          line: "Доброжелательные занятия, которые дают базовую технику, креативность и уверенность. Для тех, кто любит двигаться и расти — без обязательств соревновательной программы.",
-        },
-      },
-      gallery: {
-        label: "Галерея",
-      },
     },
   },
   uk: {
@@ -190,30 +105,6 @@ const dictionaries: Record<Language, Dictionary> = {
     notFound: {
       backToHome: "На головну",
     },
-    mission: {
-      jazzBalletAcro: "ДЖАЗ, БАЛЕТ, АКРО...",
-      professionalPedagogy: "Професійна педагогіка",
-      danceForAllAges: "Dance for all",
-    },
-    home: {
-      programs: {
-        headline: "Вік 3 - 16",
-        label: "Наші програми",
-        body: "Змагальні та аматорські групи для кожного етапу шляху. Від перших занять у студії до змагальної зали танцюристи тренуються з ясністю, турботою та спільним прагненням рости — техніка, впевненість і спільнота порівну.",
-        cta: "Дивитися класи →",
-        competitive: {
-          name: "Змагальні",
-          line: "Тренування з акцентом на техніку для тих, хто хоче сцену. Структуровані заняття розвивають дисципліну, впевненість і командний дух, готуючи учнів до змагань і виступів.",
-        },
-        recreational: {
-          name: "Аматорські",
-          line: "Дружні заняття, що дають базову техніку, креативність і впевненість. Для тих, хто любить рухатися і зростати — без зобов’язань змагальної програми.",
-        },
-      },
-      gallery: {
-        label: "Галерея",
-      },
-    },
   },
   ja: {
     nav: {
@@ -235,30 +126,6 @@ const dictionaries: Record<Language, Dictionary> = {
     },
     notFound: {
       backToHome: "ホームへ戻る",
-    },
-    mission: {
-      jazzBalletAcro: "ジャズ、バレエ、アクロ...",
-      professionalPedagogy: "プロフェッショナル指導",
-      danceForAllAges: "Dance for all",
-    },
-    home: {
-      programs: {
-        headline: "対象年齢 3 - 16歳",
-        label: "プログラム",
-        body: "競技グループとレクリエーショングループ — それぞれの段階に合わせて。スタジオでの最初のクラスから競技の舞台まで、ダンサーは明確さと丁寧さ、そして共に成長する意志をもって稽古します。技術・自信・コミュニティを、同じ重みで。",
-        cta: "クラスを見る →",
-        competitive: {
-          name: "競技",
-          line: "ステージを目指すダンサーのための技術重視のトレーニング。体系的なクラスで規律・自信・チームワークを養い、競技と公演に備えます。",
-        },
-        recreational: {
-          name: "レクリエーション",
-          line: "基礎技術・創造性・自信を育む、親しみやすいクラス。競技へのコミットなしで、動くことと成長を楽しむダンサーのために。",
-        },
-      },
-      gallery: {
-        label: "ギャラリー",
-      },
     },
   },
 };

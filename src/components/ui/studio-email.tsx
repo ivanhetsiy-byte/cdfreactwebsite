@@ -1,5 +1,7 @@
+import { STUDIO_EMAIL } from "@/lib/site-links";
+
 /** Canonical studio inbox — keep in sync with contact/footer mailto targets. */
-export const STUDIO_EMAIL = "childancefactory@gmail.com";
+export { STUDIO_EMAIL };
 
 const AT = STUDIO_EMAIL.indexOf("@");
 const LOCAL = STUDIO_EMAIL.slice(0, AT);

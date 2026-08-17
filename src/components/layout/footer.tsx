@@ -1,156 +1,139 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useRef } from "react";
+import type { ReactNode } from "react";
 
-import { SocialLinks } from "@/components/layout/social-links";
-import { StudioEmailText, STUDIO_EMAIL } from "@/components/ui/studio-email";
-import { requestRouteCover, ROUTE_COVER_MS } from "@/lib/route-cover";
+import { FadeInBlock, FadeInText } from "@/components/ui/fade-in-text";
+import { HoverText } from "@/components/ui/hover-text";
+import {
+  SOCIAL_URLS,
+  STUDIO_MAPS_URL,
+  STUDIO_PHONE_DISPLAY,
+  STUDIO_PHONE_TEL,
+  STUDIO_STREET,
+} from "@/lib/site-links";
+
+const COL_LABEL =
+  "mb-5 font-swiss text-[11px] font-normal uppercase tracking-[0.2em] text-foreground/40";
+const COL_LINK =
+  "group inline-block w-fit font-swiss text-[1.35rem] font-medium leading-tight tracking-tight text-foreground home-md:text-[1.65rem]";
+const META_LINK =
+  "group inline-block font-swiss text-[10px] font-normal leading-none text-foreground/55 home-md:text-[12px] home-lg:text-[16px]";
+
+function FooterColumn({
+  label,
+  children,
+}: {
+  label: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="flex min-w-0 flex-col gap-3">
+      <FadeInText as="p" className={COL_LABEL}>
+        {label}
+      </FadeInText>
+      {children}
+    </div>
+  );
+}
+
+function FooterLink({
+  href,
+  children,
+  className = COL_LINK,
+}: {
+  href: string;
+  children: ReactNode;
+  className?: string;
+}) {
+  const content = <HoverText>{children}</HoverText>;
+  const isInternal = href.startsWith("/");
+  const isHttp = href.startsWith("http");
+
+  if (isInternal) {
+    return (
+      <FadeInBlock>
+        <Link href={href} className={className}>
+          {content}
+        </Link>
+      </FadeInBlock>
+    );
+  }
+
+  return (
+    <FadeInBlock>
+      <a
+        href={href}
+        className={className}
+        {...(isHttp ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+      >
+        {content}
+      </a>
+    </FadeInBlock>
+  );
+}
 
 /**
- * Site-wide closing footer — large type CTA + sparse studio details.
- * Colors follow the site theme (light / dark), except Store/Bag which stay
- * black to match their forced-dark pages.
+ * Site-wide footer — Explore / Connect / Contact columns above the
+ * oversized CDF wordmark. Hover roll matches Flexion; palette stays Swiss B&W.
  */
 export function Footer() {
-  const pathname = usePathname();
-  const router = useRouter();
-  const navLockRef = useRef(false);
   const year = new Date().getFullYear();
-  const forceDark =
-    pathname === "/store" ||
-    pathname.startsWith("/store/") ||
-    pathname === "/bag";
-
-  const go = (targetPath: string) => {
-    if (targetPath === pathname || navLockRef.current) return;
-    navLockRef.current = true;
-    requestRouteCover();
-    setTimeout(() => {
-      router.push(targetPath);
-      navLockRef.current = false;
-    }, ROUTE_COVER_MS);
-  };
-
-  const cta =
-    pathname === "/contact"
-      ? { href: "/about", left: "Learn more", right: "→ About" }
-      : pathname === "/about"
-        ? { href: "/classes", left: "Check Out", right: "→ Classes" }
-        : pathname === "/classes"
-          ? { href: "/contact", left: "Send Us a Message", right: "→ Contact" }
-          : { href: "/contact", left: "Train", right: "→ Contact" };
-
-  const isClasses = pathname === "/classes";
 
   return (
     <footer
+      id="site-footer"
       aria-label="Footer"
-      className={
-        forceDark
-          ? "relative z-10 w-full bg-black text-white"
-          : "relative z-10 w-full bg-white text-black dark:bg-black dark:text-white"
-      }
+      className="flex min-h-screen w-full flex-col justify-end bg-background pt-16 text-foreground home-lg:min-h-screen home-lg:pt-24"
     >
-      {isClasses ? (
-        <p
-          className={
-            forceDark
-              ? "relative z-20 w-full whitespace-nowrap px-5 text-right font-swiss text-[clamp(1.85rem,calc((100vw-2.5rem)/7.2),16rem)] leading-none font-bold tracking-tighter text-white md:px-8 md:text-[clamp(2.75rem,calc((100vw-4rem)/8),16rem)] lg:px-10 -mb-[0.23em]"
-              : "relative z-20 w-full whitespace-nowrap px-5 text-right font-swiss text-[clamp(1.85rem,calc((100vw-2.5rem)/7.2),16rem)] leading-none font-bold tracking-tighter text-black dark:text-white md:px-8 md:text-[clamp(2.75rem,calc((100vw-4rem)/8),16rem)] lg:px-10 -mb-[0.23em]"
-          }
-        >
-          Ready to Train?
-        </p>
-      ) : null}
+      <div className="mx-auto grid w-full max-w-[1200px] grid-cols-1 gap-12 px-6 pb-16 home-md:grid-cols-3 home-md:gap-8 home-md:px-12 home-md:pb-24">
+        <FooterColumn label="Explore">
+          <FooterLink href="/about">About</FooterLink>
+          <FooterLink href="/classes">Classes</FooterLink>
+          <FooterLink href="/staff">Staff</FooterLink>
+        </FooterColumn>
 
-      <Link
-        href={cta.href}
-        onClick={(e) => {
-          e.preventDefault();
-          go(cta.href);
-        }}
-        className={
-          forceDark
-            ? "group relative z-10 flex h-[110px] w-full cursor-pointer items-center justify-between gap-3 border-t border-b border-white/20 bg-black px-5 text-white transition-colors duration-300 hover:border-brand-red hover:bg-brand-red md:h-[150px] md:px-8 lg:px-10"
-            : "group relative z-10 flex h-[110px] w-full cursor-pointer items-center justify-between gap-3 border-t border-b border-black/20 bg-white px-5 text-black transition-colors duration-300 hover:border-brand-red hover:bg-brand-red hover:text-white dark:border-white/20 dark:bg-black dark:text-white md:h-[150px] md:px-8 lg:px-10"
-        }
-      >
-        <span className="min-w-0 font-swiss text-[2.25rem] leading-none font-medium tracking-tight md:text-[4rem]">
-          {isClasses ? (
-            <>
-              <span className="md:hidden">Message Us</span>
-              <span className="hidden md:inline">{cta.left}</span>
-            </>
-          ) : (
-            cta.left
-          )}
-        </span>
-        <span className="shrink-0 font-swiss text-[2.25rem] leading-none font-medium tracking-tight transition-transform duration-300 group-hover:translate-x-[-10px] md:text-[4rem]">
-          {isClasses ? (
-            <>
-              <span className="md:hidden">Contact→</span>
-              <span className="hidden md:inline">{cta.right}</span>
-            </>
-          ) : (
-            cta.right
-          )}
-        </span>
-      </Link>
+        <FooterColumn label="Connect">
+          <FooterLink href={SOCIAL_URLS.instagram}>Instagram</FooterLink>
+          <FooterLink href={SOCIAL_URLS.tiktok}>TikTok</FooterLink>
+          <FooterLink href={SOCIAL_URLS.facebook}>Facebook</FooterLink>
+          <FooterLink href={SOCIAL_URLS.youtube}>YouTube</FooterLink>
+        </FooterColumn>
 
-      <div className="flex flex-col gap-10 px-5 pt-12 pb-24 md:flex-row md:items-end md:justify-between md:gap-16 md:px-8 md:pt-16 md:pb-28 lg:px-10">
-        <div className="max-w-xl">
-          <p
-            className={
-              forceDark
-                ? "type-eyebrow mb-3 text-[0.7rem] text-white/40"
-                : "type-eyebrow mb-3 text-[0.7rem] text-black/40 dark:text-white/40"
-            }
-          >
-            Childrens Dance Factory
-          </p>
-          <a
-            href={`mailto:${STUDIO_EMAIL}`}
-            className="block whitespace-nowrap font-swiss text-[1.75rem] leading-[1.15] tracking-tight transition-opacity hover:opacity-70 md:text-[2.5rem]"
-          >
-            <StudioEmailText />
-          </a>
-          <p
-            className={
-              forceDark
-                ? "mt-5 font-swiss text-[0.95rem] leading-relaxed text-white/45 md:text-[1.1rem]"
-                : "mt-5 font-swiss text-[0.95rem] leading-relaxed text-black/45 dark:text-white/45 md:text-[1.1rem]"
-            }
-          >
-            10100 Jamison Ave
+        <FooterColumn label="Contact">
+          <FooterLink href="/contact">Reach out</FooterLink>
+          <FooterLink href={STUDIO_MAPS_URL} className={`${COL_LINK} max-w-[16ch]`}>
+            {STUDIO_STREET}
             <br />
             Philadelphia, PA 19116
-          </p>
-          <a
-            href="tel:+19292488120"
-            className={
-              forceDark
-                ? "mt-4 inline-block font-swiss text-[0.95rem] text-white/55 transition-opacity hover:opacity-80 md:text-[1.1rem]"
-                : "mt-4 inline-block font-swiss text-[0.95rem] text-black/55 transition-opacity hover:opacity-80 dark:text-white/55 md:text-[1.1rem]"
-            }
-          >
-            929-248-8120
-          </a>
-        </div>
+          </FooterLink>
+          <FooterLink href={STUDIO_PHONE_TEL}>{STUDIO_PHONE_DISPLAY}</FooterLink>
+        </FooterColumn>
+      </div>
 
-        <div className="flex flex-col gap-8 md:items-end">
-          <SocialLinks iconGap="gap-4 md:gap-5" />
-          <p
-            className={
-              forceDark
-                ? "font-swiss text-[0.75rem] tracking-tight text-white/30 md:text-right"
-                : "font-swiss text-[0.75rem] tracking-tight text-black/30 dark:text-white/30 md:text-right"
-            }
-          >
-            © {year} CDF, LLC · Always to the top
-          </p>
+      <div className="w-full overflow-x-clip px-2 home-md:px-3">
+        <FadeInText
+          as="p"
+          overflowHidden={false}
+          stagger={0.08}
+          className="w-full font-swiss text-[48.33vw] font-bold leading-[0.8] tracking-tighter whitespace-nowrap"
+        >
+          CDF
+        </FadeInText>
+      </div>
+
+      <div className="flex w-full items-baseline justify-between gap-4 px-6 pt-3 pb-6 home-md:px-12 home-md:pb-8">
+        <div className="flex items-baseline gap-5">
+          <FooterLink href="/privacy" className={META_LINK}>
+            Privacy Policy
+          </FooterLink>
+          <FooterLink href="/imprint" className={META_LINK}>
+            Imprint
+          </FooterLink>
         </div>
+        <FadeInText as="p" className={`${META_LINK} text-right`}>
+          {`© ${year} Childrens Dance Factory`}
+        </FadeInText>
       </div>
     </footer>
   );

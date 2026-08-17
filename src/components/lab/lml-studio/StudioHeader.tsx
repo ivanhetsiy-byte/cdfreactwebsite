@@ -1,11 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useRef } from "react";
 
 import { Logo } from "@/components/layout/Logo";
-import { requestRouteCover, ROUTE_COVER_MS } from "@/lib/route-cover";
+import { useDelayedNavigation } from "@/hooks/useDelayedNavigation";
 import { requestOpenSiteMenu } from "@/lib/site-menu";
 
 /**
@@ -26,25 +24,8 @@ type StudioHeaderProps = {
 };
 
 export function StudioHeader({ variant = "lab" }: StudioHeaderProps) {
-  const pathname = usePathname();
-  const router = useRouter();
-  const navLockRef = useRef(false);
+  const go = useDelayedNavigation();
   const isStaff = variant === "staff";
-
-  const handleDelayedNavigation = (targetPath: string) => {
-    if (typeof window === "undefined") return;
-    if (targetPath === pathname) return;
-    if (navLockRef.current) return;
-
-    navLockRef.current = true;
-
-    requestRouteCover();
-
-    setTimeout(() => {
-      router.push(targetPath);
-      navLockRef.current = false;
-    }, ROUTE_COVER_MS);
-  };
 
   return (
     <header className="fixed top-0 right-0 left-0 z-[1001] mix-blend-difference">
@@ -55,7 +36,7 @@ export function StudioHeader({ variant = "lab" }: StudioHeaderProps) {
               href="/"
               onClick={(e) => {
                 e.preventDefault();
-                handleDelayedNavigation("/");
+                go("/");
               }}
               className={`swiss-no-select relative z-10 flex w-auto min-h-0 shrink-0 items-start overflow-hidden text-white ${LOGO_HEIGHT_CLASS}`}
               aria-label="CDF home"
@@ -84,7 +65,7 @@ export function StudioHeader({ variant = "lab" }: StudioHeaderProps) {
                   href="/contact"
                   onClick={(e) => {
                     e.preventDefault();
-                    handleDelayedNavigation("/contact");
+                    go("/contact");
                   }}
                   className={`${linkBase} after:w-0 hover:after:w-full`}
                 >

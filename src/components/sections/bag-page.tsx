@@ -1,18 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useRef, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 
 import { useBag } from "@/context/BagContext";
+import { useDelayedNavigation } from "@/hooks/useDelayedNavigation";
 import { formatMoney, MAX_BAG_QUANTITY, parsePrice } from "@/lib/bag";
-import { requestRouteCover, ROUTE_COVER_MS } from "@/lib/route-cover";
 
 export function BagPage() {
-  const router = useRouter();
-  const pathname = usePathname();
+  const go = useDelayedNavigation();
   const { items, count, subtotal, removeItem, setQuantity, clear } = useBag();
-  const navLockRef = useRef(false);
 
   const [lastName, setLastName] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -20,16 +17,6 @@ export function BagPage() {
   const [confirmed, setConfirmed] = useState(false);
   const [confirmedName, setConfirmedName] = useState("");
   const [confirmedTotal, setConfirmedTotal] = useState(0);
-
-  const go = (targetPath: string) => {
-    if (targetPath === pathname || navLockRef.current) return;
-    navLockRef.current = true;
-    requestRouteCover();
-    setTimeout(() => {
-      router.push(targetPath);
-      navLockRef.current = false;
-    }, ROUTE_COVER_MS);
-  };
 
   const handleCheckout = async (e: FormEvent) => {
     e.preventDefault();

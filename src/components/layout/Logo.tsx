@@ -33,7 +33,7 @@ export function Logo({
       {/* eslint-disable-next-line @next/next/no-img-element -- crisp SVG brand vectors from Figma */}
       <img
         src="/icons/cdf-black.svg"
-        alt="cdf"
+        alt="Childrens Dance Factory"
         width={104}
         height={77}
         className={`${sizeClass} ${
@@ -48,7 +48,7 @@ export function Logo({
       {/* eslint-disable-next-line @next/next/no-img-element -- crisp SVG brand vectors from Figma */}
       <img
         src="/icons/cdf-white.svg"
-        alt="cdf"
+        alt="Childrens Dance Factory"
         width={104}
         height={77}
         className={`${sizeClass} ${

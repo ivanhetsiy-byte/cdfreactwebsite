@@ -4,6 +4,8 @@ import { BagPage } from "@/components/sections/bag-page";
 
 export const metadata: Metadata = {
   title: "Bag",
+  description:
+    "Your Childrens Dance Factory bag — review studio apparel before checkout.",
 };
 
 export default function Page() {

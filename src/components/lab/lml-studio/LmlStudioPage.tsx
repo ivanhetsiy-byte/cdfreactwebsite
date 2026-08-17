@@ -480,7 +480,7 @@ export function LmlStudioPage({
         {useSiteChrome ? null : <StudioHeader />}
         <div className="fixed top-0 right-0 left-0 z-[1000] h-[100px] md:h-[120px]" />
         <StudioContent ready theme={theme} />
-        {/* Site chrome: sticky meta is global via LabShell SiteStatusBar */}
+        {/* Site chrome: sticky meta is global via SiteShell SiteStatusBar */}
         <StudioFooterBar
           showContactCta={!useSiteChrome}
           showStatusBar={!useSiteChrome}

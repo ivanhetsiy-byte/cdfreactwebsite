@@ -3,10 +3,7 @@ import Link from "next/link";
 
 import { Beams } from "@/components/backgrounds/BeamsLazy";
 import { PreviewUnlock } from "@/components/maintenance/PreviewUnlock";
-
-const INSTAGRAM =
-  process.env.NEXT_PUBLIC_INSTAGRAM_URL ??
-  "https://www.instagram.com/cdf_dance_school/";
+import { SOCIAL_URLS, STUDIO_EMAIL } from "@/lib/site-links";
 
 export const metadata: Metadata = {
   title: "Under Maintenance",
@@ -39,13 +36,13 @@ export default function MaintenancePage() {
 
         <div className="mt-10 flex flex-wrap items-center gap-4">
           <a
-            href="mailto:childancefactory@gmail.com"
+            href={`mailto:${STUDIO_EMAIL}`}
             className="font-swiss inline-flex h-12 items-center justify-center border-2 border-white bg-white px-6 text-sm font-bold tracking-tight text-black transition-colors duration-300 hover:bg-black hover:text-white"
           >
             Email the studio
           </a>
           <Link
-            href={INSTAGRAM}
+            href={SOCIAL_URLS.instagram}
             className="font-swiss text-sm tracking-wide text-white/55 underline-offset-4 transition-colors hover:text-white hover:underline"
           >
             Instagram

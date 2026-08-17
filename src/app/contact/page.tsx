@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 
 export default function Page() {
   return (
-    <PageShell>
+    <PageShell className="!pb-0">
       <ContactWireframes />
     </PageShell>
   );

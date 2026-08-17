@@ -1,11 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useState } from "react";
 
 import { useBag } from "@/context/BagContext";
-import { requestRouteCover, ROUTE_COVER_MS } from "@/lib/route-cover";
+import { useDelayedNavigation } from "@/hooks/useDelayedNavigation";
 import type { StoreProduct } from "@/lib/store-products";
 
 const ASPECT_CLASS = {
@@ -19,22 +18,12 @@ type StoreProductDetailProps = {
 };
 
 export function StoreProductDetail({ product }: StoreProductDetailProps) {
-  const router = useRouter();
-  const pathname = usePathname();
+  const go = useDelayedNavigation();
   const { addItem } = useBag();
-  const navLockRef = useRef(false);
   const [size, setSize] = useState(product.sizes[0] ?? "");
   const [added, setAdded] = useState(false);
 
-  const goStore = () => {
-    if (pathname === "/store" || navLockRef.current) return;
-    navLockRef.current = true;
-    requestRouteCover();
-    setTimeout(() => {
-      router.push("/store");
-      navLockRef.current = false;
-    }, ROUTE_COVER_MS);
-  };
+  const goStore = () => go("/store");
 
   const handleAdd = () => {
     if (!size) return;

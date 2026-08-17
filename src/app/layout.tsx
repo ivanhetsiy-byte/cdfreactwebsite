@@ -1,15 +1,25 @@
 import type { Metadata, Viewport } from "next";
 
 import { helvetica, montserrat } from "./fonts";
-import { LabShell } from "@/components/lab/LabShell";
+import { SiteShell } from "@/components/layout/site-shell";
 import { ScrollProvider } from "@/components/providers/ScrollProvider";
 import { LanguageProvider } from "@/context/LanguageContext";
 import { BagProvider } from "@/context/BagContext";
 import { ThemeProvider } from "@/providers/theme-provider";
+import {
+  SITE_URL,
+  SOCIAL_URL_LIST,
+  STUDIO_CITY,
+  STUDIO_EMAIL,
+  STUDIO_PHONE_DISPLAY,
+  STUDIO_POSTAL,
+  STUDIO_REGION,
+  STUDIO_STREET,
+} from "@/lib/site-links";
 import { Analytics } from "@vercel/analytics/next";
 import "@/styles/globals.css";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://cdf.studio";
+const siteUrl = SITE_URL;
 const siteDescription =
   "Dance studio offering competitive and recreational programs in ballet, jazz, gymnastics, and acrobatics.";
 
@@ -49,16 +59,17 @@ export default function RootLayout({
     name: "Childrens Dance Factory",
     url: siteUrl,
     description: siteDescription,
-    sameAs: [
-      process.env.NEXT_PUBLIC_INSTAGRAM_URL ??
-        "https://www.instagram.com/cdf_dance_school/",
-      process.env.NEXT_PUBLIC_TIKTOK_URL ??
-        "https://www.tiktok.com/@childancefactory",
-      process.env.NEXT_PUBLIC_FACEBOOK_URL ??
-        "https://www.facebook.com/CDF.danceschool",
-      process.env.NEXT_PUBLIC_YOUTUBE_URL ??
-        "https://www.youtube.com/@childancefactory",
-    ],
+    email: STUDIO_EMAIL,
+    telephone: STUDIO_PHONE_DISPLAY,
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: STUDIO_STREET,
+      addressLocality: STUDIO_CITY,
+      addressRegion: STUDIO_REGION,
+      postalCode: STUDIO_POSTAL,
+      addressCountry: "US",
+    },
+    sameAs: [...SOCIAL_URL_LIST],
   };
 
   return (
@@ -88,7 +99,7 @@ export default function RootLayout({
                 Skip to main content
               </a>
               <ScrollProvider>
-                <LabShell>{children}</LabShell>
+                <SiteShell>{children}</SiteShell>
               </ScrollProvider>
             </BagProvider>
           </LanguageProvider>

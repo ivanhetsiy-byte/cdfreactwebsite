@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 
 import { Footer } from "@/components/layout/footer";
+import { FooterCta } from "@/components/layout/footer-cta";
 import { Navbar } from "@/components/layout/navbar";
 import { SiteStatusBar } from "@/components/layout/site-status-bar";
 import { PageTransition } from "@/components/loading/PageTransition";
@@ -18,9 +19,10 @@ const SelectionHighlight = dynamic(
 );
 
 /**
- * Site chrome wrapper. Isolates `/admin` (local-only) from production chrome.
+ * Pathname-gated production chrome. Isolates `/admin` (local-only) and
+ * trims footer/status on `/maintenance`.
  */
-export function LabShell({ children }: { children: ReactNode }) {
+export function SiteChrome({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const isAdmin = pathname === "/admin" || pathname.startsWith("/admin/");
   const isMaintenance = pathname === "/maintenance";
@@ -60,6 +62,7 @@ export function LabShell({ children }: { children: ReactNode }) {
       >
         <Navbar />
         {children}
+        {!forceDark ? <FooterCta /> : null}
         <Footer />
         <SiteStatusBar />
       </div>

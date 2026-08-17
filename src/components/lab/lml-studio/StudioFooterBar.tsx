@@ -35,7 +35,7 @@ type StudioFooterBarProps = {
 
 /**
  * Lab-only chrome: optional sticky meta + Contact pill.
- * Production sticky bar + closing footer live in LabShell.
+ * Production sticky bar + closing footer live in SiteShell.
  */
 export function StudioFooterBar({
   showContactCta = true,
