@@ -48,13 +48,10 @@ export function SiteChrome({ children }: { children: ReactNode }) {
     );
   }
 
-  // Status bar is fixed; reserve bottom space only where it shows (md+, or store bag on mobile).
-  const statusBarPad = showBag ? "pb-28" : "max-md:pb-0 md:pb-28";
-
   return (
     <PageTransition>
       <div
-        className={`relative w-full min-h-screen ${statusBarPad} ${
+        className={`relative w-full min-h-screen ${
           forceDark
             ? "dark bg-black text-white"
             : "bg-white text-black dark:bg-black dark:text-white"
@@ -63,7 +60,7 @@ export function SiteChrome({ children }: { children: ReactNode }) {
         <Navbar />
         {children}
         {!forceDark ? <FooterCta /> : null}
-        <Footer />
+        <Footer statusBarInset={showBag} />
         <SiteStatusBar />
       </div>
       <SelectionHighlight />

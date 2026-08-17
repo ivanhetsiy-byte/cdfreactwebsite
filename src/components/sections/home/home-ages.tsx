@@ -5,8 +5,9 @@ import { FoldText } from "@/components/ui/fold-text";
  * Figma Home redesign — Ages 3-16 / Competitive vs Recreational
  * Mobile 390 (`11:158`) · Tablet 810 (`14:31`, `14:32`) · Desktop 1200 (`11:100`, `11:105`)
  *
- * One full-viewport canvas. Labels straddle the image edges and invert
- * via mix-blend-difference (Figma color split) — no MCP pixel offsets.
+ * Content-height on mobile; full-viewport canvas from tablet up.
+ * Labels straddle the image edges and invert via mix-blend-difference
+ * (Figma color split) — no MCP pixel offsets.
  */
 export function HomeAges() {
   const labelClass = [
@@ -19,7 +20,8 @@ export function HomeAges() {
       id="home-ages"
       aria-labelledby="home-ages-heading"
       className={[
-        "flex min-h-screen w-full flex-col justify-center bg-background py-16 text-foreground",
+        "w-full bg-background py-10 text-foreground",
+        "home-md:flex home-md:min-h-screen home-md:flex-col home-md:justify-center home-md:py-20",
         "home-lg:flex home-lg:min-h-screen home-lg:w-full home-lg:flex-col home-lg:items-center home-lg:justify-center home-lg:py-24",
       ].join(" ")}
     >

@@ -7,7 +7,40 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 
 import { Logo } from "@/components/layout/Logo";
 import { NavProgressiveBlur } from "@/components/layout/NavProgressiveBlur";
-import { useLanguage, type Language } from "@/context/LanguageContext";
+import { HamburgerIcon, TypewriterSlot } from "@/components/layout/navbar-chrome";
+import {
+  BLUR_SCROLL_RANGE,
+  BOOKMARK_EXIT_S,
+  BOOKMARK_HEIGHT,
+  BOOKMARK_PAD_X,
+  CHROME_PAD_X,
+  CHROME_PAD_Y,
+  LOGO_HEIGHT_CLASS,
+  LOGO_IMG_CLASS,
+  MENU_TOGGLE_CLOSE,
+  MENU_TOGGLE_OPEN,
+  MOBILE_INDICATOR_S,
+  MOBILE_MENU_BG_IN_S,
+  MOBILE_MENU_BG_OUT_S,
+  MOBILE_MENU_CONTENT_S,
+  MOBILE_MENU_LANGS,
+  MOBILE_NAV_BREATHE_MS,
+  MOBILE_NAV_HREFS,
+  MOBILE_NAV_LABELS,
+  NAV_HREFS,
+  menuLinkClass,
+  mobileMenuLinkClass,
+  storeMenuLinkClass,
+  studioLinkClass,
+  studioLinkClassFor,
+} from "@/components/layout/navbar-data";
+import {
+  delay,
+  pageSurfaceIsBlackAt,
+  prefersReducedMotion,
+  readScrollY,
+} from "@/components/layout/navbar-surface";
+import { useLanguage } from "@/context/LanguageContext";
 import { useCompactNavMeasure } from "@/hooks/useCompactNav";
 import { getLenis } from "@/lib/lenis";
 import { shouldSkipSmoothScroll } from "@/lib/motion-env";
@@ -17,366 +50,10 @@ import {
   broadcastSiteMenuState,
 } from "@/lib/site-menu";
 
-const MOBILE_MENU_LANGS: { code: Language; label: string }[] = [
-  { code: "en", label: "EN" },
-  { code: "uk", label: "UK" },
-  { code: "ru", label: "RU" },
-  { code: "ja", label: "JA" },
-];
-
-/** Desktop inline menu — Contact lives only in persistent chrome. */
-const NAV_HREFS = [
-  { key: "home" as const, href: "/" },
-  { key: "about" as const, href: "/about" },
-  { key: "classes" as const, href: "/classes" },
-  { key: "staff" as const, href: "/staff" },
-];
-
-/** Mobile LML-style stack — Contact in list (Figma inverted-active menu). */
-const MOBILE_NAV_HREFS = [
-  { key: "home" as const, href: "/" },
-  { key: "about" as const, href: "/about" },
-  { key: "classes" as const, href: "/classes" },
-  { key: "staff" as const, href: "/staff" },
-  { key: "contact" as const, href: "/contact" },
-];
-
-/** Title-case labels for mobile menu (desktop keeps uppercase via CSS). */
-const MOBILE_NAV_LABELS: Record<
-  (typeof MOBILE_NAV_HREFS)[number]["key"],
-  string
-> = {
-  home: "Home",
-  about: "About Us",
-  classes: "Classes",
-  staff: "Staff",
-  contact: "Contact",
-};
-
-/**
- * Same outer footprint as lab LML mark.
- * Inner CDF art is cropped/scaled so ink fills that box (no extra downward growth).
- */
-const LOGO_HEIGHT_CLASS =
-  "h-[calc(min(25vw,220px)*179/467)] md:h-[calc(min(15vw,180px)*179/467)]";
-
-/** Stretch mark so cropped frame’s bottom = last ink pixel. */
-const LOGO_IMG_CLASS = "!h-[calc(100%*77/55)] !w-auto !max-h-none !items-start";
-
-/** Chrome pad — top→logo gap. */
-const CHROME_PAD_X = "px-5 md:px-6.5";
-const CHROME_PAD_Y = "py-4 md:py-6.5";
-
-/** Scroll distance (px) over which nav frost fades in. */
-const BLUR_SCROLL_RANGE = 120;
-
-/** Figma bookmark tab — hangs from viewport top over the active open-menu link. */
-const BOOKMARK_HEIGHT = 73;
-const BOOKMARK_PAD_X = 9;
-/** Wipe-up + fade when desktop menu closes with bookmark visible. */
-const BOOKMARK_EXIT_S = 0.35;
-/** Kinfolk-style mobile curtain — bg slides from top, content fades in. */
-const MOBILE_MENU_BG_IN_S = 0.8;
-const MOBILE_MENU_BG_OUT_S = 0.6;
-const MOBILE_MENU_CONTENT_S = 0.55;
-/** Sliding inverted bar between menu items. */
-const MOBILE_INDICATOR_S = 0.5;
-/** Min time menu stays open after tap while page loads underneath. */
-const MOBILE_NAV_BREATHE_MS = 650;
-
-/** Desktop open-menu links — small uppercase; active = hanging bookmark (overlay). */
-function menuLinkClass(active: boolean) {
-  return [
-    "menu-inline-link relative shrink-0 font-swiss text-sm font-medium uppercase leading-none tracking-widest md:text-base",
-    active
-      ? "text-transparent"
-      : "text-white transition-opacity hover:opacity-70",
-  ].join(" ");
-}
-
 type BookmarkLayout = {
   centerX: number;
   label: string;
 };
-
-/** Same as lab StudioHeader Work/Studio — top-aligned with −8px optical nudge. */
-const studioLinkClass =
-  "relative top-[-8px] inline-block font-medium text-[3.2rem] leading-none text-white transition-colors after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-current after:transition-all after:content-[''] hover:after:w-full";
-
-function studioLinkClassFor(active: boolean) {
-  return [
-    "relative top-[-8px] inline-block font-medium text-[3.2rem] leading-none text-white transition-colors",
-    "after:absolute after:bottom-0 after:left-0 after:h-0.5 after:bg-current after:transition-all after:content-['']",
-    active ? "after:w-full" : "after:w-0 hover:after:w-full",
-  ].join(" ");
-}
-
-/** Open-menu Store — same size/optical nudge as Contact / Close. */
-function storeMenuLinkClass(active: boolean) {
-  return [
-    "menu-store-link relative top-[-8px] inline-block shrink-0 font-medium normal-case leading-none text-white transition-colors",
-    "text-[3.2rem]",
-    "after:absolute after:bottom-0 after:left-0 after:h-0.5 after:bg-current after:transition-[width] after:duration-300 after:ease-out after:content-['']",
-    active ? "after:w-full" : "after:w-0 hover:after:w-full",
-  ].join(" ");
-}
-
-/** Mobile open menu — white panel; inverted active via sliding black bar + blend. */
-function mobileMenuLinkClass() {
-  return [
-    "menu-drop-link relative z-10 block w-full px-5 py-[0.35em] text-left font-swiss",
-    "text-[clamp(3rem,14vw,4.875rem)] font-normal leading-none tracking-tight",
-    "text-white mix-blend-difference transition-opacity hover:opacity-70",
-  ].join(" ");
-}
-
-function HamburgerIcon({ open }: { open: boolean }) {
-  return (
-    <span className="relative flex h-5 w-7 items-center justify-center" aria-hidden="true">
-      <span
-        className={`absolute block h-0.5 w-7 bg-current transition-transform duration-300 ease-out ${
-          open ? "translate-y-0 rotate-45" : "-translate-y-1.5"
-        }`}
-      />
-      <span
-        className={`absolute block h-0.5 w-7 bg-current transition-transform duration-300 ease-out ${
-          open ? "translate-y-0 -rotate-45" : "translate-y-1.5"
-        }`}
-      />
-    </span>
-  );
-}
-
-/** Chrome Menu ↔ Close labels (title case, matches Contact). */
-const MENU_TOGGLE_OPEN = "Menu";
-const MENU_TOGGLE_CLOSE = "Close";
-
-function delay(ms: number) {
-  return new Promise<void>((resolve) => {
-    setTimeout(resolve, ms);
-  });
-}
-
-function prefersReducedMotion() {
-  return (
-    typeof window !== "undefined" &&
-    window.matchMedia("(prefers-reduced-motion: reduce)").matches
-  );
-}
-
-function readScrollY() {
-  if (typeof window === "undefined") return 0;
-  const lenis = (window as unknown as { lenis?: { scroll?: number } }).lenis;
-  if (typeof lenis?.scroll === "number") return lenis.scroll;
-  return window.scrollY || document.documentElement.scrollTop || 0;
-}
-
-type Rgba = { r: number; g: number; b: number; a: number };
-
-function parseCssColor(input: string): Rgba | null {
-  const comma = input.match(
-    /^rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)(?:\s*,\s*([\d.]+))?\s*\)$/i,
-  );
-  if (comma) {
-    return {
-      r: Number(comma[1]),
-      g: Number(comma[2]),
-      b: Number(comma[3]),
-      a: comma[4] === undefined ? 1 : Number(comma[4]),
-    };
-  }
-  const space = input.match(
-    /^rgba?\(\s*([\d.]+)\s+([\d.]+)\s+([\d.]+)(?:\s*\/\s*([\d.]+%?))?\s*\)$/i,
-  );
-  if (space) {
-    const aRaw = space[4];
-    let a = 1;
-    if (aRaw !== undefined) {
-      a = aRaw.endsWith("%") ? Number(aRaw.slice(0, -1)) / 100 : Number(aRaw);
-    }
-    return {
-      r: Number(space[1]),
-      g: Number(space[2]),
-      b: Number(space[3]),
-      a,
-    };
-  }
-  return null;
-}
-
-/** Opaque near-black page surfaces (not mid-grey). */
-function isNearBlack(c: Rgba) {
-  return c.a >= 0.95 && c.r <= 28 && c.g <= 28 && c.b <= 28;
-}
-
-function shouldSkipSurfaceSample(el: Element) {
-  if (!(el instanceof HTMLElement)) return true;
-  return Boolean(
-    el.closest(
-      "[data-nav-bookmark-overlay], header, #site-nav-menu-mobile, [data-nav-progressive-blur]",
-    ),
-  );
-}
-
-function parseInsetLength(
-  raw: string,
-  axisSize: number,
-): number | null {
-  const v = raw.trim();
-  if (v.endsWith("%")) {
-    const n = Number(v.slice(0, -1));
-    return Number.isFinite(n) ? (n / 100) * axisSize : null;
-  }
-  if (v.endsWith("px")) {
-    const n = Number(v.slice(0, -2));
-    return Number.isFinite(n) ? n : null;
-  }
-  if (v === "0") return 0;
-  const n = Number(v);
-  return Number.isFinite(n) ? n : null;
-}
-
-/**
- * Whether (x,y) falls in the element's visible box after CSS `clip-path: inset(...)`.
- * Curtains/wipes that are fully clipped must not count as the page surface.
- */
-function elementVisiblyCoversPoint(
-  el: HTMLElement,
-  x: number,
-  y: number,
-): boolean {
-  const r = el.getBoundingClientRect();
-  if (r.width < 1 || r.height < 1) return false;
-  if (x < r.left || x > r.right || y < r.top || y > r.bottom) return false;
-
-  const clip = getComputedStyle(el).clipPath;
-  if (!clip || clip === "none") return true;
-
-  const insetMatch = clip.match(/^inset\(\s*([^)]+?)\s*\)$/i);
-  if (!insetMatch?.[1]) {
-    // Non-inset clips (path/circle) — only trust if not pointer-events-none
-    return getComputedStyle(el).pointerEvents !== "none";
-  }
-
-  const bits = insetMatch[1].trim().split(/\s+/);
-  let topRaw: string;
-  let rightRaw: string;
-  let bottomRaw: string;
-  let leftRaw: string;
-  if (bits.length === 1) {
-    topRaw = rightRaw = bottomRaw = leftRaw = bits[0]!;
-  } else if (bits.length === 2) {
-    topRaw = bottomRaw = bits[0]!;
-    rightRaw = leftRaw = bits[1]!;
-  } else if (bits.length === 3) {
-    topRaw = bits[0]!;
-    rightRaw = leftRaw = bits[1]!;
-    bottomRaw = bits[2]!;
-  } else {
-    topRaw = bits[0]!;
-    rightRaw = bits[1]!;
-    bottomRaw = bits[2]!;
-    leftRaw = bits[3]!;
-  }
-
-  const top = parseInsetLength(topRaw, r.height);
-  const right = parseInsetLength(rightRaw, r.width);
-  const bottom = parseInsetLength(bottomRaw, r.height);
-  const left = parseInsetLength(leftRaw, r.width);
-  if (top == null || right == null || bottom == null || left == null) {
-    return getComputedStyle(el).pointerEvents !== "none";
-  }
-
-  const visible = {
-    top: r.top + top,
-    right: r.right - right,
-    bottom: r.bottom - bottom,
-    left: r.left + left,
-  };
-  if (visible.right - visible.left < 1 || visible.bottom - visible.top < 1) {
-    return false;
-  }
-  return (
-    x >= visible.left &&
-    x <= visible.right &&
-    y >= visible.top &&
-    y <= visible.bottom
-  );
-}
-
-/**
- * True when the page surface under (x,y) is near-black.
- * 1) Explicit `[data-nav-page-surface=dark]` layers (pointer-events-none curtains
- *    are invisible to elementsFromPoint — must be queried directly).
- * 2) Else first opaque hit from elementsFromPoint (skips nav chrome).
- */
-function pageSurfaceIsBlackAt(x: number, y: number) {
-  if (typeof document === "undefined") return false;
-
-  const marked = document.querySelectorAll("[data-nav-page-surface='dark']");
-  for (const el of marked) {
-    if (!(el instanceof HTMLElement)) continue;
-    if (!elementVisiblyCoversPoint(el, x, y)) continue;
-    const parsed = parseCssColor(getComputedStyle(el).backgroundColor);
-    if (parsed && parsed.a >= 0.95) return isNearBlack(parsed);
-    // Marked dark with no parsable bg — still treat as dark if it covers
-    return true;
-  }
-
-  const stack = document.elementsFromPoint(x, y);
-  for (const el of stack) {
-    if (shouldSkipSurfaceSample(el)) continue;
-    if (!(el instanceof HTMLElement)) continue;
-    if (!elementVisiblyCoversPoint(el, x, y)) continue;
-    const parsed = parseCssColor(getComputedStyle(el).backgroundColor);
-    if (!parsed || parsed.a < 0.95) continue;
-    return isNearBlack(parsed);
-  }
-
-  for (const el of [document.body, document.documentElement]) {
-    if (!el) continue;
-    const parsed = parseCssColor(getComputedStyle(el).backgroundColor);
-    if (!parsed || parsed.a < 0.95) continue;
-    return isNearBlack(parsed);
-  }
-
-  return false;
-}
-
-/**
- * Full word always laid out; clip reveals from the right (RTL on open).
- * Caret sits on the reveal edge — right when opening, left when closing.
- */
-function TypewriterSlot({
-  full,
-  typed,
-  typing,
-}: {
-  full: string;
-  typed: string;
-  typing: boolean;
-}) {
-  const progress = full.length === 0 ? 0 : typed.length / full.length;
-  const clipLeft = (1 - progress) * 100;
-
-  return (
-    <span className="relative inline-block whitespace-nowrap">
-      <span
-        className="inline-block whitespace-nowrap"
-        style={{ clipPath: `inset(0 0 0 ${clipLeft}%)` }}
-      >
-        {full}
-      </span>
-      {typing ? (
-        <span
-          aria-hidden
-          className="pointer-events-none absolute top-1/2 h-[0.85em] w-[0.08em] -translate-y-1/2 bg-current animate-[caret-blink_1.1s_linear_infinite]"
-          style={{ left: `${(1 - progress) * 100}%` }}
-        />
-      ) : null}
-    </span>
-  );
-}
 
 export function Navbar() {
   const pathname = usePathname();
@@ -1358,7 +1035,7 @@ export function Navbar() {
           <div
             ref={bookmarkRef}
             className={[
-              "flex items-end justify-center overflow-hidden font-swiss text-sm font-medium uppercase leading-none tracking-widest md:text-base",
+              "flex items-end justify-center overflow-hidden font-swiss text-sm font-medium uppercase leading-none tracking-widest home-md:text-base",
               bookmarkOnBlackBg
                 ? "bg-white text-black"
                 : "bg-black text-white",

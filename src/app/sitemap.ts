@@ -2,11 +2,21 @@ import type { MetadataRoute } from "next";
 
 import { getCompetitionSlugs } from "@/lib/competitions";
 import { SITE_URL } from "@/lib/site-links";
-import { getStoreProductIds } from "@/lib/store-products";
+import { loadStoreProductIds } from "@/lib/store-catalog.server";
 
 const siteUrl = SITE_URL;
 
-export default function sitemap(): MetadataRoute.Sitemap {
+/** Live catalog ids; empty if the catalog is missing or fails to load. */
+function readSitemapProductIds(): string[] {
+  try {
+    const ids = loadStoreProductIds();
+    return Array.isArray(ids) ? ids.filter((id) => id.trim().length > 0) : [];
+  } catch {
+    return [];
+  }
+}
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes = [
     "",
     "/about",
@@ -21,7 +31,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: path === "" ? 1 : 0.8,
   }));
 
-  const productRoutes = getStoreProductIds().map((id) => ({
+  const productIds = await Promise.resolve(readSitemapProductIds());
+  const productRoutes = productIds.map((id) => ({
     url: `${siteUrl}/store/${id}`,
     lastModified: new Date(),
     changeFrequency: "monthly" as const,

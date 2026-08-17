@@ -650,7 +650,7 @@ export function ClassesWireframes() {
   return (
     <div
       ref={rootRef}
-      className="relative w-full bg-white text-black dark:bg-black dark:text-white"
+      className="relative w-full overflow-x-clip bg-white text-black dark:bg-black dark:text-white"
     >
       <header className="relative w-full overflow-visible pb-[clamp(3rem,8vh,6rem)]">
         <h1

@@ -2,6 +2,9 @@
 
 import { useLayoutEffect, useRef, useState, type RefObject } from "react";
 
+/** Align with `--breakpoint-home-md` so desktop chrome never wins at 768–809px. */
+const HOME_MD_PX = 810;
+
 /** Minimum gap between Contact and the links group inside the 40% chrome band. */
 const MIN_CHROME_GAP_PX = 16;
 
@@ -26,6 +29,14 @@ export function useCompactNavMeasure(
       const contact = contactRef.current;
       const links = linksRef.current;
       if (!row || !band || !contact || !links) return;
+
+      if (window.innerWidth < HOME_MD_PX) {
+        if (!compactRef.current) {
+          compactRef.current = true;
+          setCompact(true);
+        }
+        return;
+      }
 
       const bandWidth = row.clientWidth * CHROME_BAND_RATIO;
       // Set width without observing the band itself (avoids RO feedback loops)

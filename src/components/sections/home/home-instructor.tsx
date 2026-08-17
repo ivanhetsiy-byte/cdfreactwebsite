@@ -5,17 +5,18 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Image from "next/image";
 import { useEffect, useRef } from "react";
 
-import {
-  ABOUT_BLURB,
-  ABOUT_NAME,
-  TAGLINE_LINES,
-} from "@/components/lab/lml-studio/content";
 import { FadeInText } from "@/components/ui/fade-in-text";
 import { prefersReducedMotion } from "@/lib/motion-env";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const ROLE = TAGLINE_LINES[0].trim();
+/** Production home copy — kept local so this section does not import `lab/`. */
+const INSTRUCTOR = {
+  name: "Mykhaylo Hetsiy",
+  role: "Founder/Lead Artist",
+  blurb:
+    "(Михайло) Childrens Dance Factory (CDF)™ merges craft with stage art, using world-trained technique to craft unique dance experiences that give students a lasting stage impact.",
+} as const;
 
 /**
  * Figma Home redesign — Instructor / Community
@@ -68,7 +69,7 @@ export function HomeInstructor() {
       >
         <div
           className={[
-            "flex min-h-screen min-w-0 flex-col items-start justify-center gap-8 py-16",
+            "flex h-auto min-w-0 flex-col items-start justify-start gap-6 py-10",
             "home-md:min-h-0 home-md:justify-start home-md:gap-6 home-md:py-0",
             "home-lg:col-span-5",
           ].join(" ")}
@@ -99,19 +100,19 @@ export function HomeInstructor() {
                 as="p"
                 className="w-full text-[28px] leading-snug home-md:text-[15px] home-lg:text-[19px]"
               >
-                {ABOUT_NAME}
+                {INSTRUCTOR.name}
               </FadeInText>
               <FadeInText
                 as="p"
                 className="w-full text-[28px] leading-snug home-md:text-[15px] home-lg:text-[19px]"
               >
-                {ROLE}
+                {INSTRUCTOR.role}
               </FadeInText>
               <FadeInText
                 as="p"
                 className="mt-4 w-full text-[15px] leading-snug home-md:text-[13px] home-lg:text-[15px]"
               >
-                {ABOUT_BLURB}
+                {INSTRUCTOR.blurb}
               </FadeInText>
             </figcaption>
           </figure>
@@ -119,7 +120,7 @@ export function HomeInstructor() {
 
         <div
           className={[
-            "flex min-h-screen w-full min-w-0 flex-col justify-center gap-4 py-16",
+            "flex h-auto w-full min-w-0 flex-col justify-start gap-4 py-10",
             "home-md:min-h-0 home-md:justify-start home-md:py-0",
             "home-lg:col-span-7",
           ].join(" ")}

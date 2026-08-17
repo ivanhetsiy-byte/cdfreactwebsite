@@ -14,7 +14,8 @@ export function HomeGallery() {
       id="home-gallery"
       aria-labelledby="home-gallery-heading"
       className={[
-        "flex min-h-screen w-full flex-col justify-end bg-background pt-16 pb-8 text-foreground",
+        "flex w-full flex-col bg-background py-8 text-foreground",
+        "home-md:min-h-screen home-md:justify-end home-md:pt-16",
         "home-lg:min-h-screen home-lg:pt-24",
       ].join(" ")}
     >

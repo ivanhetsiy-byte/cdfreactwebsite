@@ -76,15 +76,24 @@ function FooterLink({
 /**
  * Site-wide footer — Explore / Connect / Contact columns above the
  * oversized CDF wordmark. Hover roll matches Flexion; palette stays Swiss B&W.
+ *
+ * `statusBarInset` matches SiteStatusBar visibility: always-on for store
+ * (bag icon on mobile), md+ elsewhere. Inset lives on the footer so scroll
+ * cannot continue past it into empty chrome padding.
  */
-export function Footer() {
+export function Footer({
+  statusBarInset = false,
+}: {
+  statusBarInset?: boolean;
+}) {
   const year = new Date().getFullYear();
+  const insetClass = statusBarInset ? "pb-28" : "md:pb-28";
 
   return (
     <footer
       id="site-footer"
       aria-label="Footer"
-      className="flex min-h-screen w-full flex-col justify-end bg-background pt-16 text-foreground home-lg:min-h-screen home-lg:pt-24"
+      className={`flex min-h-screen w-full flex-col justify-end bg-background pt-16 text-foreground home-lg:min-h-screen home-lg:pt-24 ${insetClass}`}
     >
       <div className="mx-auto grid w-full max-w-[1200px] grid-cols-1 gap-12 px-6 pb-16 home-md:grid-cols-3 home-md:gap-8 home-md:px-12 home-md:pb-24">
         <FooterColumn label="Explore">
@@ -111,12 +120,12 @@ export function Footer() {
         </FooterColumn>
       </div>
 
-      <div className="w-full overflow-x-clip px-2 home-md:px-3">
+      <div className="w-full overflow-x-clip overflow-y-clip px-2 pt-[0.22em] font-swiss text-[48.33vw] leading-none home-md:px-3">
         <FadeInText
           as="p"
           overflowHidden={false}
           stagger={0.08}
-          className="w-full font-swiss text-[48.33vw] font-bold leading-[0.8] tracking-tighter whitespace-nowrap"
+          className="w-full font-bold leading-[0.8] tracking-tighter whitespace-nowrap"
         >
           CDF
         </FadeInText>
