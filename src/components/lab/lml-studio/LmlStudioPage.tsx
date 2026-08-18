@@ -22,7 +22,7 @@ import { PortraitCanvas } from "./PortraitCanvas";
 import { ScrollFloat } from "./ScrollFloat";
 import { StudioFooterBar } from "./StudioFooterBar";
 import { StudioHeader } from "./StudioHeader";
-import { prefersReducedMotion } from "@/lib/motion-env";
+import { isCoarseOrNarrow, prefersReducedMotion } from "@/lib/motion-env";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -46,6 +46,7 @@ function StudioContent({
 }) {
   const titleRef = useRef<HTMLHeadingElement>(null);
   const portraitRef = useRef<HTMLDivElement>(null);
+  const landingRef = useRef<HTMLDivElement>(null);
   const taglineRef = useRef<HTMLDivElement>(null);
   const bioRef = useRef<HTMLSpanElement>(null);
   const isLight = theme === "light";
@@ -60,11 +61,14 @@ function StudioContent({
     if (!ready) return;
     if (prefersReducedMotion()) return;
 
+    let cssCleanup: (() => void) | undefined;
+    const cheap = isCoarseOrNarrow();
+
     const ctx = gsap.context(() => {
       const splits: SplitType[] = [];
 
       // Hero title — load entrance (not scrubbed on LML)
-      if (titleRef.current) {
+      if (titleRef.current && !cheap) {
         const split = new SplitType(titleRef.current, { types: "chars" });
         splits.push(split);
         gsap.fromTo(
@@ -79,6 +83,13 @@ function StudioContent({
             delay: 0.05,
           },
         );
+      } else if (titleRef.current) {
+        gsap.from(titleRef.current, {
+          y: 24,
+          opacity: 0,
+          duration: 0.7,
+          ease: "power3.out",
+        });
       }
 
       gsap.from(".lml-found", {
@@ -89,30 +100,25 @@ function StudioContent({
         delay: 0.45,
       });
 
-      // Portrait entrance: opacity only (scroll owns Y motion)
-      gsap.from(".lml-portrait", {
-        opacity: 0,
-        duration: 1.1,
-        ease: "power3.out",
-        delay: 0.25,
-      });
+      // Portrait entrance: opacity only (scroll owns Y motion).
+      // Skip on touch — GSAP transform on this node fights the CSS timeline.
+      if (!cheap) {
+        gsap.from(".lml-portrait", {
+          opacity: 0,
+          duration: 1.1,
+          ease: "power3.out",
+          delay: 0.25,
+        });
+      }
 
       /**
-       * Portrait scroll travel — matches lml.cc studio page source:
-       * y ends when portrait center == tagline center; scrub ends when
-       * tagline center hits viewport center. Desktop scrub 0.6 / touch 0.3.
+       * Portrait scroll travel — y ends when portrait center == tagline
+       * center on desktop. Touch parks the portrait in the mobile well
+       * above the tagline via a CSS scroll() timeline.
        */
       if (portraitRef.current && taglineRef.current) {
         const portrait = portraitRef.current;
         const tagline = taglineRef.current;
-        const touch =
-          ("ontouchstart" in window || navigator.maxTouchPoints > 0) &&
-          (/Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-            navigator.userAgent,
-          ) ||
-            window.innerWidth <= 1024);
-        // Heavier scrub lag on touch used to amplify scroll jank — keep it tight.
-        const scrub = touch ? 0.3 : 0.6;
 
         const getTravelY = () => {
           const portraitCenter =
@@ -122,6 +128,35 @@ function StudioContent({
           return taglineCenter - portraitCenter;
         };
 
+        const cssOk =
+          cheap &&
+          typeof CSS !== "undefined" &&
+          CSS.supports("animation-timeline", "scroll()");
+
+        if (cssOk) {
+          const dest =
+            landingRef.current && landingRef.current.offsetParent !== null
+              ? landingRef.current
+              : tagline;
+          const applyCssTravel = () => {
+            const start = Math.round(offsetTopSum(portrait));
+            const end = Math.max(start + 1, Math.round(offsetTopSum(dest)));
+            const travel = Math.max(0, end - start);
+            portrait.style.setProperty("--lml-portrait-travel", `${travel}px`);
+            portrait.style.animationRange = `${start}px ${end}px`;
+          };
+
+          portrait.classList.add("cdf-staff-portrait-css");
+          applyCssTravel();
+          window.addEventListener("resize", applyCssTravel);
+          void document.fonts?.ready.then(applyCssTravel);
+          cssCleanup = () => {
+            window.removeEventListener("resize", applyCssTravel);
+            portrait.classList.remove("cdf-staff-portrait-css");
+            portrait.style.removeProperty("--lml-portrait-travel");
+            portrait.style.animationRange = "";
+          };
+        } else {
         gsap.set(portrait, { y: 0 });
         gsap.fromTo(
           portrait,
@@ -132,16 +167,18 @@ function StudioContent({
             immediateRender: false,
             scrollTrigger: {
               trigger: portrait,
-              start: () => "top top",
-              end: () =>
-                `${offsetTopSum(tagline) + tagline.offsetHeight / 2 - window.innerHeight / 2}px center`,
-              scrub,
+              start: "top top",
+              endTrigger: tagline,
+              end: "center center",
+              scrub: cheap ? true : 0.6,
               invalidateOnRefresh: true,
             },
           },
         );
+        }
       }
 
+      if (!cheap) {
       // About pill — scrubbed slide/fade like LML
       gsap.fromTo(
         ".lml-about-pill",
@@ -180,6 +217,7 @@ function StudioContent({
 
       // Teacher bios — same scrub as founder bio
       gsap.utils.toArray<HTMLElement>(".teacher-bio").forEach((el) => {
+        if (el.offsetParent === null) return;
         gsap.fromTo(
           el,
           { y: 100, opacity: 0 },
@@ -197,10 +235,15 @@ function StudioContent({
         );
       });
 
-      requestAnimationFrame(() => ScrollTrigger.refresh());
+      }
+
+      if (!cheap) {
+        requestAnimationFrame(() => ScrollTrigger.refresh());
+      }
     });
 
     return () => {
+      cssCleanup?.();
       ctx.revert();
     };
   }, [ready]);
@@ -258,12 +301,19 @@ function StudioContent({
             </ScrollFloat>
           </div>
         </div>
+
+        {/* Mobile: empty well the portrait travels into, so the tagline sits below it. */}
+        <div
+          ref={landingRef}
+          className="pointer-events-none relative z-0 mt-4 aspect-square w-full md:hidden"
+          aria-hidden
+        />
       </section>
 
-      {/* Tagline — portrait scrub centers on this block (LML pattern) */}
+      {/* Tagline — desktop portrait scrub still centers here (LML pattern) */}
       <section
         ref={taglineRef}
-        className="pointer-events-none relative z-20 flex min-h-[50vh] w-full items-center px-5 pt-[100px] md:h-[80vh] md:px-6.5 md:pt-[200px]"
+        className="pointer-events-none relative z-20 flex w-full items-start px-5 pt-3 md:h-[80vh] md:items-center md:px-6.5 md:pt-[200px]"
       >
         <div className="scroll-float w-full">
           <ScrollFloat

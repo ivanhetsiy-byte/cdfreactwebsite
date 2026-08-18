@@ -15,8 +15,9 @@ type LenisWindow = Window & { lenis: Lenis };
 export function LabScrollProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     window.history.scrollRestoration = "manual";
+    const skipSmooth = shouldSkipSmoothScroll();
 
-    if (shouldSkipSmoothScroll()) {
+    if (skipSmooth) {
       requestAnimationFrame(() => ScrollTrigger.refresh());
       return;
     }

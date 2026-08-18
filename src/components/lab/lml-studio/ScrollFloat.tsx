@@ -9,7 +9,8 @@ import {
 } from "react";
 import SplitType from "split-type";
 
-import { prefersReducedMotion } from "@/lib/motion-env";
+import { scheduleScrollTriggerRefresh } from "@/lib/gsap-refresh";
+import { isCoarseOrNarrow, prefersReducedMotion } from "@/lib/motion-env";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -49,6 +50,16 @@ export function ScrollFloat({
 
     if (prefersReducedMotion()) {
       gsap.set(el, { clearProps: "all" });
+      return;
+    }
+
+    const hidden =
+      el.offsetParent === null && getComputedStyle(el).position !== "fixed";
+    const cheap = isCoarseOrNarrow();
+    if (hidden) return;
+
+    if (cheap) {
+      gsap.set(el, { clearProps: "transform,opacity" });
       return;
     }
 
@@ -113,7 +124,7 @@ export function ScrollFloat({
     });
 
     syncSelectability();
-    requestAnimationFrame(() => ScrollTrigger.refresh());
+    scheduleScrollTriggerRefresh();
 
     return () => {
       tween.scrollTrigger?.kill();

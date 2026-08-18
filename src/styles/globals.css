@@ -367,6 +367,29 @@ body.site-menu-open.site-nav-compact [data-site-status-bar] {
   }
 }
 
+/* Staff portrait — compositor-driven Y travel on touch.
+   GSAP scrub on iOS only updates when JS scroll events fire. */
+@keyframes cdf-staff-portrait-travel {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(0, var(--lml-portrait-travel, 0px), 0);
+  }
+}
+
+.cdf-staff-portrait-css {
+  animation: cdf-staff-portrait-travel linear both;
+  animation-timeline: scroll(root);
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cdf-staff-portrait-css {
+    animation: none;
+  }
+}
+
 /* Founded → Where We've Been. Sticky dwell + CSS view timeline so the
    white→black wipe stays locked to scroll without GSAP scrub on iOS. */
 @keyframes cdf-where-curtain {
