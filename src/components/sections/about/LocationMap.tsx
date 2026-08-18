@@ -111,53 +111,70 @@ export function LocationMap({ lat, lon, label, className }: LocationMapProps) {
     let map: MapLibreMap | null = null;
     let marker: Marker | null = null;
     let resizeObserver: ResizeObserver | null = null;
+    let started = false;
 
-    void (async () => {
-      const maplibregl = await import("maplibre-gl");
-      if (cancelled || !containerRef.current) return;
+    const start = () => {
+      if (cancelled || started) return;
+      started = true;
 
-      ensureChromeStyles();
+      void (async () => {
+        const maplibregl = await import("maplibre-gl");
+        if (cancelled || !containerRef.current) return;
 
-      const instance = new maplibregl.Map({
-        container,
-        style: STYLE_URL,
-        center: [lon, lat],
-        zoom: DEFAULT_ZOOM,
-        interactive: false,
-        attributionControl: false,
-        fadeDuration: 0,
-      });
+        ensureChromeStyles();
 
-      map = instance;
-      mapRef.current = instance;
+        const instance = new maplibregl.Map({
+          container,
+          style: STYLE_URL,
+          center: [lon, lat],
+          zoom: DEFAULT_ZOOM,
+          interactive: false,
+          attributionControl: false,
+          fadeDuration: 0,
+        });
 
-      instance.addControl(
-        new maplibregl.AttributionControl({
-          compact: true,
-        }),
-        "bottom-right",
-      );
+        map = instance;
+        mapRef.current = instance;
 
-      marker = new maplibregl.Marker({
-        element: createPinElement(),
-        anchor: "bottom",
-      })
-        .setLngLat([lon, lat])
-        .addTo(instance);
+        instance.addControl(
+          new maplibregl.AttributionControl({
+            compact: true,
+          }),
+          "bottom-right",
+        );
 
-      instance.on("load", () => {
-        if (cancelled) return;
-        instance.resize();
-      });
+        marker = new maplibregl.Marker({
+          element: createPinElement(),
+          anchor: "bottom",
+        })
+          .setLngLat([lon, lat])
+          .addTo(instance);
 
-      resizeObserver = new ResizeObserver(() => {
-        instance.resize();
-      });
-      resizeObserver.observe(container);
-    })();
+        instance.on("load", () => {
+          if (cancelled) return;
+          instance.resize();
+        });
+
+        resizeObserver = new ResizeObserver(() => {
+          instance.resize();
+        });
+        resizeObserver.observe(container);
+      })();
+    };
+
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry?.isIntersecting) return;
+        io.disconnect();
+        start();
+      },
+      { rootMargin: "160px" },
+    );
+    io.observe(container);
 
     return () => {
       cancelled = true;
+      io.disconnect();
       resizeObserver?.disconnect();
       marker?.remove();
       map?.remove();

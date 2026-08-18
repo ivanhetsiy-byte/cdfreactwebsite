@@ -153,26 +153,43 @@ function elementVisiblyCoversPoint(
  *    are invisible to elementsFromPoint — must be queried directly).
  * 2) Else first opaque hit from elementsFromPoint (skips nav chrome).
  */
-export function pageSurfaceIsBlackAt(x: number, y: number) {
-  if (typeof document === "undefined") return false;
+let surfaceCache = {
+  value: false,
+  at: 0,
+  y: 0,
+  ms: 0,
+};
 
+function samplePageSurfaceIsBlackAt(x: number, y: number) {
   const marked = document.querySelectorAll("[data-nav-page-surface='dark']");
   for (const el of marked) {
     if (!(el instanceof HTMLElement)) continue;
     if (!elementVisiblyCoversPoint(el, x, y)) continue;
-    const parsed = parseCssColor(getComputedStyle(el).backgroundColor);
+    const style = getComputedStyle(el);
+    // Mobile curtain uses opacity (not clip-path) — skip while it's still hidden.
+    if (Number.parseFloat(style.opacity) < 0.45) continue;
+    const parsed = parseCssColor(style.backgroundColor);
     if (parsed && parsed.a >= 0.95) return isNearBlack(parsed);
     return true;
   }
 
-  const stack = document.elementsFromPoint(x, y);
-  for (const el of stack) {
-    if (shouldSkipSurfaceSample(el)) continue;
-    if (!(el instanceof HTMLElement)) continue;
-    if (!elementVisiblyCoversPoint(el, x, y)) continue;
-    const parsed = parseCssColor(getComputedStyle(el).backgroundColor);
-    if (!parsed || parsed.a < 0.95) continue;
-    return isNearBlack(parsed);
+  // Hit-testing the full stack every scroll frame is a mobile long-task.
+  // Marked dark layers already cover About/home curtains; skip the rest
+  // on coarse/narrow and fall back to body/html.
+  const coarse =
+    window.matchMedia("(max-width: 767px)").matches ||
+    window.matchMedia("(pointer: coarse)").matches;
+
+  if (!coarse) {
+    const stack = document.elementsFromPoint(x, y);
+    for (const el of stack) {
+      if (shouldSkipSurfaceSample(el)) continue;
+      if (!(el instanceof HTMLElement)) continue;
+      if (!elementVisiblyCoversPoint(el, x, y)) continue;
+      const parsed = parseCssColor(getComputedStyle(el).backgroundColor);
+      if (!parsed || parsed.a < 0.95) continue;
+      return isNearBlack(parsed);
+    }
   }
 
   for (const el of [document.body, document.documentElement]) {
@@ -183,4 +200,33 @@ export function pageSurfaceIsBlackAt(x: number, y: number) {
   }
 
   return false;
+}
+
+export function pageSurfaceIsBlackAt(x: number, y: number) {
+  if (typeof document === "undefined") return false;
+
+  const now = performance.now();
+  const yScroll = window.scrollY || 0;
+  const coarse =
+    window.matchMedia("(max-width: 767px)").matches ||
+    window.matchMedia("(pointer: coarse)").matches;
+  const maxAge = coarse ? 200 : 100;
+  const maxDelta = coarse ? 120 : 48;
+  if (now - surfaceCache.at < maxAge && Math.abs(yScroll - surfaceCache.y) < maxDelta) {
+    return surfaceCache.value;
+  }
+
+  const t0 = performance.now();
+  const value = samplePageSurfaceIsBlackAt(x, y);
+  surfaceCache = {
+    value,
+    at: now,
+    y: yScroll,
+    ms: performance.now() - t0,
+  };
+  return value;
+}
+
+export function lastPageSurfaceSampleMs() {
+  return surfaceCache.ms;
 }

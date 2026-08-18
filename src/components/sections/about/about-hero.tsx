@@ -22,18 +22,21 @@ gsap.registerPlugin(ScrollTrigger);
  * Vertical centering uses flex so GSAP can own the `x` transform without
  * fighting a CSS `translateY`.
  *
- * On mobile, pin is disabled and the scrub distance is shorter so touch scroll
- * does not fight a full-viewport pin.
+ * Mobile never uses GSAP pin/scrub (iOS JS scroll events are too sparse, so
+ * scrub reads as frame-by-frame). A CSS view timeline on the sticky runway
+ * pans the title on the compositor instead.
  */
 export function AboutHero() {
   const sectionRef = useRef<HTMLElement>(null);
+  const runwayRef = useRef<HTMLDivElement>(null);
   const textRef = useRef<HTMLHeadingElement>(null);
   const [reducedMotion, setReducedMotion] = useState(false);
 
   useEffect(() => {
     const section = sectionRef.current;
+    const runway = runwayRef.current;
     const text = textRef.current;
-    if (!section || !text) return;
+    if (!section || !runway || !text) return;
 
     const reduced = window.matchMedia(MOTION_MQ.reduced).matches;
     if (reduced) {
@@ -103,25 +106,29 @@ export function AboutHero() {
     });
 
     mm.add("(max-width: 767px)", () => {
-      const tween = gsap.to(text, {
-        x: () => -getDistance(),
-        ease: "none",
-        scrollTrigger: {
-          trigger: section,
-          start: "top top",
-          end: () => `+=${Math.min(getDistance(), window.innerHeight * 0.85)}`,
-          pin: false,
-          scrub: true,
-          invalidateOnRefresh: true,
-        },
-      });
+      const applyTravel = () => {
+        const d = getDistance();
+        runway.style.height = `calc(100svh + ${d}px)`;
+        runway.style.setProperty("--cdf-hero-travel", `${d}px`);
+        return d;
+      };
+      applyTravel();
+
+      const fonts = document.fonts;
+      if (fonts?.ready) {
+        void fonts.ready.then(() => applyTravel());
+      }
 
       return () => {
-        tween.scrollTrigger?.kill();
-        tween.kill();
-        gsap.set(text, { clearProps: "transform" });
+        runway.style.height = "";
+        runway.style.removeProperty("--cdf-hero-travel");
       };
     });
+
+    const fonts = document.fonts;
+    if (fonts?.ready) {
+      void fonts.ready.then(() => ScrollTrigger.refresh());
+    }
 
     return () => {
       mm.revert();
@@ -132,19 +139,23 @@ export function AboutHero() {
     <section
       ref={sectionRef}
       aria-labelledby="about-heading"
-      className="relative flex h-svh w-full items-center overflow-hidden bg-white"
+      className="cdf-about-hero relative w-full bg-white max-md:touch-pan-y md:overflow-x-clip"
     >
-      <h1
-        id="about-heading"
-        ref={textRef}
-        className={
-          reducedMotion
-            ? "px-6 font-swiss font-normal leading-none tracking-tight text-black text-[clamp(2.5rem,12vw,6rem)]"
-            : "whitespace-nowrap font-swiss font-normal leading-none tracking-tight text-black text-[16vw] will-change-transform"
-        }
-      >
-        Childrens Dance Factory
-      </h1>
+      <div ref={runwayRef} className="cdf-about-hero-runway relative h-svh">
+        <div className="flex h-svh w-full items-center overflow-hidden max-md:sticky max-md:top-0">
+          <h1
+            id="about-heading"
+            ref={textRef}
+            className={
+              reducedMotion
+                ? "px-6 font-swiss font-normal leading-none tracking-tight text-black text-[clamp(2.5rem,12vw,6rem)]"
+                : "cdf-about-hero-title whitespace-nowrap font-swiss font-normal leading-none tracking-tight text-black text-[16vw] will-change-transform"
+            }
+          >
+            Childrens Dance Factory
+          </h1>
+        </div>
+      </div>
     </section>
   );
 }

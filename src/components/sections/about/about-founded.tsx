@@ -6,6 +6,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import SplitType from "split-type";
 
 import { Shuffle } from "@/components/motion/Shuffle";
+import { scheduleScrollTriggerRefresh } from "@/lib/gsap-refresh";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -65,11 +66,15 @@ export function AboutFounded() {
         trigger: lead,
         start: "top 92%",
         onEnter: () => reveal.play(),
-        onLeaveBack: () => reveal.reverse(),
+        onLeaveBack: () => {
+          // Reversing SplitType on every up-swipe is a mobile hitch.
+          if (window.matchMedia("(max-width: 767px)").matches) return;
+          reveal.reverse();
+        },
       });
     }, section);
 
-    requestAnimationFrame(() => ScrollTrigger.refresh());
+    scheduleScrollTriggerRefresh();
 
     return () => {
       ctx.revert();

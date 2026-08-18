@@ -51,6 +51,12 @@ export function ScrollProvider({ children }: { children: ReactNode }) {
     window.history.scrollRestoration = "manual";
 
     if (shouldSkipSmoothScroll()) {
+      // iOS URL-bar show/hide fires resize and ScrollTrigger.refresh, which
+      // hitch native touch scroll. Keep ST measurements on orientation only.
+      ScrollTrigger.config({
+        ignoreMobileResize: true,
+        autoRefreshEvents: "visibilitychange,DOMContentLoaded,load",
+      });
       if (!window.location.hash) {
         window.scrollTo(0, 0);
       }

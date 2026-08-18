@@ -8,6 +8,12 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   devIndicators: false,
+  // Phone / tunnel hosts hitting this machine's Next dev server.
+  allowedDevOrigins: [
+    "192.168.50.43",
+    "*.trycloudflare.com",
+    "*.loca.lt",
+  ],
   turbopack: {
     root: projectRoot,
   },

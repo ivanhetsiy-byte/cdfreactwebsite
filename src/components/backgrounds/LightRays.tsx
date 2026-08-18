@@ -217,133 +217,147 @@ export function LightRays({
   const rafRef = useRef<number | null>(null);
   const mouseRef = useRef({ x: 0.5, y: 0.5 });
   const smoothMouseRef = useRef({ x: 0.5, y: 0.5 });
-  const [isVisible, setIsVisible] = useState(false);
+  const visibleRef = useRef(false);
   const [useCssFallback, setUseCssFallback] = useState(false);
 
-  // Mobile / reduced-motion: CSS rays only — skip WebGL entirely.
+  // Reduced motion: CSS wash only. Coarse/narrow still uses WebGL at dpr 1.
   useEffect(() => {
-    setUseCssFallback(prefersReducedMotion() || isCoarseOrNarrow());
+    setUseCssFallback(prefersReducedMotion());
   }, []);
 
-  // Only run the GL loop while the canvas is on screen.
+  // Create GL once; pause the draw loop while off-screen. Tearing down the
+  // context on every intersection flip is what spiked reverse-scroll.
   useEffect(() => {
     if (useCssFallback) return;
-    const el = containerRef.current;
-    if (!el) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => setIsVisible(entry?.isIntersecting ?? false),
-      { threshold: 0.1 },
-    );
-    observer.observe(el);
-
-    return () => observer.disconnect();
-  }, [useCssFallback]);
-
-  useEffect(() => {
     const container = containerRef.current;
-    if (useCssFallback || !isVisible || !container) return;
+    if (!container) return;
+
+    let created = false;
+    let renderer: Renderer | null = null;
+    let mesh: Mesh | null = null;
+    let uniforms: Uniforms | null = null;
+    let resizeObserver: ResizeObserver | null = null;
 
     const maxDpr = isCoarseOrNarrow() ? 1 : Math.min(window.devicePixelRatio, 2);
 
-    const renderer = new Renderer({
-      dpr: maxDpr,
-      alpha: true,
-    });
-    rendererRef.current = renderer;
+    const ensureCreated = () => {
+      if (created || !containerRef.current) return;
+      created = true;
 
-    const gl = renderer.gl;
-    gl.canvas.style.width = "100%";
-    gl.canvas.style.height = "100%";
-    gl.canvas.style.display = "block";
-    container.replaceChildren(gl.canvas);
+      renderer = new Renderer({
+        dpr: maxDpr,
+        alpha: true,
+      });
+      rendererRef.current = renderer;
 
-    const uniforms: Uniforms = {
-      iTime: { value: 0 },
-      iResolution: { value: [1, 1] },
-      rayPos: { value: [0, 0] },
-      rayDir: { value: [0, 1] },
-      raysColor: { value: hexToRgb(raysColor) },
-      raysSpeed: { value: raysSpeed },
-      lightSpread: { value: lightSpread },
-      rayLength: { value: rayLength },
-      pulsating: { value: pulsating ? 1 : 0 },
-      fadeDistance: { value: fadeDistance },
-      saturation: { value: saturation },
-      mousePos: { value: [0.5, 0.5] },
-      mouseInfluence: { value: followMouse ? mouseInfluence : 0 },
-      noiseAmount: { value: noiseAmount },
-      distortion: { value: distortion },
-    };
-    uniformsRef.current = uniforms;
+      const gl = renderer.gl;
+      gl.canvas.style.width = "100%";
+      gl.canvas.style.height = "100%";
+      gl.canvas.style.display = "block";
+      container.replaceChildren(gl.canvas);
 
-    const mesh = new Mesh(gl, {
-      geometry: new Triangle(gl),
-      program: new Program(gl, {
-        vertex: VERTEX,
-        fragment: FRAGMENT,
-        uniforms,
-      }),
-    });
-    meshRef.current = mesh;
+      uniforms = {
+        iTime: { value: 0 },
+        iResolution: { value: [1, 1] },
+        rayPos: { value: [0, 0] },
+        rayDir: { value: [0, 1] },
+        raysColor: { value: hexToRgb(raysColor) },
+        raysSpeed: { value: raysSpeed },
+        lightSpread: { value: lightSpread },
+        rayLength: { value: rayLength },
+        pulsating: { value: pulsating ? 1 : 0 },
+        fadeDistance: { value: fadeDistance },
+        saturation: { value: saturation },
+        mousePos: { value: [0.5, 0.5] },
+        mouseInfluence: { value: followMouse ? mouseInfluence : 0 },
+        noiseAmount: { value: noiseAmount },
+        distortion: { value: distortion },
+      };
+      uniformsRef.current = uniforms;
 
-    const updatePlacement = () => {
-      renderer.dpr = maxDpr;
+      mesh = new Mesh(gl, {
+        geometry: new Triangle(gl),
+        program: new Program(gl, {
+          vertex: VERTEX,
+          fragment: FRAGMENT,
+          uniforms,
+        }),
+      });
+      meshRef.current = mesh;
 
-      const { clientWidth, clientHeight } = container;
-      renderer.setSize(clientWidth, clientHeight);
+      const updatePlacement = () => {
+        if (!renderer || !uniforms || !containerRef.current) return;
+        renderer.dpr = maxDpr;
+        const { clientWidth, clientHeight } = containerRef.current;
+        renderer.setSize(clientWidth, clientHeight);
+        const w = clientWidth * renderer.dpr;
+        const h = clientHeight * renderer.dpr;
+        uniforms.iResolution.value = [w, h];
+        const { anchor, dir } = getAnchorAndDir(raysOrigin, w, h);
+        uniforms.rayPos.value = anchor;
+        uniforms.rayDir.value = dir;
+      };
 
-      const w = clientWidth * renderer.dpr;
-      const h = clientHeight * renderer.dpr;
-      uniforms.iResolution.value = [w, h];
-
-      const { anchor, dir } = getAnchorAndDir(raysOrigin, w, h);
-      uniforms.rayPos.value = anchor;
-      uniforms.rayDir.value = dir;
+      resizeObserver = new ResizeObserver(updatePlacement);
+      resizeObserver.observe(container);
+      updatePlacement();
     };
 
     const loop = (t: number) => {
+      if (!visibleRef.current || !renderer || !mesh || !uniforms) {
+        rafRef.current = null;
+        return;
+      }
       uniforms.iTime.value = t * 0.001;
-
       if (followMouse && mouseInfluence > 0) {
         const smoothing = 0.92;
         smoothMouseRef.current.x =
-          smoothMouseRef.current.x * smoothing + mouseRef.current.x * (1 - smoothing);
+          smoothMouseRef.current.x * smoothing +
+          mouseRef.current.x * (1 - smoothing);
         smoothMouseRef.current.y =
-          smoothMouseRef.current.y * smoothing + mouseRef.current.y * (1 - smoothing);
+          smoothMouseRef.current.y * smoothing +
+          mouseRef.current.y * (1 - smoothing);
         uniforms.mousePos.value = [
           smoothMouseRef.current.x,
           smoothMouseRef.current.y,
         ];
       }
-
       renderer.render({ scene: mesh });
       rafRef.current = requestAnimationFrame(loop);
     };
 
-    const resizeObserver = new ResizeObserver(updatePlacement);
-    resizeObserver.observe(container);
-    updatePlacement();
-    rafRef.current = requestAnimationFrame(loop);
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        const next = entry?.isIntersecting ?? false;
+        visibleRef.current = next;
+        if (!next) return;
+        ensureCreated();
+        if (rafRef.current === null) {
+          rafRef.current = requestAnimationFrame(loop);
+        }
+      },
+      { threshold: 0.1 },
+    );
+    observer.observe(container);
 
     return () => {
+      observer.disconnect();
       if (rafRef.current !== null) {
         cancelAnimationFrame(rafRef.current);
         rafRef.current = null;
       }
-      resizeObserver.disconnect();
-
-      const canvas = gl.canvas;
-      gl.getExtension("WEBGL_lose_context")?.loseContext();
-      canvas.parentNode?.removeChild(canvas);
-
+      resizeObserver?.disconnect();
+      if (renderer) {
+        const canvas = renderer.gl.canvas;
+        renderer.gl.getExtension("WEBGL_lose_context")?.loseContext();
+        canvas.parentNode?.removeChild(canvas);
+      }
       rendererRef.current = null;
       uniformsRef.current = null;
       meshRef.current = null;
     };
   }, [
     useCssFallback,
-    isVisible,
     raysOrigin,
     raysColor,
     raysSpeed,

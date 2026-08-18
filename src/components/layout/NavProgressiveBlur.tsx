@@ -56,7 +56,12 @@ export function NavProgressiveBlur({ rootRef }: NavProgressiveBlurProps) {
       aria-hidden="true"
       data-nav-progressive-blur
       className="pointer-events-none fixed top-0 right-0 left-0 z-[999] h-[100px] md:h-[120px]"
-      style={{ "--nav-blur-progress": 0 } as CSSProperties}
+      style={
+        {
+          "--nav-blur-progress": 0,
+          "--nav-scrim-base": "#ffffff",
+        } as CSSProperties
+      }
     >
       <div className="relative h-full w-full">
         {desktopFrost ? (
@@ -79,7 +84,7 @@ export function NavProgressiveBlur({ rootRef }: NavProgressiveBlurProps) {
             style={{
               opacity: "var(--nav-blur-progress, 0)",
               background:
-                "linear-gradient(to bottom, color-mix(in srgb, var(--background, #fff) 78%, transparent) 0%, color-mix(in srgb, var(--background, #fff) 42%, transparent) 55%, transparent 100%)",
+                "linear-gradient(to bottom, color-mix(in srgb, var(--nav-scrim-base, var(--background, #fff)) 78%, transparent) 0%, color-mix(in srgb, var(--nav-scrim-base, var(--background, #fff)) 42%, transparent) 55%, transparent 100%)",
             }}
           />
         )}

@@ -112,6 +112,7 @@ function MenuItem({
         duration: speed,
         ease: "none",
         repeat: -1,
+        paused: true,
       });
     };
 
@@ -153,6 +154,7 @@ function MenuItem({
       .set(marqueeRef.current, { y: edge === "top" ? "-101%" : "101%" }, 0)
       .set(marqueeInnerRef.current, { y: edge === "top" ? "101%" : "-101%" }, 0)
       .to([marqueeRef.current, marqueeInnerRef.current], { y: "0%" }, 0);
+    animationRef.current?.play();
   };
 
   const playLeave = (clientX: number, clientY: number) => {
@@ -173,6 +175,7 @@ function MenuItem({
       return;
     }
 
+    animationRef.current?.pause();
     gsap
       .timeline({ defaults: animationDefaults })
       .to(marqueeRef.current, { y: edge === "top" ? "-101%" : "101%" }, 0)

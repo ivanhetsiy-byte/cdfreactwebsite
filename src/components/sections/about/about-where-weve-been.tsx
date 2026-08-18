@@ -96,12 +96,15 @@ export function AboutWhereWeveBeen() {
       return;
     }
 
-    const split = new SplitType(heading, {
-      types: "chars",
-      tagName: "span",
-      charClass: "char inline-block",
-    });
-    const chars = split.chars ?? [];
+    const isMobileLayout = window.matchMedia("(max-width: 767px)").matches;
+    const split = isMobileLayout
+      ? null
+      : new SplitType(heading, {
+          types: "chars",
+          tagName: "span",
+          charClass: "char inline-block",
+        });
+    const chars = split?.chars ?? [];
 
     const rowTimelines: gsap.core.Timeline[] = [];
     let activeIndex: number | null = null;
@@ -277,6 +280,26 @@ export function AboutWhereWeveBeen() {
       return scrub;
     };
 
+    const buildMobileHandoff = () => {
+      const sentinel = section.querySelector("[data-where-rays-sentinel]");
+      const io =
+        sentinel instanceof Element
+          ? new IntersectionObserver(
+              ([entry]) => {
+                if (!entry?.isIntersecting) return;
+                io?.disconnect();
+                setMountRays(true);
+              },
+              { threshold: 0 },
+            )
+          : null;
+      if (io && sentinel instanceof Element) io.observe(sentinel);
+
+      return () => {
+        io?.disconnect();
+      };
+    };
+
     const mm = gsap.matchMedia();
 
     // ── Desktop: sticky stage, hover-driven rows ───────────────────────────
@@ -311,7 +334,7 @@ export function AboutWhereWeveBeen() {
 
     // ── Mobile: tap a row to open its hover state; tap again to close ──────
     mm.add("(max-width: 767px)", () => {
-      const scrub = buildScrub(true);
+      const teardownHandoff = buildMobileHandoff();
 
       const handlers: Array<{ row: HTMLLIElement; click: (e: Event) => void }> =
         [];
@@ -331,9 +354,7 @@ export function AboutWhereWeveBeen() {
           row.removeEventListener("click", click);
         });
         setActive(null);
-        if (scrubRef.current === scrub) scrubRef.current = null;
-        scrub.scrollTrigger?.kill();
-        scrub.kill();
+        teardownHandoff();
       };
     });
 
@@ -342,7 +363,7 @@ export function AboutWhereWeveBeen() {
     return () => {
       mm.revert();
       rowTimelines.forEach((t) => t.kill());
-      split.revert();
+      split?.revert();
     };
   }, []);
 
@@ -371,6 +392,7 @@ export function AboutWhereWeveBeen() {
       ScrollTrigger.update();
       // Land on the finished black stage even if scrub lag hasn't caught up.
       setMountRays(true);
+      sectionRef.current?.classList.add("cdf-where-complete");
       scrubRef.current?.progress(1);
     };
 
@@ -392,17 +414,22 @@ export function AboutWhereWeveBeen() {
     <section
       ref={sectionRef}
       aria-labelledby="about-where-heading"
-      className="relative w-full overflow-x-clip bg-white"
+      className="cdf-where relative w-full bg-white md:overflow-x-clip"
     >
       {/* The runway holds the sticky stage while scroll scrubs white → black,
           then leaves room to open names (hover / tap) and follow the arrow. */}
-      <div ref={runwayRef} className="relative h-[180vh] md:h-[250vh]">
+      <div ref={runwayRef} className="cdf-where-runway relative h-[180svh] md:h-[250vh]">
         {/* Deep-link target — near scrub end so #where-weve-been opens on the
             finished black stage the competition arrows leave from. */}
         <div
           id={ABOUT_WHERE_HASH}
           aria-hidden
           className="pointer-events-none absolute top-[calc(100%-100svh)] left-0 h-px w-px"
+        />
+        <div
+          data-where-rays-sentinel
+          aria-hidden
+          className="pointer-events-none absolute top-[55%] left-0 h-px w-px md:hidden"
         />
         {/* Full-viewport stage. Content is top-aligned, so whatever height the
             names do not need is simply black rather than stretched type. */}
@@ -415,15 +442,16 @@ export function AboutWhereWeveBeen() {
             ref={curtainRef}
             aria-hidden
             data-nav-page-surface="dark"
-            className="pointer-events-none absolute inset-0 z-0 bg-black"
-            style={{ clipPath: "inset(100% 0 0 0)" }}
+            className="cdf-where-curtain pointer-events-none absolute inset-0 z-0 bg-black max-md:opacity-0 md:[clip-path:inset(100%_0_0_0)]"
           />
 
           {/* Light rays — mounted once scrub starts revealing them */}
           <div
             ref={raysRef}
             aria-hidden
-            className="pointer-events-none absolute inset-0 z-[1] opacity-0"
+            className={`pointer-events-none absolute inset-0 z-[1] ${
+              mountRays ? "opacity-100" : "opacity-0"
+            }`}
           >
             {mountRays ? (
               <LightRays
@@ -443,14 +471,14 @@ export function AboutWhereWeveBeen() {
           {/* Content — normal flow so the heading and rows can never overlap.
               GSAP centres the heading with a transform, then slides it to 0. */}
           <div className="relative z-10 flex h-full w-full flex-col px-6 pt-[max(5rem,12vh)] pb-[max(2rem,5vh)] md:px-10">
-            <div ref={headingWrapRef} className="z-10 shrink-0">
+            <div ref={headingWrapRef} className="cdf-where-heading-wrap z-10 shrink-0">
               {/* Overflow clips the rising glyphs to the line box so a leftover
                   translate can never paint them over the rows below. */}
               <div className="overflow-hidden">
                 <h2
                   id="about-where-heading"
                   ref={headingRef}
-                  className="font-swiss whitespace-nowrap text-[min(10.6vw,13vh)] font-normal leading-none tracking-tight text-black"
+                  className="cdf-where-heading font-swiss whitespace-nowrap text-[min(10.6vw,13vh)] font-normal leading-none tracking-tight text-black"
                 >
                   Where We&rsquo;ve Been
                 </h2>
@@ -467,7 +495,7 @@ export function AboutWhereWeveBeen() {
             <ul
               ref={listRef}
               aria-label="Competitions"
-              className="relative z-10 flex flex-col"
+              className="cdf-where-rows relative z-10 flex flex-col"
             >
               {COMPETITIONS.map((comp, index) => (
                 <li

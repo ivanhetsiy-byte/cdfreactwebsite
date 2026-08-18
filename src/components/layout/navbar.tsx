@@ -379,9 +379,15 @@ export function Navbar() {
       writeRaf = 0;
       const y = readScrollY();
       const p = Math.min(1, Math.max(0, y / BLUR_SCROLL_RANGE));
-      blurRootRef.current?.style.setProperty(
-        "--nav-blur-progress",
-        p.toFixed(4),
+      const root = blurRootRef.current;
+      if (!root) return;
+      // Solid black stages (Where We've Been) keep mix-blend chrome; a filled
+      // scrim covers the top-origin light rays.
+      const onBlack = pageSurfaceIsBlackAt(window.innerWidth * 0.5, 12);
+      root.style.setProperty("--nav-blur-progress", (onBlack ? 0 : p).toFixed(4));
+      root.style.setProperty(
+        "--nav-scrim-base",
+        onBlack ? "#000000" : "#ffffff",
       );
     };
 
@@ -514,9 +520,10 @@ export function Navbar() {
   );
 
   // Keep mobile panel clipped shut when closed (Kinfolk curtain park)
-  useEffect(() => {
+  useLayoutEffect(() => {
+    if (menuOpen) return;
     parkMobileMenu();
-  }, [parkMobileMenu]);
+  }, [parkMobileMenu, menuOpen]);
 
   // External Menu triggers (e.g. lab StudioHeader)
   useEffect(() => {
@@ -1094,7 +1101,11 @@ export function Navbar() {
         aria-hidden={!menuOpen}
         className={`fixed inset-0 z-[1003] overflow-hidden text-black ${
           useCompactNav ? "" : "hidden"
-        } ${menuOpen ? "pointer-events-auto" : "pointer-events-none"}`}
+        } ${
+          menuOpen
+            ? "pointer-events-auto"
+            : "pointer-events-none [clip-path:inset(0_0_100%_0)]"
+        }`}
       >
         <div
           ref={mobileBgRef}

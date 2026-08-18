@@ -37,6 +37,7 @@ export function FooterCta({ forceDark = false }: { forceDark?: boolean }) {
         e.preventDefault();
         go(cta.href);
       }}
+      data-site-footer-cta
       className={
         forceDark
           ? "group relative z-10 flex h-[110px] w-full cursor-pointer items-center justify-between gap-3 border-t border-b border-white/20 bg-black px-5 text-white transition-colors duration-300 hover:border-brand-red hover:bg-brand-red md:h-[150px] md:px-8 lg:px-10"

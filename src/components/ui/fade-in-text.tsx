@@ -9,9 +9,14 @@ import {
 } from "react";
 import SplitType from "split-type";
 
-import { prefersReducedMotion } from "@/lib/motion-env";
+import { scheduleScrollTriggerRefresh } from "@/lib/gsap-refresh";
+import { isCoarseOrNarrow, prefersReducedMotion } from "@/lib/motion-env";
 
 gsap.registerPlugin(ScrollTrigger);
+
+function isFooterFade(el: HTMLElement) {
+  return Boolean(el.closest("#site-footer, [data-site-footer-cta]"));
+}
 
 type FadeInTextTag = "h1" | "h2" | "p" | "span" | "div";
 
@@ -53,12 +58,33 @@ export function FadeInText({
     const el = ref.current;
     if (!el) return;
     if (prefersReducedMotion()) return;
+    if (isFooterFade(el) && isCoarseOrNarrow()) return;
 
-    let split: SplitType | null = null;
     const triggerEl = trigger
       ? (document.querySelector(trigger) as HTMLElement | null) ?? el
       : el;
+    const cheap = isCoarseOrNarrow() || Tag === "p";
+    let split: SplitType | null = null;
     const ctx = gsap.context(() => {
+      if (cheap) {
+        gsap.fromTo(
+          el,
+          { y: 16, opacity: 0 },
+          {
+            y: 0,
+            opacity: 1,
+            duration: 0.55,
+            ease: "power2.out",
+            scrollTrigger: {
+              trigger: triggerEl,
+              start: scrollStart,
+              once: true,
+            },
+          },
+        );
+        return;
+      }
+
       split = new SplitType(el, {
         types: "words,chars",
         tagName: "span",
@@ -94,7 +120,7 @@ export function FadeInText({
       );
     }, el);
 
-    requestAnimationFrame(() => ScrollTrigger.refresh());
+    scheduleScrollTriggerRefresh();
 
     return () => {
       ctx.revert();
@@ -145,6 +171,7 @@ export function FadeInBlock({
     const el = ref.current;
     if (!el) return;
     if (prefersReducedMotion()) return;
+    if (isFooterFade(el) && isCoarseOrNarrow()) return;
 
     const ctx = gsap.context(() => {
       gsap.fromTo(
@@ -165,7 +192,7 @@ export function FadeInBlock({
       );
     }, el);
 
-    requestAnimationFrame(() => ScrollTrigger.refresh());
+    scheduleScrollTriggerRefresh();
 
     return () => ctx.revert();
   }, [scrollEnd, scrollStart]);

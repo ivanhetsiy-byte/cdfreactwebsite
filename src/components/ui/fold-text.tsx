@@ -10,7 +10,8 @@ import {
   type ReactNode,
 } from "react";
 
-import { prefersReducedMotion } from "@/lib/motion-env";
+import { scheduleScrollTriggerRefresh } from "@/lib/gsap-refresh";
+import { isCoarseOrNarrow, prefersReducedMotion } from "@/lib/motion-env";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -111,7 +112,7 @@ export function FoldText({
     );
     if (!pieces.length) return;
 
-    if (prefersReducedMotion()) {
+    if (prefersReducedMotion() || isCoarseOrNarrow()) {
       gsap.set(pieces, {
         opacity: 1,
         rotateX: 0,
@@ -172,7 +173,7 @@ export function FoldText({
       );
     }, root);
 
-    requestAnimationFrame(() => ScrollTrigger.refresh());
+    scheduleScrollTriggerRefresh();
 
     return () => ctx.revert();
   }, [

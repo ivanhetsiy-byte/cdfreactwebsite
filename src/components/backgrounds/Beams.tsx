@@ -17,6 +17,8 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { PerspectiveCamera } from "@react-three/drei";
 import { degToRad } from "three/src/math/MathUtils.js";
 
+import { isCoarseOrNarrow } from "@/lib/motion-env";
+
 type UniformValue = THREE.IUniform<unknown> | unknown;
 
 interface ExtendMaterialConfig {
@@ -91,7 +93,7 @@ function extendMaterial<T extends THREE.Material = THREE.Material>(
 }
 
 const CanvasWrapper: FC<{ children: ReactNode }> = ({ children }) => (
-  <Canvas dpr={[1, 2]} frameloop="always" className="relative h-full w-full">
+  <Canvas dpr={[1, 1.5]} frameloop="always" className="relative h-full w-full">
     {children}
   </Canvas>
 );
@@ -210,11 +212,19 @@ export function Beams({
   const [reduced, setReduced] = useState(false);
 
   useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setReduced(mq.matches);
-    const onChange = () => setReduced(mq.matches);
-    mq.addEventListener("change", onChange);
-    return () => mq.removeEventListener("change", onChange);
+    const sync = () =>
+      setReduced(
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches ||
+          isCoarseOrNarrow(),
+      );
+    sync();
+    const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    motion.addEventListener("change", sync);
+    window.addEventListener("resize", sync);
+    return () => {
+      motion.removeEventListener("change", sync);
+      window.removeEventListener("resize", sync);
+    };
   }, []);
 
   const beamMaterial = useMemo(

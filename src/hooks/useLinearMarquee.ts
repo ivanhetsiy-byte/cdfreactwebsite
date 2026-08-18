@@ -71,7 +71,17 @@ export function useLinearMarquee() {
     const ro = new ResizeObserver(measureLoop);
     ro.observe(viewport);
 
+    let inView = true;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        inView = Boolean(entry?.isIntersecting);
+      },
+      { rootMargin: "80px" },
+    );
+    io.observe(viewport);
+
     const ticker = () => {
+      if (!inView && !draggingRef.current) return;
       const dt = gsap.ticker.deltaRatio(60);
       const loopWidth = loopWidthRef.current;
       if (loopWidth <= 0) return;
@@ -97,6 +107,7 @@ export function useLinearMarquee() {
     return () => {
       gsap.ticker.remove(ticker);
       ro.disconnect();
+      io.disconnect();
     };
   }, [applyOffset, measureLoop]);
 
