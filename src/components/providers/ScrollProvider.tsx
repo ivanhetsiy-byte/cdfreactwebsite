@@ -29,6 +29,15 @@ function resetScrollToTop() {
   window.scrollTo(0, 0);
 }
 
+function syncScrollMetrics() {
+  if (typeof window === "undefined") return;
+  const lenis = (window as unknown as Partial<LenisWindow>).lenis;
+  if (lenis && typeof (lenis as { resize?: () => void }).resize === "function") {
+    (lenis as { resize: () => void }).resize();
+  }
+  ScrollTrigger.refresh();
+}
+
 /**
  * Window-level Lenis — no nested scroll shell. Document scroll moves the page
  * canvas (and its absolute navbar overlay) off-screen; only fixed chrome
@@ -114,6 +123,11 @@ export function ScrollProvider({ children }: { children: ReactNode }) {
     if (typeof window !== "undefined" && window.location.hash) return;
 
     resetScrollToTop();
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        syncScrollMetrics();
+      });
+    });
   }, [pathname, ownsOwnScroll]);
 
   return <>{children}</>;
