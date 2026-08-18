@@ -143,7 +143,7 @@ function StudioContent({
             const end = Math.max(start + 1, Math.round(offsetTopSum(dest)));
             const travel = Math.max(0, end - start);
             portrait.style.setProperty("--lml-portrait-travel", `${travel}px`);
-            portrait.style.animationRange = `${start}px ${end}px`;
+            portrait.style.setProperty("animation-range", `${start}px ${end}px`);
           };
 
           portrait.classList.add("cdf-staff-portrait-css");
@@ -154,7 +154,7 @@ function StudioContent({
             window.removeEventListener("resize", applyCssTravel);
             portrait.classList.remove("cdf-staff-portrait-css");
             portrait.style.removeProperty("--lml-portrait-travel");
-            portrait.style.animationRange = "";
+            portrait.style.removeProperty("animation-range");
           };
         } else {
         gsap.set(portrait, { y: 0 });
