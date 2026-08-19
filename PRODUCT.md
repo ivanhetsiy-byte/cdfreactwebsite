@@ -25,7 +25,7 @@ CDF differentiates through a focus on true artistry, led by a founder/artistic d
 - Studio at KleinLife Philadelphia: 10100 Jamison Ave, Philadelphia, PA 19116
 - Contact path: contact form (Resend), phone `929-248-8120`, email `childancefactory@gmail.com`
 - Public surfaces: home, about, classes, staff, contact, store (catalog empty until products ship), competitions
-- Store catalog editor at `/admin` is local development only (`NODE_ENV !== production`) and must not be treated as a public product surface
+- Store catalog editor at `/admin` and media drop at `/admin/media` are local development only (`NODE_ENV !== production`) and must not be treated as public product surfaces
 - Motto (locked): “ALWAYS TO THE TOP, ALWAYS TOGETHER.”
 - Mission title (locked): “Where Talent Grows”
 - Season mark in use: “SEASON 12”
@@ -43,11 +43,10 @@ Confirmed:
 Must not invent or change without explicit product approval:
 - Motto, mission title, and values already proposed on the site
 - Teacher names and roles currently on the site
-- Competition names/achievements and other factual claims (several competition achievements are still `TODO` in code — leave unresolved or mark incomplete; do not invent placements)
+- Competition names/achievements and other factual claims
 - Pricing, tuition, schedules, online booking, testimonials, multi-location claims
 
 Undecided / incomplete (do not fill in):
-- Remaining competition achievement lines beyond Showstopper “NATIONAL CHAMPS”
 - Store product catalog and real teacher portrait assets beyond the founder photo
 
 ## Brand Commitments
@@ -64,7 +63,7 @@ Undecided / incomplete (do not fill in):
 - Hero/visual assets: `public/images/filler.svg` plus production hero media
 - Gallery photos: `public/images/gallery/wdc-2026-leap.png`, `wdc-2026-ensemble.png`, `nexstar-2026.png`
 - Founder portrait: `public/images/staff/mykhaylo.jpg` (secondary teacher portraits currently use stand-ins)
-- Competition list source: `src/lib/competitions.ts` (Showstopper = NATIONAL CHAMPS; others TODO)
+- Competition list source: `src/lib/competitions.ts` (Showstopper = Regional/National Winners; Starpower = National/Regional Winners; Hall of Fame = Regional Winners; Nexstar = Regional Winners; WDC = 2 Time World Champions)
 - Social defaults in layout/social components: Instagram `cdf_dance_school`; TikTok/YouTube `@childancefactory`; Facebook `CDF.danceschool`
 
 Absences — never fabricate:

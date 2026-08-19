@@ -3,6 +3,7 @@ import Link from "next/link";
 import { HomeEnrollmentMarquee } from "@/components/sections/home/home-enrollment-marquee";
 import { FadeInText } from "@/components/ui/fade-in-text";
 import { FoldText } from "@/components/ui/fold-text";
+import { loadHeroGalleryImages } from "@/lib/local-media.server";
 
 /**
  * Figma Home redesign — Enrollment Container
@@ -13,6 +14,8 @@ import { FoldText } from "@/components/ui/fold-text";
  * desktop (1200+) — pinned to the bottom. Scales with vw.
  */
 export function HomeHero() {
+  const images = loadHeroGalleryImages();
+
   return (
     <section
       id="home-hero"
@@ -36,7 +39,10 @@ export function HomeHero() {
           className="w-full whitespace-nowrap font-swiss text-[17.4vw] font-normal uppercase leading-none tracking-normal text-foreground"
         />
 
-        <HomeEnrollmentMarquee className="mt-[clamp(8px,0.92vw,11px)]" />
+        <HomeEnrollmentMarquee
+          className="mt-[clamp(8px,0.92vw,11px)]"
+          images={images}
+        />
 
         <Link
           href="/classes"

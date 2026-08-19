@@ -204,7 +204,7 @@ Not a card system. Prefer bordered planes, full-bleed media figures, and rule-se
 ### Out of scope for this system file
 - Current production hero implementation (`hero.tsx`) — redesign may be editorial; do not copy its layout as tokens
 - Home programs section / programs guide path — excluded from authority
-- `/admin` local-only store catalog editor (not a public surface)
+- `/admin` local-only store catalog editor and `/admin/media` local-only media drop (not public surfaces)
 
 ## Do's and Don'ts
 

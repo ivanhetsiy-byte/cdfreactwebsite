@@ -88,11 +88,11 @@ export function HomeInstructor() {
               className="home-instructor-photo relative aspect-[188/215] w-[188px] max-w-full overflow-hidden home-md:w-[214px] home-lg:w-[317px]"
             >
               <Image
-                src="/images/staff/mykhaylo.jpg"
+                src="/images/staff/mykhaylo-hetsiy.jpg"
                 alt="Mykhaylo Hetsiy"
                 fill
                 sizes="(max-width: 809px) 188px, (max-width: 1199px) 214px, 317px"
-                className="object-cover object-center"
+                className="object-cover object-[center_18%]"
               />
             </div>
             <figcaption className="mt-3 w-full min-w-0 max-w-full text-left font-swiss font-normal">

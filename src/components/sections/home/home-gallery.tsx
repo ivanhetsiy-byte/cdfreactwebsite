@@ -1,5 +1,6 @@
 import { HomeGalleryMarquee } from "@/components/sections/home/home-gallery-marquee";
 import { FadeInText } from "@/components/ui/fade-in-text";
+import { loadGalleryImages } from "@/lib/local-media.server";
 
 /**
  * Figma Home redesign — Gallery
@@ -9,6 +10,8 @@ import { FadeInText } from "@/components/ui/fade-in-text";
  * and loops linearly (RTL) with desktop drag.
  */
 export function HomeGallery() {
+  const images = loadGalleryImages();
+
   return (
     <section
       id="home-gallery"
@@ -35,7 +38,7 @@ export function HomeGallery() {
         />
       </div>
 
-      <HomeGalleryMarquee className="mt-8" />
+      <HomeGalleryMarquee className="mt-8" images={images} />
     </section>
   );
 }

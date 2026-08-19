@@ -60,4 +60,5 @@ public/            # Static images and icons
 
 - `/staff` is the production staff experience (LML studio UI with site chrome).
 - `/admin` is a local-development store catalog editor (`robots: noindex`; 404s in production).
+- `/admin/media` is a local-development media drop for `public/images` (same production 404).
 - Bag checkout is roster-gated and emailed via Resend — not a payment gateway.

@@ -5,11 +5,31 @@ export type Competition = {
 };
 
 export const COMPETITIONS = [
-  { name: "SHOWSTOPPER", achievement: "NATIONAL CHAMPS", slug: "showstopper" },
-  { name: "STARPOWER", achievement: "TODO", slug: "starpower" },
-  { name: "STARBOUND", achievement: "TODO", slug: "starbound" },
-  { name: "NEXSTAR", achievement: "TODO", slug: "nexstar" },
-  { name: "FLY", achievement: "TODO", slug: "fly" },
+  {
+    name: "SHOWSTOPPER",
+    achievement: "REGIONAL / NATIONAL WINNERS",
+    slug: "showstopper",
+  },
+  {
+    name: "HALL OF FAME",
+    achievement: "REGIONAL WINNERS",
+    slug: "hall-of-fame",
+  },
+  {
+    name: "STARPOWER",
+    achievement: "NATIONAL / REGIONAL WINNERS",
+    slug: "starpower",
+  },
+  {
+    name: "NEXSTAR",
+    achievement: "REGIONAL WINNERS",
+    slug: "nexstar",
+  },
+  {
+    name: "WDC",
+    achievement: "2 TIME WORLD CHAMPIONS",
+    slug: "wdc",
+  },
 ] as const satisfies readonly Competition[];
 
 export type CompetitionSlug = (typeof COMPETITIONS)[number]["slug"];

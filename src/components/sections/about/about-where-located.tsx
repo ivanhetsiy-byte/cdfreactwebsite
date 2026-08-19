@@ -165,21 +165,30 @@ function GetDirectionsButton({
 export function AboutWhereLocated() {
   const sectionRef = useRef<HTMLElement>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
+  const headingMaskRef = useRef<HTMLDivElement>(null);
   const detailsRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const section = sectionRef.current;
     const heading = headingRef.current;
+    const mask = headingMaskRef.current;
     const details = detailsRef.current;
     const map = mapRef.current;
-    if (!section || !heading || !details || !map) return;
+    if (!section || !heading || !mask || !details || !map) return;
 
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (reduced) {
       gsap.set([heading, details, map], { clearProps: "all" });
       return;
     }
+
+    const clipRise = () => {
+      mask.style.clipPath = "inset(0 -100vw 0 -100vw)";
+    };
+    const clearClip = () => {
+      mask.style.clipPath = "none";
+    };
 
     const ctx = gsap.context(() => {
       gsap.set(heading, { autoAlpha: 0, yPercent: 110 });
@@ -199,6 +208,8 @@ export function AboutWhereLocated() {
           autoAlpha: 1,
           yPercent: 0,
           duration: 0.95,
+          onStart: clipRise,
+          onComplete: clearClip,
         })
         .to(
           map,
@@ -225,7 +236,10 @@ export function AboutWhereLocated() {
         trigger: section,
         start: "top 78%",
         onEnter: () => reveal.play(),
-        onLeaveBack: () => reveal.reverse(),
+        onLeaveBack: () => {
+          clipRise();
+          reveal.reverse();
+        },
       });
     }, section);
 
@@ -280,11 +294,11 @@ export function AboutWhereLocated() {
 
           {/* Copy — over the map on desktop; pointer-events only on text */}
           <div className="relative z-10 order-1 flex w-full flex-col justify-center md:absolute md:top-[clamp(6rem,10vw,11rem)] md:left-0 md:order-none md:w-[70%] md:justify-start md:pointer-events-none lg:w-[66%]">
-            <div className="overflow-hidden">
+            <div ref={headingMaskRef} className="overflow-visible">
               <h2
                 ref={headingRef}
                 id="about-located-heading"
-                className="pointer-events-auto font-swiss text-[clamp(3.25rem,12vw,11rem)] font-normal leading-[0.92] tracking-tight text-black md:whitespace-nowrap"
+                className="pointer-events-auto font-swiss text-[clamp(3.25rem,12vw,11rem)] font-normal leading-[0.92] tracking-tight text-black py-[0.18em] md:whitespace-nowrap"
               >
                 Where We&rsquo;re Located
               </h2>

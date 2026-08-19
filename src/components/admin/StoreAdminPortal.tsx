@@ -177,6 +177,12 @@ export function StoreAdminPortal({
           </div>
           <div className="flex flex-wrap gap-3">
             <Link
+              href="/admin/media"
+              className="border border-white/30 px-4 py-2 font-swiss text-sm hover:bg-white hover:text-black"
+            >
+              Media
+            </Link>
+            <Link
               href="/store"
               className="border border-white/30 px-4 py-2 font-swiss text-sm hover:bg-white hover:text-black"
             >

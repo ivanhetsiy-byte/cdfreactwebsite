@@ -11,7 +11,7 @@ import gsap from "gsap";
 import { prefersReducedMotion } from "@/lib/motion-env";
 
 /** Right-to-left cruise speed in px/s. Linear, no easing. */
-const AUTO_SPEED_PX_S = 36;
+const AUTO_SPEED_PX_S = 52;
 /** Per-frame velocity decay after a drag release (0–1). */
 const DRAG_FRICTION = 0.94;
 const MOMENTUM_CUTOFF = 8;
@@ -23,7 +23,7 @@ function wrapOffset(x: number, loopWidth: number) {
 }
 
 /**
- * Linear RTL loop with hover-pause, desktop drag, and momentum.
+ * Linear RTL loop with desktop drag and momentum.
  * Transform writes stay on the track ref — no React state in the ticker.
  */
 export function useLinearMarquee() {
@@ -31,7 +31,6 @@ export function useLinearMarquee() {
   const trackRef = useRef<HTMLDivElement>(null);
   const offsetRef = useRef(0);
   const loopWidthRef = useRef(0);
-  const hoverPausedRef = useRef(false);
   const draggingRef = useRef(false);
   const dragOriginXRef = useRef(0);
   const dragOriginOffsetRef = useRef(0);
@@ -95,7 +94,7 @@ export function useLinearMarquee() {
         velocityRef.current *= DRAG_FRICTION;
       } else {
         velocityRef.current = 0;
-        if (!hoverPausedRef.current && !reducedRef.current) {
+        if (!reducedRef.current) {
           next -= (AUTO_SPEED_PX_S * dt) / 60;
         }
       }
@@ -146,11 +145,6 @@ export function useLinearMarquee() {
 
   const onMouseLeave = () => {
     endDrag();
-    hoverPausedRef.current = false;
-  };
-
-  const onMouseEnter = () => {
-    hoverPausedRef.current = true;
   };
 
   return {
@@ -160,6 +154,5 @@ export function useLinearMarquee() {
     onMouseMove,
     onMouseUp,
     onMouseLeave,
-    onMouseEnter,
   };
 }

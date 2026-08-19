@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 
-const PORTRAIT_SRC = "/images/staff/mykhaylo.jpg";
+const PORTRAIT_SRC = "/images/staff/mykhaylo-hetsiy.jpg";
 
 type PortraitCanvasProps = {
   /** Soft well option instead of a black crop box. */
@@ -23,7 +23,7 @@ export function PortraitCanvas({ theme = "dark" }: PortraitCanvasProps) {
         priority
         draggable={false}
         sizes="(max-width: 768px) 100vw, 40vw"
-        className="object-cover object-center select-none swiss-no-select"
+        className="object-cover object-[center_18%] select-none swiss-no-select"
       />
     </div>
   );

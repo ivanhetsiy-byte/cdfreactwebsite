@@ -2,16 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
-import Link from "next/link";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import SplitType from "split-type";
 
-import {
-  ABOUT_WHERE_HASH,
-  COMPETITIONS,
-  competitionHref,
-} from "@/lib/competitions";
+import { ABOUT_WHERE_HASH, COMPETITIONS } from "@/lib/competitions";
 import { getLenis } from "@/lib/lenis";
 import { MOTION_MQ } from "@/lib/motion-env";
 
@@ -31,8 +26,7 @@ gsap.registerPlugin(ScrollTrigger);
  * the top, light rays in, all five names revealed together.
  *
  * Opening a name swaps it for its achievement on a full-bleed white band —
- * hover on desktop, tap to toggle on mobile. An ↗ in the band corner links
- * through to that competition's (wireframe) detail page.
+ * hover on desktop, tap to toggle on mobile.
  */
 export function AboutWhereWeveBeen() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -81,19 +75,57 @@ export function AboutWhereWeveBeen() {
       gsap.set(headingWrap, { clearProps: "transform" });
       gsap.set(list, { opacity: 1 });
       setMountRays(true);
+
+      const reducedTimelines: gsap.core.Timeline[] = [];
+      let reducedActive: number | null = null;
+      const setReducedActive = (index: number | null) => {
+        if (reducedActive === index) return;
+        if (reducedActive !== null) reducedTimelines[reducedActive]?.reverse();
+        reducedActive = index;
+        if (index !== null) reducedTimelines[index]?.play();
+      };
+
       rows.forEach((row) => {
         const band = row.querySelector<HTMLElement>("[data-band]");
         const name = row.querySelector<HTMLElement>("[data-name]");
         const achievement = row.querySelector<HTMLElement>("[data-achievement]");
-        const arrow = row.querySelector<HTMLElement>("[data-arrow]");
         gsap.set(row, { opacity: 1, yPercent: 0 });
-        if (band) gsap.set(band, { scaleX: 0 });
-        if (name) gsap.set(name, { yPercent: 0 });
-        if (achievement) gsap.set(achievement, { yPercent: 100 });
-        // Keep the detail link reachable without the hover choreography
-        if (arrow) gsap.set(arrow, { opacity: 1, pointerEvents: "auto" });
+        if (!band || !name || !achievement) return;
+        gsap.set(band, { scaleX: 0, transformOrigin: "left center" });
+        gsap.set(name, { yPercent: 0 });
+        gsap.set(achievement, { yPercent: 100 });
+        reducedTimelines.push(
+          gsap
+            .timeline({ paused: true })
+            .to(band, { scaleX: 1, duration: 0.01 }, 0)
+            .to(name, { yPercent: -100, duration: 0.01 }, 0)
+            .to(achievement, { yPercent: 0, duration: 0.01 }, 0),
+        );
       });
-      return;
+
+      const reducedHandlers: Array<() => void> = [];
+      const desktop = window.matchMedia("(min-width: 768px)").matches;
+      rows.forEach((row, i) => {
+        if (desktop) {
+          const enter = () => setReducedActive(i);
+          const leave = () => setReducedActive(null);
+          row.addEventListener("pointerenter", enter);
+          row.addEventListener("pointerleave", leave);
+          reducedHandlers.push(() => {
+            row.removeEventListener("pointerenter", enter);
+            row.removeEventListener("pointerleave", leave);
+          });
+        } else {
+          const click = () => setReducedActive(reducedActive === i ? null : i);
+          row.addEventListener("click", click);
+          reducedHandlers.push(() => row.removeEventListener("click", click));
+        }
+      });
+
+      return () => {
+        reducedHandlers.forEach((off) => off());
+        reducedTimelines.forEach((tl) => tl.kill());
+      };
     }
 
     const isMobileLayout = window.matchMedia("(max-width: 767px)").matches;
@@ -124,30 +156,17 @@ export function AboutWhereWeveBeen() {
       const band = row.querySelector<HTMLElement>("[data-band]");
       const name = row.querySelector<HTMLElement>("[data-name]");
       const achievement = row.querySelector<HTMLElement>("[data-achievement]");
-      const arrow = row.querySelector<HTMLElement>("[data-arrow]");
-      if (!band || !name || !achievement || !arrow) return;
+      if (!band || !name || !achievement) return;
 
       gsap.set(band, { scaleX: 0, transformOrigin: "left center" });
       gsap.set(name, { yPercent: 0 });
       gsap.set(achievement, { yPercent: 100 });
-      gsap.set(arrow, { opacity: 0, scale: 0.7, pointerEvents: "none" });
 
       const tl = gsap
         .timeline({ paused: true })
         .to(band, { scaleX: 1, duration: 0.45, ease: "power3.inOut" }, 0)
         .to(name, { yPercent: -100, duration: 0.45, ease: "power3.inOut" }, 0)
-        .to(achievement, { yPercent: 0, duration: 0.45, ease: "power3.inOut" }, 0)
-        .to(
-          arrow,
-          {
-            opacity: 1,
-            scale: 1,
-            duration: 0.35,
-            ease: "power2.out",
-            pointerEvents: "auto",
-          },
-          0.15,
-        );
+        .to(achievement, { yPercent: 0, duration: 0.45, ease: "power3.inOut" }, 0);
 
       rowTimelines.push(tl);
     });
@@ -341,8 +360,7 @@ export function AboutWhereWeveBeen() {
 
       rows.forEach((row, i) => {
         const click = (e: Event) => {
-          // Arrow navigates on its own — don't toggle the row shut underneath it
-          if ((e.target as Element | null)?.closest?.("[data-arrow]")) return;
+          e.preventDefault();
           setActive(activeIndex === i ? null : i);
         };
         row.addEventListener("click", click);
@@ -417,10 +435,10 @@ export function AboutWhereWeveBeen() {
       className="cdf-where relative w-full bg-white md:overflow-x-clip"
     >
       {/* The runway holds the sticky stage while scroll scrubs white → black,
-          then leaves room to open names (hover / tap) and follow the arrow. */}
+          then leaves room to open names (hover / tap). */}
       <div ref={runwayRef} className="cdf-where-runway relative h-[180svh] md:h-[250vh]">
         {/* Deep-link target — near scrub end so #where-weve-been opens on the
-            finished black stage the competition arrows leave from. */}
+            finished black stage. */}
         <div
           id={ABOUT_WHERE_HASH}
           aria-hidden
@@ -484,7 +502,7 @@ export function AboutWhereWeveBeen() {
                 </h2>
               </div>
               {/* Gap scales with the heading. Mobile has room for a generous
-                  beat; desktop has to stay tighter so FLY still clears the fold. */}
+                  beat; desktop has to stay tighter so WDC still clears the fold. */}
               <div
                 aria-hidden
                 className="h-[1.75em] text-[min(10.6vw,13vh)] md:h-[0.75em]"
@@ -527,38 +545,11 @@ export function AboutWhereWeveBeen() {
                     </span>
                     <span
                       data-achievement
-                      className="font-swiss absolute inset-0 block whitespace-nowrap text-[min(9vw,10.5vh)] font-normal leading-[1.15] tracking-tight text-black"
+                      className="font-swiss absolute inset-0 block whitespace-nowrap text-[min(8.2vw,9.5vh)] font-normal leading-[1.15] tracking-tight text-black"
                     >
                       {comp.achievement}
                     </span>
                   </span>
-
-                  {/* ↗ — revealed with the band and sized to fill its height. On
-                      mobile it sits in the band's full-bleed gutter, where the
-                      long achievement text would otherwise run into it. */}
-                  <Link
-                    data-arrow
-                    href={competitionHref(comp.slug)}
-                    aria-label={`Open ${comp.name} competition page`}
-                    className="absolute inset-y-[6%] -right-4 z-20 flex aspect-square items-center justify-center text-black opacity-0 md:right-0"
-                  >
-                    {/* Tight viewBox so the stroke itself spans the band, not
-                        just the box it sits in. */}
-                    <svg
-                      aria-hidden
-                      viewBox="0 0 20 20"
-                      fill="none"
-                      className="size-full"
-                    >
-                      <path
-                        d="M2 18L18 2M18 2H8M18 2V12"
-                        stroke="currentColor"
-                        strokeWidth="1.35"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </Link>
                 </li>
               ))}
             </ul>
