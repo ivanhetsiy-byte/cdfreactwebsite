@@ -600,13 +600,15 @@ body.site-menu-open.site-nav-compact [data-site-status-bar] {
   );
 }
 
+/* Blend on the label root so difference samples the video and the page.
+   Piece-level blend is isolated by z-index / 3D transforms on ancestors. */
+.fold-text-blend {
+  mix-blend-mode: difference;
+}
+
 .fold-text-blend .fold-text-segment {
   perspective: none;
   transform-style: flat;
-}
-
-.fold-text-blend .fold-text-piece {
-  mix-blend-mode: difference;
 }
 
 .fold-text-blend .fold-text-piece::after {

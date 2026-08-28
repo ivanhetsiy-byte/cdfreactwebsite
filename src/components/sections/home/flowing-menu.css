@@ -1,0 +1,135 @@
+/* Stage-slot chip: capsule clip + CSS 3D block. --chip-roll / --chip-twist live on .marquee-inner. */
+
+.marquee-inner {
+  --chip-roll: 0deg;
+  --chip-twist: 0deg;
+}
+
+.menu-chip {
+  --chip-color: #c31716;
+  position: relative;
+  isolation: isolate;
+  clip-path: inset(0 round 999px);
+  perspective: 28rem;
+  transform-style: preserve-3d;
+}
+
+.menu-chip__stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+}
+
+.menu-chip__drop {
+  display: block;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.menu-chip__block {
+  --chip-w: 3.15rem;
+  --chip-h: 1.85rem;
+  --chip-d: 1.7rem;
+  position: relative;
+  width: var(--chip-w);
+  height: var(--chip-h);
+  transform-style: preserve-3d;
+  transform: rotateX(22deg) rotateY(var(--chip-roll)) rotateZ(var(--chip-twist));
+  will-change: transform;
+}
+
+.menu-chip__face {
+  position: absolute;
+  display: block;
+  backface-visibility: hidden;
+  border-radius: 0.38rem;
+}
+
+.menu-chip__face--front,
+.menu-chip__face--back {
+  width: var(--chip-w);
+  height: var(--chip-h);
+  inset: 0;
+}
+
+.menu-chip__face--front {
+  background: linear-gradient(
+    158deg,
+    color-mix(in srgb, var(--chip-color) 68%, white) 0%,
+    var(--chip-color) 52%,
+    color-mix(in srgb, var(--chip-color) 78%, black) 100%
+  );
+  transform: translateZ(calc(var(--chip-d) / 2));
+}
+
+.menu-chip__face--back {
+  background: color-mix(in srgb, var(--chip-color) 46%, black);
+  transform: rotateY(180deg) translateZ(calc(var(--chip-d) / 2));
+}
+
+.menu-chip__face--right,
+.menu-chip__face--left {
+  width: var(--chip-d);
+  height: var(--chip-h);
+  top: 0;
+  left: 50%;
+  margin-left: calc(var(--chip-d) / -2);
+}
+
+.menu-chip__face--right {
+  background: color-mix(in srgb, var(--chip-color) 68%, black);
+  transform: rotateY(90deg) translateZ(calc(var(--chip-w) / 2));
+}
+
+.menu-chip__face--left {
+  background: color-mix(in srgb, var(--chip-color) 82%, white);
+  transform: rotateY(-90deg) translateZ(calc(var(--chip-w) / 2));
+}
+
+.menu-chip__face--top,
+.menu-chip__face--bottom {
+  width: var(--chip-w);
+  height: var(--chip-d);
+  left: 0;
+  top: 50%;
+  margin-top: calc(var(--chip-d) / -2);
+}
+
+.menu-chip__face--top {
+  background: color-mix(in srgb, var(--chip-color) 58%, white);
+  transform: rotateX(90deg) translateZ(calc(var(--chip-h) / 2));
+}
+
+.menu-chip__face--bottom {
+  background: color-mix(in srgb, var(--chip-color) 38%, black);
+  transform: rotateX(-90deg) translateZ(calc(var(--chip-h) / 2));
+}
+
+@media (min-width: 50.625rem) {
+  .menu-chip__block {
+    --chip-w: 4.35rem;
+    --chip-h: 2.4rem;
+    --chip-d: 2.2rem;
+  }
+}
+
+@media (min-width: 75rem) {
+  .menu-chip__block {
+    --chip-w: 5.4rem;
+    --chip-h: 3.05rem;
+    --chip-d: 2.75rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu-chip {
+    background-color: var(--chip-color);
+  }
+
+  .menu-chip__stage {
+    display: none;
+  }
+}

@@ -49,11 +49,12 @@ function StudioContent({
   const landingRef = useRef<HTMLDivElement>(null);
   const taglineRef = useRef<HTMLDivElement>(null);
   const bioRef = useRef<HTMLSpanElement>(null);
+  const rootRef = useRef<HTMLElement>(null);
   const isLight = theme === "light";
   const surface = isLight ? "bg-white text-black" : "bg-black text-white";
   const portraitWell = isLight ? "bg-neutral-100" : "bg-black";
   const aboutPill = isLight
-    ? "border-black/40 text-black/60"
+    ? "border-white/40 text-white/60"
     : "border-white/50 text-white/70";
   const teamInk = isLight ? "text-black" : "text-white";
 
@@ -102,8 +103,8 @@ function StudioContent({
 
       // Portrait entrance: opacity only (scroll owns Y motion).
       // Skip on touch — GSAP transform on this node fights the CSS timeline.
-      if (!cheap) {
-        gsap.from(".lml-portrait", {
+      if (!cheap && portraitRef.current) {
+        gsap.from(portraitRef.current, {
           opacity: 0,
           duration: 1.1,
           ease: "power3.out",
@@ -112,15 +113,31 @@ function StudioContent({
       }
 
       /**
-       * Portrait scroll travel — y ends when portrait center == tagline
-       * center on desktop. Touch parks the portrait in the mobile well
-       * above the tagline via a CSS scroll() timeline.
+       * Portrait scroll travel. Desktop: y ends when portrait center ==
+       * tagline center. Mobile: park in the landing well so the tagline
+       * and bio sit below the photo, not on it.
        */
       if (portraitRef.current && taglineRef.current) {
         const portrait = portraitRef.current;
         const tagline = taglineRef.current;
 
+        const parkingWell = () => {
+          const well = landingRef.current;
+          if (
+            well &&
+            well.offsetParent !== null &&
+            well.offsetHeight > 0
+          ) {
+            return well;
+          }
+          return null;
+        };
+
         const getTravelY = () => {
+          const well = parkingWell();
+          if (well) {
+            return offsetTopSum(well) - offsetTopSum(portrait);
+          }
           const portraitCenter =
             offsetTopSum(portrait) + portrait.offsetHeight / 2;
           const taglineCenter =
@@ -134,11 +151,8 @@ function StudioContent({
           CSS.supports("animation-timeline", "scroll()");
 
         if (cssOk) {
-          const dest =
-            landingRef.current && landingRef.current.offsetParent !== null
-              ? landingRef.current
-              : tagline;
           const applyCssTravel = () => {
+            const dest = parkingWell() ?? tagline;
             const start = Math.round(offsetTopSum(portrait));
             const end = Math.max(start + 1, Math.round(offsetTopSum(dest)));
             const travel = Math.max(0, end - start);
@@ -157,6 +171,7 @@ function StudioContent({
             portrait.style.removeProperty("animation-range");
           };
         } else {
+        const dest = parkingWell() ?? tagline;
         gsap.set(portrait, { y: 0 });
         gsap.fromTo(
           portrait,
@@ -168,8 +183,8 @@ function StudioContent({
             scrollTrigger: {
               trigger: portrait,
               start: "top top",
-              endTrigger: tagline,
-              end: "center center",
+              endTrigger: dest,
+              end: dest === landingRef.current ? "top top" : "center center",
               scrub: cheap ? true : 0.6,
               invalidateOnRefresh: true,
             },
@@ -240,7 +255,7 @@ function StudioContent({
       if (!cheap) {
         requestAnimationFrame(() => ScrollTrigger.refresh());
       }
-    });
+    }, rootRef);
 
     return () => {
       cssCleanup?.();
@@ -251,6 +266,7 @@ function StudioContent({
   return (
     <main
       id="main-content"
+      ref={rootRef}
       className={`studio-page relative z-10 ${surface}`}
       data-studio-root
     >
@@ -279,7 +295,11 @@ function StudioContent({
           </div>
         </div>
 
-        <div className="pointer-events-auto relative z-20 mt-[150px] w-full">
+        <div
+          className={`lml-about-blend pointer-events-auto relative z-20 mt-[150px] w-full ${
+            isLight ? "mix-blend-difference text-white" : ""
+          }`}
+        >
           {/* md:absolute — sits on the text block origin like LML, not above it in flow */}
           <span
             className={`lml-about-pill mb-3 mt-3 block w-fit rounded-full border px-6.5 py-1 text-xs md:absolute md:top-0 md:left-0 md:z-[1] md:mt-3 md:mb-0 md:flex md:items-center md:justify-center md:text-sm ${aboutPill}`}
@@ -305,7 +325,7 @@ function StudioContent({
         {/* Mobile: empty well the portrait travels into, so the tagline sits below it. */}
         <div
           ref={landingRef}
-          className="pointer-events-none relative z-0 mt-4 aspect-square w-full md:hidden"
+          className="pointer-events-none relative z-0 mt-4 aspect-square w-full shrink-0 md:hidden"
           aria-hidden
         />
       </section>
@@ -313,7 +333,7 @@ function StudioContent({
       {/* Tagline — desktop portrait scrub still centers here (LML pattern) */}
       <section
         ref={taglineRef}
-        className="pointer-events-none relative z-20 flex w-full items-start px-5 pt-3 md:h-[80vh] md:items-center md:px-6.5 md:pt-[200px]"
+        className="pointer-events-none relative z-20 flex w-full items-start px-5 pt-8 md:h-[80vh] md:items-center md:px-6.5 md:pt-[200px]"
       >
         <div className="scroll-float w-full">
           <ScrollFloat

@@ -56,6 +56,11 @@ body:has(.lml-lab-light) {
   opacity: 0.04;
 }
 
+.lml-lab-light .lml-about-blend {
+  mix-blend-mode: difference;
+  color: #fff;
+}
+
 .lml-lab .glitch-text {
   position: relative;
   color: #6a6a6a;

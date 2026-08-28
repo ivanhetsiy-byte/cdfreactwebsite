@@ -1,16 +1,31 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState, type MouseEvent } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type MouseEvent,
+} from "react";
 import gsap from "gsap";
 
 import { FadeInText } from "@/components/ui/fade-in-text";
 import { MOTION_MQ, prefersReducedMotion } from "@/lib/motion-env";
 
+import "./flowing-menu.css";
+
+export type ChipMotion = "snap" | "soft" | "flip" | "thud";
+
+export type MenuChipConfig = {
+  color: string;
+  motion: ChipMotion;
+};
+
 export type FlowingMenuItem = {
   link: string;
   text: string;
-  image: string;
+  chip: MenuChipConfig;
 };
 
 type FlowingMenuProps = {
@@ -36,6 +51,23 @@ type MenuItemProps = FlowingMenuItem & {
 
 const animationDefaults: gsap.TweenVars = { duration: 0.6, ease: "expo" };
 
+const CHIP_TRAVEL: Record<ChipMotion, { roll: number; twist: number }> = {
+  snap: { roll: 180, twist: 0 },
+  soft: { roll: 72, twist: 0 },
+  flip: { roll: 360, twist: 180 },
+  thud: { roll: 110, twist: 0 },
+};
+
+const CHIP_ENTER: Record<
+  ChipMotion,
+  { y: number; duration: number; ease: string; spin?: number }
+> = {
+  snap: { y: -52, duration: 0.58, ease: "elastic.out(1, 0.4)" },
+  soft: { y: -36, duration: 0.72, ease: "sine.out" },
+  flip: { y: -56, duration: 0.62, ease: "back.out(1.6)", spin: 360 },
+  thud: { y: -28, duration: 0.3, ease: "power4.out" },
+};
+
 function isCoarsePointer() {
   if (typeof window === "undefined") return false;
   return window.matchMedia(MOTION_MQ.coarse).matches;
@@ -52,10 +84,33 @@ function findClosestEdge(
   return topEdgeDist < bottomEdgeDist ? "top" : "bottom";
 }
 
+function MenuChip({ color }: { color: string }) {
+  return (
+    <div
+      aria-hidden
+      className="menu-chip mx-[2vw] block h-full w-[min(10rem,42vw)] shrink-0 home-md:w-[min(12.5rem,28vw)]"
+      style={{ "--chip-color": color } as CSSProperties}
+    >
+      <div className="menu-chip__stage">
+        <div className="menu-chip__drop">
+          <div className="menu-chip__block">
+            <span className="menu-chip__face menu-chip__face--front" />
+            <span className="menu-chip__face menu-chip__face--back" />
+            <span className="menu-chip__face menu-chip__face--left" />
+            <span className="menu-chip__face menu-chip__face--right" />
+            <span className="menu-chip__face menu-chip__face--top" />
+            <span className="menu-chip__face menu-chip__face--bottom" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function MenuItem({
   link,
   text,
-  image,
+  chip,
   speed,
   textColor,
   marqueeBgColor,
@@ -88,7 +143,7 @@ function MenuItem({
     calculateRepetitions();
     window.addEventListener("resize", calculateRepetitions);
     return () => window.removeEventListener("resize", calculateRepetitions);
-  }, [text, image]);
+  }, [text, chip.color, chip.motion]);
 
   useEffect(() => {
     const setupMarquee = () => {
@@ -101,18 +156,28 @@ function MenuItem({
       if (contentWidth === 0) return;
 
       animationRef.current?.kill();
+      const inner = marqueeInnerRef.current;
+      inner.style.setProperty("--chip-roll", "0deg");
+      inner.style.setProperty("--chip-twist", "0deg");
+
       if (prefersReducedMotion()) {
         animationRef.current = null;
-        gsap.set(marqueeInnerRef.current, { x: 0 });
+        gsap.set(inner, { x: 0 });
         return;
       }
 
-      animationRef.current = gsap.to(marqueeInnerRef.current, {
+      const { roll, twist } = CHIP_TRAVEL[chip.motion];
+      animationRef.current = gsap.to(inner, {
         x: -contentWidth,
         duration: speed,
         ease: "none",
         repeat: -1,
         paused: true,
+        onUpdate() {
+          const progress = this.progress();
+          inner.style.setProperty("--chip-roll", `${progress * roll}deg`);
+          inner.style.setProperty("--chip-twist", `${progress * twist}deg`);
+        },
       });
     };
 
@@ -122,15 +187,43 @@ function MenuItem({
       animationRef.current?.kill();
       animationRef.current = null;
     };
-  }, [text, image, repetitions, speed]);
+  }, [text, chip.color, chip.motion, repetitions, speed]);
 
   useEffect(() => {
     return () => {
       animationRef.current?.kill();
       if (marqueeRef.current) gsap.killTweensOf(marqueeRef.current);
-      if (marqueeInnerRef.current) gsap.killTweensOf(marqueeInnerRef.current);
+      if (marqueeInnerRef.current) {
+        gsap.killTweensOf(marqueeInnerRef.current);
+        gsap.killTweensOf(
+          marqueeInnerRef.current.querySelectorAll(".menu-chip__drop"),
+        );
+      }
     };
   }, []);
+
+  const playChipEnter = () => {
+    const drops = marqueeInnerRef.current?.querySelectorAll(".menu-chip__drop");
+    if (!drops?.length) return;
+    gsap.killTweensOf(drops);
+    if (prefersReducedMotion()) {
+      gsap.set(drops, { y: 0, rotationY: 0 });
+      return;
+    }
+    const enter = CHIP_ENTER[chip.motion];
+    gsap.fromTo(
+      drops,
+      { y: enter.y, rotationY: enter.spin ? -enter.spin : 0 },
+      {
+        y: 0,
+        rotationY: 0,
+        duration: enter.duration,
+        ease: enter.ease,
+        overwrite: true,
+        force3D: true,
+      },
+    );
+  };
 
   const playEnter = (clientX: number, clientY: number) => {
     if (!itemRef.current || !marqueeRef.current || !marqueeInnerRef.current) {
@@ -146,6 +239,7 @@ function MenuItem({
 
     if (prefersReducedMotion()) {
       gsap.set([marqueeRef.current, marqueeInnerRef.current], { y: "0%" });
+      playChipEnter();
       return;
     }
 
@@ -154,6 +248,7 @@ function MenuItem({
       .set(marqueeRef.current, { y: edge === "top" ? "-101%" : "101%" }, 0)
       .set(marqueeInnerRef.current, { y: edge === "top" ? "101%" : "-101%" }, 0)
       .to([marqueeRef.current, marqueeInnerRef.current], { y: "0%" }, 0);
+    playChipEnter();
     animationRef.current?.play();
   };
 
@@ -168,6 +263,9 @@ function MenuItem({
       rect.width,
       rect.height,
     );
+
+    const drops = marqueeInnerRef.current.querySelectorAll(".menu-chip__drop");
+    gsap.killTweensOf(drops);
 
     if (prefersReducedMotion()) {
       gsap.set(marqueeRef.current, { y: "101%" });
@@ -243,7 +341,7 @@ function MenuItem({
         >
           <div
             ref={marqueeInnerRef}
-            className="flex h-full w-max items-center"
+            className="marquee-inner flex h-full w-max items-center"
           >
             {Array.from({ length: repetitions }, (_, idx) => (
               <div
@@ -252,11 +350,7 @@ function MenuItem({
                 style={{ color: marqueeTextColor }}
               >
                 {text}
-                <span
-                  aria-hidden
-                  className="mx-[2vw] block h-full w-[min(10rem,42vw)] shrink-0 rounded-full bg-cover bg-center home-md:w-[min(12.5rem,28vw)]"
-                  style={{ backgroundImage: `url(${image})` }}
-                />
+                <MenuChip color={chip.color} />
               </div>
             ))}
           </div>

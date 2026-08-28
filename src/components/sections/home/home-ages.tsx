@@ -1,3 +1,4 @@
+import { HomeAgesVideo } from "@/components/sections/home/home-ages-video";
 import { FadeInText } from "@/components/ui/fade-in-text";
 import { FoldText } from "@/components/ui/fold-text";
 
@@ -43,14 +44,20 @@ export function HomeAges() {
           />
 
           <div
+            id="home-ages-media"
             aria-hidden
-            className="aspect-[1121/642] h-auto w-full bg-foreground"
-          />
+            className="relative aspect-[1121/642] h-auto w-full overflow-hidden bg-foreground"
+          >
+            <HomeAgesVideo />
+          </div>
 
           <FoldText
             as="p"
             text="Recreational"
             creaseShading={0}
+            trigger="#home-ages-media"
+            scrollStart="top 90%"
+            scrollEnd="center 60%"
             className={`${labelClass} right-0 bottom-0 translate-y-1/2 text-right`}
           />
         </div>
